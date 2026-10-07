@@ -1,0 +1,26 @@
+# Local credentials and environment files
+.env
+.env.*
+*.local
+*.key
+*.pem
+
+# Real credentials copied from the examples
+auth.json
+examples/codex/auth.json
+examples/codex/config.toml
+examples/hermes.yaml
+examples/openclaw.json
+
+# Logs and runtime artifacts
+*.log
+baseline_*.json
+
+# 证据采集与运行产物（可能含敏感输入；evidence_capture.py / images_generations.py 的默认输出目录）
+evidence/
+outputs/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
