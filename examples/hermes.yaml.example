@@ -1,0 +1,20 @@
+# Hermes Agent (Nous Research - 养马) 配置文件
+# 存放路径: ~/.hermes/config.yaml 或 %USERPROFILE%\.hermes\config.yaml
+
+model:
+  provider: custom
+  base_url: "https://nuoapi.net/v1"
+  default: "gpt-6-astra"
+  temperature: 0.7
+  timeout: 120
+
+agent:
+  persistent_memory: true
+  auto_learn_skills: true
+  max_iterations: 30
+
+toolsets:
+  - filesystem
+  - terminal
+  - web_search
+  - browser

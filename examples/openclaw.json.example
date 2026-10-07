@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openclaw.ai/schema/config.json",
+  "version": "2.0",
+  "models": {
+    "providers": {
+      "nuoapi": {
+        "baseUrl": "https://nuoapi.net/v1",
+        "apiKey": "YOUR_NUOAPI_API_KEY",
+        "apiType": "openai"
+      }
+    },
+    "default": "gpt-6-astra",
+    "fallback": "gpt-5.6-luna"
+  },
+  "agent": {
+    "name": "OpenClaw-Worker",
+    "workspace": "./workspace",
+    "permissions": {
+      "allowTerminal": true,
+      "allowFileSystem": true,
+      "allowBrowser": true
+    }
+  },
+  "ui": {
+    "theme": "dark",
+    "port": 3000
+  }
+}

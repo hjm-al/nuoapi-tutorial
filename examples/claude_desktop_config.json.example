@@ -1,0 +1,18 @@
+{
+  "inference": {
+    "provider": "third_party",
+    "base_url": "https://nuoapi.net",
+    "api_key": "YOUR_NUOAPI_API_KEY",
+    "default_model": "claude-sonnet-4-6"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\YOUR_USERNAME\\Desktop"
+      ]
+    }
+  }
+}

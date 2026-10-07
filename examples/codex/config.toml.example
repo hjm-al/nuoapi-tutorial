@@ -1,0 +1,12 @@
+model_provider = "nuoapi"
+model = "MODEL_NAME_FROM_MODEL_PLAZA"
+model_reasoning_effort = "high"
+network_access = "enabled"
+
+[model_providers.nuoapi]
+name = "nuoapi"
+base_url = "https://nuoapi.net/v1"
+wire_api = "responses"
+requires_openai_auth = true
+# NuoAPI uses standard HTTP; disable unnecessary WebSocket retries.
+supports_websockets = false
