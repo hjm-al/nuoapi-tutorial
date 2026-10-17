@@ -47,12 +47,19 @@
 | [`docs/MODEL_VERIFICATION_METHODS.md`](docs/MODEL_VERIFICATION_METHODS.md) | 防掺水方法学：证据分档、统计口径、假阳性回归 |
 | [`docs/TEST_REPORT_SPEC.md`](docs/TEST_REPORT_SPEC.md) | 黑盒测试报告的六模块规范模板 |
 | [`docs/AI模型API协议科普-2026-10-12.md`](docs/AI模型API协议科普-2026-10-12.md) | Chat Completions、Responses、Messages、Gemini 原生协议与地址结构 |
-| [`docs/模型广场清单-2026-10-12.md`](docs/模型广场清单-2026-10-12.md) | 模型广场快照：分组倍率与计费口径（明细 `.xlsx`），抄精确模型名用 |
-| [`docs/模型广场清单-2026-10-18.md`](docs/模型广场清单-2026-10-18.md) | 模型广场快照（10-18 窗口）：14 个分组、144 行、每个分组可用模型全列（明细 xlsx 与准确模型名用） |
-| [`docs/接入第三方工具教程-2026-09-26.md`](docs/接入第三方工具教程-2026-09-26.md) | 按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法 |
-| [`docs/图片生成实测教程-2026-09-28.md`](docs/图片生成实测教程-2026-09-28.md) | 图片生成接口的窗口化实测记录 |
+| [`docs/模型广场清单-2026-10-18.md`](docs/模型广场清单-2026-10-18.md) | 模型广场当前窗口（10-18）：抄模型名、看分组用这一份 |
+| [`docs/模型广场清单-2026-10-12.md`](docs/模型广场清单-2026-10-12.md) | 历史窗口（10-12），数字原样保留；不要拿它当现价或抄当前模型名 |
+| [`docs/接入第三方工具教程-2026-09-26.md`](docs/接入第三方工具教程-2026-09-26.md) | 按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法；下面三篇是 Codex / Claude Code / Gemini CLI 的症状短页 |
+| [`docs/Codex-一直Reconnecting-2026-10-18.md`](docs/Codex-一直Reconnecting-2026-10-18.md) | Codex 一直 `Reconnecting` 或日志出现 `wss://…/v1/responses`：一份配置加彻底重启 |
+| [`docs/Claude-Code-不要加v1-2026-10-18.md`](docs/Claude-Code-不要加v1-2026-10-18.md) | Claude Code 返回 `404`：Base URL 用根地址，Key 变量名是 `ANTHROPIC_AUTH_TOKEN` |
+| [`docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md) | Gemini CLI 报 `platform is not gemini`：`GOOGLE_GEMINI_BASE_URL` 只填根地址 |
+| [`docs/图片生成实测教程-2026-09-28.md`](docs/图片生成实测教程-2026-09-28.md) | 图片生成接口的窗口化实测记录（含编辑入口是 JSON 而非 multipart 这个跨实现差异） |
+| [`docs/图像质量复盘方法-2026-10-18.md`](docs/图像质量复盘方法-2026-10-18.md) | 图像质量复盘：C1–C10 缺陷码、归因到提示词段落、版本哈希登记、对照实验与防退化四条硬约束 |
 | [`docs/余额与额度查询-2026-10-06.md`](docs/余额与额度查询-2026-10-06.md) | `/v1/usage` 只读额度查询：多级兜底解析、SPA 假成功防范、取证模板（C 级证据） |
 | [`FAQ.md`](FAQ.md) | 30 条常见问题与分层排错 |
+| [`docs/Claude-Code-不要加v1-2026-10-18.md`](docs/Claude-Code-不要加v1-2026-10-18.md) | 长尾排错页：Claude Code 报 404，根地址加没加 `/v1` |
+| [`docs/Codex-一直Reconnecting-2026-10-18.md`](docs/Codex-一直Reconnecting-2026-10-18.md) | 长尾排错页：Codex 一直 Reconnecting，关掉 WebSocket |
+| [`docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md) | 长尾排错页：Gemini CLI 报 `platform is not gemini` |
 | [`h5/`](h5/) | 站点构建：`build_h5.py` 生成移动端单文件页（[`h5/index.html`](h5/index.html)），`build_site.py` 生成本文档的多页静态站并部署到 GitHub Pages；`theme.py` 为两者共用的样式与交互脚本 |
 | [`tests/`](tests/) | 文档死链、凭据泄露、站点构建与产物同步的仓库自检 |
 
@@ -67,7 +74,7 @@
 | **Messages** | `/v1/messages` | `https://nuoapi.net`（**根地址，不加 /v1**） | Claude Code、Claude Desktop 第三方推理 |
 | **Gemini 原生 REST** | `/v1beta/models/{模型}:generateContent` | REST 填 `https://nuoapi.net/v1beta`；**Gemini CLI 例外**，变量填根地址 | Gemini CLI、脚本直调 |
 
-选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`（根地址）+ `GEMINI_API_KEY` + `GEMINI_MODEL`；报 `400 platform is not gemini` 优先查协议平台是否选错。
+选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`（根地址）+ `GEMINI_API_KEY` + `GEMINI_MODEL`；报 `400 platform is not gemini` 时按[这篇短页](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)改，不要先当成 Key 无效。
 
 ## 三分钟快速开始
 
@@ -97,10 +104,10 @@ bash ./examples/quick_setup.sh
 
 | 客户端 | 协议 / Base URL | 关键点 |
 |---|---|---|
-| [**Codex CLI / 桌面端**](docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli) | Responses · `https://nuoapi.net/v1` | `~/.codex/config.toml` 里 `wire_api = "responses"`、`supports_websockets = false`；Key 写 `auth.json`；桌面端共享同一配置，改完彻底重启。教程见[第 5.2 节](docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli)，模板见 [`examples/codex/`](examples/codex/)，排错见 [FAQ §4](FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办)/[§11](FAQ.md#11-codex-读取不到配置怎么办) |
-| [**Claude Code**](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具) | Messages · `https://nuoapi.net` | `ANTHROPIC_BASE_URL` 用根地址，**严禁加 `/v1`**；Key 变量名是 `ANTHROPIC_AUTH_TOKEN`。教程见[第 5.1 节](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具)，模板 [`claude-code.env.example`](examples/claude-code.env.example)，排错见 [FAQ §2](FAQ.md#2-claude-code-的-base-url-要不要加-v1) |
+| [**Codex CLI / 桌面端**](docs/Codex-一直Reconnecting-2026-10-18.md) | Responses · `https://nuoapi.net/v1` | `~/.codex/config.toml` 里 `wire_api = "responses"`、`supports_websockets = false`；Key 写 `auth.json`；桌面端共享同一配置，改完彻底重启。步骤见[短页](docs/Codex-一直Reconnecting-2026-10-18.md)，总表索引在[第 5.2 节](docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli)，模板 [`examples/codex/`](examples/codex/)，排错见 [FAQ §4](FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办)/[§11](FAQ.md#11-codex-读取不到配置怎么办) |
+| [**Claude Code**](docs/Claude-Code-不要加v1-2026-10-18.md) | Messages · `https://nuoapi.net` | `ANTHROPIC_BASE_URL` 用根地址，**严禁加 `/v1`**；Key 变量名是 `ANTHROPIC_AUTH_TOKEN`。步骤见[短页](docs/Claude-Code-不要加v1-2026-10-18.md)，总表索引在[第 5.1 节](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具)，模板 [`claude-code.env.example`](examples/claude-code.env.example)，排错见 [FAQ §2](FAQ.md#2-claude-code-的-base-url-要不要加-v1) |
 | [**Claude Desktop (Cowork)**](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具) | Messages · `https://nuoapi.net` | 登录页开启开发者模式 → Configure third-party inference，只填 Key 和根地址；模板 [`claude_desktop_config.json.example`](examples/claude_desktop_config.json.example)（MCP 配置另见[教程第 8 节](docs/接入第三方工具教程-2026-09-26.md#8-mcp-工具)） |
-| [**Gemini CLI**](docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli) | Gemini · 根地址 | `~/.gemini/.env` 写 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`，不加 `/v1beta`。工具配置见[教程第 5.3 节](docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli)，协议说明见[协议科普第 6 节](docs/AI模型API协议科普-2026-10-12.md#6-gemini-原生协议)，模板 [`gemini.env.example`](examples/gemini.env.example)，排错见 [FAQ §9](FAQ.md#9-gemini-cli-配置后没有响应怎么办) |
+| [**Gemini CLI**](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md) | Gemini · 根地址 | `~/.gemini/.env` 写 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`，不加 `/v1beta`。步骤见[短页](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)，总表索引在[第 5.3 节](docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli)，协议说明见[协议科普第 6 节](docs/AI模型API协议科普-2026-10-12.md#6-gemini-原生协议)，模板 [`gemini.env.example`](examples/gemini.env.example)，排错见 [FAQ §9](FAQ.md#9-gemini-cli-配置后没有响应怎么办) |
 | [**Cursor / Roo / Cline / Continue / Aider / OpenCode / Cherry**](docs/接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue) | Chat Completions · `/v1` | Provider 选 `OpenAI Compatible`，四字段照填；IDE 插件见[教程第 7.1 节](docs/接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue)、通用图形客户端见[第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端)，排错见 [FAQ §27](FAQ.md#27-如何在-cursor-或-roo-code-cline-中配置-nuoapi)；模板 [`opencode.json.example`](examples/opencode.json.example) |
 | [**VS Code 智能体（Copilot Chat / BYOK）**](docs/接入第三方工具教程-2026-09-26.md#72-vs-code-智能体) | Custom Endpoint · 按协议填完整 URL | 不登录 GitHub 也能用（BYOK）；模型选择器齿轮或命令面板运行 `Chat: Manage Language Models` → Add Models → Custom Endpoint，在 `chatLanguageModels.json` 填 `vendor: customendpoint`、`apiType`、完整 `url` 与能力；agent 模式要求模型支持工具调用，BYOK 不驱动补全/语义检索。详见[教程第 7.2 节](docs/接入第三方工具教程-2026-09-26.md#72-vs-code-智能体)、模板 [`vscode-chatLanguageModels.json.example`](examples/vscode-chatLanguageModels.json.example) |
 | [**CC Switch**](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch) | 按目标工具分 | 图形化读写本机配置文件、不代理流量；安装与"导入到 CCS"一键导入见[教程第 6 节](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch)；Claude 模式填根地址，Codex 模式填 `/v1`，切换后重启客户端。导入不生效见 [FAQ §10](FAQ.md#10-cc-switch-导入后没有生效怎么办) |

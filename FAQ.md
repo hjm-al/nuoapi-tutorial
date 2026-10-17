@@ -36,7 +36,7 @@ ANTHROPIC_AUTH_TOKEN=YOUR_NUOAPI_API_KEY
 
 修改环境变量后重新打开终端或重启 Claude Code。
 
-误加 `/v1` 时，请求实际落在 `/v1/messages`，常见表现是 404（网关返回纯文本 `404 page not found`），而不是 Key 错误。
+误加 `/v1` 时，请求实际落在错误路径上，常见表现是 404（网关返回纯文本 `404 page not found`），而不是 Key 错误。逐步配置见[《Claude Code：不要加 /v1》](docs/Claude-Code-不要加v1-2026-10-18.md)。
 
 ## 3. 返回 401 Unauthorized 怎么办？
 
@@ -64,7 +64,7 @@ supports_websockets = false
 
 保存后完全退出并重启 Codex。不要只在 `.env` 中添加代理变量，因为那不会必然关闭客户端的 WebSocket 尝试。
 
-排查时对照日志原文：正常情况下日志不应再出现 `wss://nuoapi.net/v1/responses`；若仍有 `WebSocket connection ... failed`、`stream error` 或反复 `connecting to wss://...`，说明 `supports_websockets = false` 没被读到（配置文件路径不对或没彻底重启），回到第 11 节检查配置位置。
+排查时对照日志原文：正常情况下日志不应再出现 `wss://nuoapi.net/v1/responses`；若仍有 `WebSocket connection ... failed`、`stream error` 或反复 `connecting to wss://...`，说明 `supports_websockets = false` 没被读到（配置文件路径不对或没彻底重启），回到第 11 节检查配置位置。逐步配置见[《Codex：关掉 WebSocket》](docs/Codex-一直Reconnecting-2026-10-18.md)。
 
 ## 5. 返回 404 或 model not found 怎么办？
 
@@ -116,7 +116,7 @@ GEMINI_MODEL=MODEL_NAME_FROM_MODEL_PLAZA
 
 确认当前分组包含 Gemini 模型，并重新启动 CLI。模型名必须与模型广场完全一致。
 
-两种"有动静但不通"的情况别和"无响应"混淆：报 `400 platform is not gemini` 是协议平台选错（排法见第 20 节）；若上游透传 Google 报错，会看到 `API_KEY_INVALID` 或 `API key not valid` 字样，说明 Key 没被对端接受。另外 Gemini CLI 的 Base URL 填根地址，若误填成 `.../v1beta` 也会异常。
+两种"有动静但不通"的情况别和"无响应"混淆：报 `400 platform is not gemini` 是协议平台选错（排法见第 20 节）；若上游透传 Google 报错，会看到 `API_KEY_INVALID` 或 `API key not valid` 字样，说明 Key 没被对端接受。另外 Gemini CLI 的 Base URL 填根地址，若误填成 `.../v1beta` 也会异常。逐步配置见[《Gemini CLI：platform is not gemini》](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)。
 
 ## 10. CC Switch 导入后没有生效怎么办？
 
