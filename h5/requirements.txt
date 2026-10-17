@@ -1,0 +1,2 @@
+# GitHub Pages 站点构建依赖（h5/build_h5.py 与 h5/build_site.py 共用）
+markdown>=3.4,<4
