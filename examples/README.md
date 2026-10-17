@@ -1,3 +1,8 @@
+<!-- seo-meta
+  title: 八语言 OpenAI 兼容 API 调用示例与四协议最小样例
+  description: curl、Python、Node、Go、Java、PHP、Rust、C# 的最小请求样例，外加 Responses、Anthropic Messages、Gemini 原生 REST 四种协议对照。
+-->
+
 # 配置示例
 
 这些文件只包含占位符，不包含可用凭据。
@@ -37,6 +42,7 @@
 - `claude-code.env.example`：Claude Code 环境变量。
 - `codex/`：Codex Provider 和 API Key 文件模板。
 - `opencode.json.example`：OpenCode 的 OpenAI 兼容 Provider 模板。
+- `vscode-chatLanguageModels.json.example`：VS Code 智能体（Copilot Chat / BYOK）Custom Endpoint 配置模板；`apiKey` 用 `${input:...}` 输入变量占位，模型 `url` 填完整请求路径。
 - `gemini.env.example`：Gemini CLI 环境变量。
 - `openai_compatible.py`：Python OpenAI SDK 最小请求。
 - `openai_stream.py`：Python OpenAI SDK 流式 (SSE) 请求。

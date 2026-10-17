@@ -1,3 +1,8 @@
+<!-- seo-meta
+  title: NuoAPI 接入脚手架：Codex / Claude Code / Gemini 配置与防掺水
+  description: 四种协议（Chat Completions、Responses、Messages、Gemini REST）怎么选、16+ 客户端怎么接、模型真伪怎么验，附可直接跑的探针与一键配置脚本。
+-->
+
 # NuoAPI 接入脚手架与防掺水取证工具箱
 
 > **法律与第三方商标免责声明**
@@ -8,7 +13,7 @@
 
 一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
 
-本文以网关 `https://nuoapi.net`（模型广场：<https://nuoapi.net/model-plaza?embedded=1>）为实例。模型名、分组、价格与渠道状态随时变化，**一切以模型广场和控制台实时显示为准**；文中标注取证窗口的结论只代表该时间点的观察。
+本文以网关 `https://nuoapi.net`（模型广场：<https://nuoapi.net/model-plaza>，用「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，**一切以模型广场和控制台实时显示为准**；文中标注取证窗口的结论只代表该时间点的观察。
 
 ---
 
@@ -41,15 +46,19 @@
 | [`examples/cost_audit.py`](examples/cost_audit.py) | 消费证据包（或两条差分请求）估算系统前缀注入区间与缓存读取占比 |
 | [`docs/MODEL_VERIFICATION_METHODS.md`](docs/MODEL_VERIFICATION_METHODS.md) | 防掺水方法学：证据分档、统计口径、假阳性回归 |
 | [`docs/TEST_REPORT_SPEC.md`](docs/TEST_REPORT_SPEC.md) | 黑盒测试报告的六模块规范模板 |
-| [`docs/接入第三方工具教程-2026-09-26.md`](docs/接入第三方工具教程-2026-09-26.md) | 四种协议 × 四种环境（GUI/PowerShell/Bash/Docker·CI）的通用接法 |
+| [`docs/AI模型API协议科普-2026-10-12.md`](docs/AI模型API协议科普-2026-10-12.md) | Chat Completions、Responses、Messages、Gemini 原生协议与地址结构 |
+| [`docs/模型广场清单-2026-10-12.md`](docs/模型广场清单-2026-10-12.md) | 模型广场快照：分组倍率与计费口径（明细 `.xlsx`），抄精确模型名用 |
+| [`docs/模型广场清单-2026-10-18.md`](docs/模型广场清单-2026-10-18.md) | 模型广场快照（10-18 窗口）：14 个分组、144 行、每个分组可用模型全列（明细 xlsx 与准确模型名用） |
+| [`docs/接入第三方工具教程-2026-09-26.md`](docs/接入第三方工具教程-2026-09-26.md) | 按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法 |
 | [`docs/图片生成实测教程-2026-09-28.md`](docs/图片生成实测教程-2026-09-28.md) | 图片生成接口的窗口化实测记录 |
 | [`docs/余额与额度查询-2026-10-06.md`](docs/余额与额度查询-2026-10-06.md) | `/v1/usage` 只读额度查询：多级兜底解析、SPA 假成功防范、取证模板（C 级证据） |
 | [`FAQ.md`](FAQ.md) | 30 条常见问题与分层排错 |
-| [`tests/`](tests/) | 文档死链与凭据泄露的仓库自检 |
+| [`h5/`](h5/) | 站点构建：`build_h5.py` 生成移动端单文件页（[`h5/index.html`](h5/index.html)），`build_site.py` 生成本文档的多页静态站并部署到 GitHub Pages；`theme.py` 为两者共用的样式与交互脚本 |
+| [`tests/`](tests/) | 文档死链、凭据泄露、站点构建与产物同步的仓库自检 |
 
 ## 先认清四种协议面孔
 
-客户端设置里名字再多，按**报文协议**归纳只有四种：Chat Completions、Responses、Messages、Gemini 原生。xAI（Grok）、DeepSeek、MiniMax 等没有各自的私有协议，都复用 Chat Completions 形态。**Base URL 是前缀，不是完整请求地址**——客户端自己会拼后面的路径。
+客户端设置里名字再多，本仓库面向通用文本与 Agent 客户端归纳为四种常见报文协议：Chat Completions、Responses、Messages、Gemini 原生。xAI（Grok）、DeepSeek、MiniMax 等模型在许多第三方客户端中也通过现有兼容协议接入，不能只凭厂商名判断协议。**Base URL 是前缀，不是完整请求地址**，客户端通常会继续拼接路径。概念、报文差异和判断方法见[《AI 模型 API 协议科普》](docs/AI模型API协议科普-2026-10-12.md)，下表仅作配置速查。
 
 | 协议面孔 | 实际请求路径 | 客户端 Base URL | 典型客户端 |
 |---|---|---|---|
@@ -82,28 +91,29 @@
 bash ./examples/quick_setup.sh
 ```
 
-环境要求：**Python 3.10+**（真伪探针与全部零依赖示例；3 个 OpenAI SDK 示例另需 `pip install openai`）、Windows PowerShell 5.1+ 或任意 POSIX bash。脚本不会内置任何模型名，模型 ID 一律以你当前 Key 的模型广场列表为准。命令行客户端本身（Claude Code / Codex / Gemini CLI）需要先装 Node.js 再用 npm 安装，步骤见[接入教程 §2.5](docs/接入第三方工具教程-2026-09-26.md#25-先安装命令行客户端nodejs-与-cli)。
+环境要求：**Python 3.10+**（真伪探针与全部零依赖示例；3 个 OpenAI SDK 示例另需 `pip install openai`）、Windows PowerShell 5.1+ 或任意 POSIX bash。脚本不会内置任何模型名，模型 ID 一律以你当前 Key 的模型广场列表为准。命令行客户端本身（Claude Code / Codex / Gemini CLI）需要先装 Node.js 再用 npm 安装，步骤见[接入教程第 2 节](docs/接入第三方工具教程-2026-09-26.md#2-命令行客户端先安装-nodejs-与-cli)。
 
 ## 各客户端/CLI 接入要点
 
 | 客户端 | 协议 / Base URL | 关键点 |
 |---|---|---|
-| [**Codex CLI / 桌面端**](docs/接入第三方工具教程-2026-09-26.md#6-接入-codex-或其他-cli) | Responses · `https://nuoapi.net/v1` | `~/.codex/config.toml` 里 `wire_api = "responses"`、`supports_websockets = false`；Key 写 `auth.json`；桌面端共享同一配置，改完彻底重启。教程见[第 6 节](docs/接入第三方工具教程-2026-09-26.md#6-接入-codex-或其他-cli)，模板见 [`examples/codex/`](examples/codex/)，排错见 [FAQ §4](FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办)/[§11](FAQ.md#11-codex-读取不到配置怎么办) |
-| [**Claude Code**](docs/接入第三方工具教程-2026-09-26.md#5-接入-claude-类工具) | Messages · `https://nuoapi.net` | `ANTHROPIC_BASE_URL` 用根地址，**严禁加 `/v1`**；Key 变量名是 `ANTHROPIC_AUTH_TOKEN`。教程见[第 5 节](docs/接入第三方工具教程-2026-09-26.md#5-接入-claude-类工具)，模板 [`claude-code.env.example`](examples/claude-code.env.example)，排错见 [FAQ §2](FAQ.md#2-claude-code-的-base-url-要不要加-v1) |
-| [**Claude Desktop (Cowork)**](docs/接入第三方工具教程-2026-09-26.md#5-接入-claude-类工具) | Messages · `https://nuoapi.net` | 登录页开启开发者模式 → Configure third-party inference，只填 Key 和根地址；模板 [`claude_desktop_config.json.example`](examples/claude_desktop_config.json.example)（MCP 配置另见[教程第 8 节](docs/接入第三方工具教程-2026-09-26.md#8-mcp-工具不是模型-api)） |
-| [**Gemini CLI**](docs/接入第三方工具教程-2026-09-26.md#14-gemini-原生rest-与-cli-两种填法) | Gemini · 根地址 | `~/.gemini/.env` 写 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`，不加 `/v1beta`。说明见[教程 §1.4](docs/接入第三方工具教程-2026-09-26.md#14-gemini-原生rest-与-cli-两种填法)，模板 [`gemini.env.example`](examples/gemini.env.example)，排错见 [FAQ §9](FAQ.md#9-gemini-cli-配置后没有响应怎么办) |
-| [**Cursor / Roo / Cline / Continue / Aider / OpenCode / Cherry**](docs/接入第三方工具教程-2026-09-26.md#7-接入-ide-插件) | Chat Completions · `/v1` | Provider 选 `OpenAI Compatible`，四字段照填；IDE 插件见[教程第 7 节](docs/接入第三方工具教程-2026-09-26.md#7-接入-ide-插件)、通用图形客户端见[第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-接入-openai-兼容工具)，排错见 [FAQ §27](FAQ.md#27-如何在-cursor-或-roo-code-cline-中配置-nuoapi)；模板 [`opencode.json.example`](examples/opencode.json.example) |
-| [**CC Switch**](docs/接入第三方工具教程-2026-09-26.md#65-用-cc-switch-图形化管理-provider) | 按目标工具分 | 图形化读写本机配置文件、不代理流量；安装与"导入到 CCS"一键导入见[教程 §6.5](docs/接入第三方工具教程-2026-09-26.md#65-用-cc-switch-图形化管理-provider)；Claude 模式填根地址，Codex 模式填 `/v1`，切换后重启客户端。导入不生效见 [FAQ §10](FAQ.md#10-cc-switch-导入后没有生效怎么办) |
+| [**Codex CLI / 桌面端**](docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli) | Responses · `https://nuoapi.net/v1` | `~/.codex/config.toml` 里 `wire_api = "responses"`、`supports_websockets = false`；Key 写 `auth.json`；桌面端共享同一配置，改完彻底重启。教程见[第 5.2 节](docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli)，模板见 [`examples/codex/`](examples/codex/)，排错见 [FAQ §4](FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办)/[§11](FAQ.md#11-codex-读取不到配置怎么办) |
+| [**Claude Code**](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具) | Messages · `https://nuoapi.net` | `ANTHROPIC_BASE_URL` 用根地址，**严禁加 `/v1`**；Key 变量名是 `ANTHROPIC_AUTH_TOKEN`。教程见[第 5.1 节](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具)，模板 [`claude-code.env.example`](examples/claude-code.env.example)，排错见 [FAQ §2](FAQ.md#2-claude-code-的-base-url-要不要加-v1) |
+| [**Claude Desktop (Cowork)**](docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具) | Messages · `https://nuoapi.net` | 登录页开启开发者模式 → Configure third-party inference，只填 Key 和根地址；模板 [`claude_desktop_config.json.example`](examples/claude_desktop_config.json.example)（MCP 配置另见[教程第 8 节](docs/接入第三方工具教程-2026-09-26.md#8-mcp-工具)） |
+| [**Gemini CLI**](docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli) | Gemini · 根地址 | `~/.gemini/.env` 写 `GOOGLE_GEMINI_BASE_URL=https://nuoapi.net`，不加 `/v1beta`。工具配置见[教程第 5.3 节](docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli)，协议说明见[协议科普第 6 节](docs/AI模型API协议科普-2026-10-12.md#6-gemini-原生协议)，模板 [`gemini.env.example`](examples/gemini.env.example)，排错见 [FAQ §9](FAQ.md#9-gemini-cli-配置后没有响应怎么办) |
+| [**Cursor / Roo / Cline / Continue / Aider / OpenCode / Cherry**](docs/接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue) | Chat Completions · `/v1` | Provider 选 `OpenAI Compatible`，四字段照填；IDE 插件见[教程第 7.1 节](docs/接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue)、通用图形客户端见[第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端)，排错见 [FAQ §27](FAQ.md#27-如何在-cursor-或-roo-code-cline-中配置-nuoapi)；模板 [`opencode.json.example`](examples/opencode.json.example) |
+| [**VS Code 智能体（Copilot Chat / BYOK）**](docs/接入第三方工具教程-2026-09-26.md#72-vs-code-智能体) | Custom Endpoint · 按协议填完整 URL | 不登录 GitHub 也能用（BYOK）；模型选择器齿轮或命令面板运行 `Chat: Manage Language Models` → Add Models → Custom Endpoint，在 `chatLanguageModels.json` 填 `vendor: customendpoint`、`apiType`、完整 `url` 与能力；agent 模式要求模型支持工具调用，BYOK 不驱动补全/语义检索。详见[教程第 7.2 节](docs/接入第三方工具教程-2026-09-26.md#72-vs-code-智能体)、模板 [`vscode-chatLanguageModels.json.example`](examples/vscode-chatLanguageModels.json.example) |
+| [**CC Switch**](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch) | 按目标工具分 | 图形化读写本机配置文件、不代理流量；安装与"导入到 CCS"一键导入见[教程第 6 节](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch)；Claude 模式填根地址，Codex 模式填 `/v1`，切换后重启客户端。导入不生效见 [FAQ §10](FAQ.md#10-cc-switch-导入后没有生效怎么办) |
 | [**Hermes（养马）**](examples/README.md#配置示例) | Chat Completions · `/v1` | `~/.hermes/config.yaml` + `.env`，模板 [`hermes.yaml.example`](examples/hermes.yaml.example)、[`hermes.env.example`](examples/hermes.env.example)（[模板说明](examples/README.md#配置示例)）；VPS 常驻可用 [`linux_agent.service.example`](examples/linux_agent.service.example) |
 | [**OpenClaw（龙虾）**](examples/README.md#配置示例) | Chat Completions · `/v1` | `~/.openclaw/openclaw.json`，模板 [`openclaw.json.example`](examples/openclaw.json.example)（[模板说明](examples/README.md#配置示例)） |
-| [**Trae CN（TRAE 国内版）**](docs/接入第三方工具教程-2026-09-26.md#95-trae-cntrae-国内版桌面端--traecode) | Chat Completions · `/v1`（也支持 Messages · 根地址） | 设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI `https://nuoapi.net/v1`、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见[教程 §9.5](docs/接入第三方工具教程-2026-09-26.md#95-trae-cntrae-国内版桌面端--traecode)（仅桌面端支持） |
-| [**ZCode（智谱 Z.ai）**](docs/接入第三方工具教程-2026-09-26.md#91-zcode智谱-zai-桌面端) | OpenAI `/v1` 与 Anthropic 根地址均可 | 「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见[教程 §9.1](docs/接入第三方工具教程-2026-09-26.md#91-zcode智谱-zai-桌面端) |
-| [**WorkBuddy（腾讯云）**](docs/接入第三方工具教程-2026-09-26.md#92-workbuddy腾讯云桌面-agent) | Chat Completions · **填完整 URL** | 头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 `https://nuoapi.net/v1/chat/completions`；模型名不支持别名；也可写 `~/.workbuddy/models.json`（UTF-8 无 BOM）。详见[教程 §9.2](docs/接入第三方工具教程-2026-09-26.md#92-workbuddy腾讯云桌面-agent) |
-| [**Marvis（腾讯 AI 管家）**](docs/接入第三方工具教程-2026-09-26.md#93-marvis腾讯操作系统级-ai-管家) | 行业通用接口（字段以界面为准） | 设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见[教程 §9.3](docs/接入第三方工具教程-2026-09-26.md#93-marvis腾讯操作系统级-ai-管家) |
-| [**Qoder CN / Qoder CLI / 国际版**](docs/接入第三方工具教程-2026-09-26.md#94-qoder国际版-ide--qoder-cli--qoder-cn) | 按形态分 | **Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）**；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见[教程 §9.4](docs/接入第三方工具教程-2026-09-26.md#94-qoder国际版-ide--qoder-cli--qoder-cn) |
-| [**dsh（DeepSeek Harness）**](docs/接入第三方工具教程-2026-09-26.md#96-dshdeepseek-harness) | Chat Completions · `/v1` | `dsh web` → Settings → Models → Add a custom provider，protocol 选 `openai-completions`、Base URL 填 `/v1`；或写 `~/.dsh/settings.yaml` 用 `apiKeyEnv` 引环境变量。详见[教程 §9.6](docs/接入第三方工具教程-2026-09-26.md#96-dshdeepseek-harness) |
-| [**MiniMax CLI（mmx-cli）**](docs/接入第三方工具教程-2026-09-26.md#97-接不了中转站的minimax-climmx-cli) | **不能接中转站** | 官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见[教程 §9.7](docs/接入第三方工具教程-2026-09-26.md#97-接不了中转站的minimax-climmx-cli) |
-| [**通用图形客户端**](docs/接入第三方工具教程-2026-09-26.md#4-接入-openai-兼容工具) | 按上表对号入座 | 提供方类型选协议项（OpenAI Compatible / Anthropic / Gemini），而不是找站点名；通用填法见[教程第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-接入-openai-兼容工具) |
+| [**Trae CN（TRAE 国内版）**](docs/接入第三方工具教程-2026-09-26.md#trae-cntrae-国内版桌面端--traecode) | Chat Completions · `/v1`（也支持 Messages · 根地址） | 设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI `https://nuoapi.net/v1`、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手)（仅桌面端支持） |
+| [**ZCode（智谱 Z.ai）**](docs/接入第三方工具教程-2026-09-26.md#zcode智谱-zai-桌面端) | OpenAI `/v1` 与 Anthropic 根地址均可 | 「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
+| [**WorkBuddy（腾讯云）**](docs/接入第三方工具教程-2026-09-26.md#workbuddy腾讯云桌面-agent) | Chat Completions · **填完整 URL** | 头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 `https://nuoapi.net/v1/chat/completions`；模型名不支持别名；也可写 `~/.workbuddy/models.json`（UTF-8 无 BOM）。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
+| [**Marvis（腾讯 AI 管家）**](docs/接入第三方工具教程-2026-09-26.md#marvis腾讯操作系统级-ai-管家) | 行业通用接口（字段以界面为准） | 设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
+| [**Qoder CN / Qoder CLI / 国际版**](docs/接入第三方工具教程-2026-09-26.md#qoder国际版-ide--qoder-cli--qoder-cn) | 按形态分 | **Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）**；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手) |
+| [**dsh（DeepSeek Harness）**](docs/接入第三方工具教程-2026-09-26.md#dshdeepseek-harness) | Chat Completions · `/v1` | `dsh web` → Settings → Models → Add a custom provider，protocol 选 `openai-completions`、Base URL 填 `/v1`；或写 `~/.dsh/settings.yaml` 用 `apiKeyEnv` 引环境变量。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent) |
+| [**MiniMax CLI（mmx-cli）**](docs/接入第三方工具教程-2026-09-26.md#接不了中转站的minimax-climmx-cli区别于-minimax-code) | **不能接中转站** | 官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent) |
+| [**通用图形客户端**](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) | 按上表对号入座 | 提供方类型选协议项（OpenAI Compatible / Anthropic / Gemini），而不是找站点名；通用填法见[教程第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) |
 
 Claude Code 环境变量（PowerShell）：
 
@@ -112,7 +122,7 @@ Claude Code 环境变量（PowerShell）：
 [Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", "YOUR_NUOAPI_API_KEY", "User")
 ```
 
-不同操作系统、Docker 与 CI 环境的完整接法（`$env:`/`export`/`~/.bashrc`/Secrets 注入、配置文件路径对照）见 [接入教程第 3 节：不同环境应该怎么接](docs/接入第三方工具教程-2026-09-26.md#3-不同环境应该怎么接)。
+不同操作系统、Docker 与 CI 环境的完整接法（`$env:`/`export`/`~/.bashrc`/Secrets 注入、配置文件路径对照）见 [接入教程第 3 节：通用配置载体](docs/接入第三方工具教程-2026-09-26.md#3-通用配置载体)。
 
 ## 多语言调用样例与四协议最小示例
 
@@ -143,15 +153,17 @@ curl -s "https://nuoapi.net/v1/models" \
   | python -c "import sys,json;[print(m['id']) for m in json.load(sys.stdin)['data']]"
 ```
 
-选型表是**取证窗口 2026-09-21 前后**的页面快照，倍率与状态仅作方法示范，下单前以模型广场实时页为准（页面计价约定 `1 CNY = 1 USD` 仅为站内换算）：
+选型表是**取证窗口 2026-09-21 前后**的页面快照，倍率与状态仅作方法示范，下单前以模型广场实时页为准（页面计价约定 `1 CNY = 1 USD` 仅为站内换算）。要自己核对“我这个组到底能用哪些模型、倍率多少”，看[模型广场](https://nuoapi.net/model-plaza)：进页后选「分组」标签筛到你的 Key 所在组，再选「倍率」筛选价格档；不想开浏览器就用上面的 `/v1/models` 拉清单。
 
 | 场景 | 当时的模型/分组 | 倍率 | 当时的观察 |
 |---|---|---|---|
-| 海量脚本测活 | `free` 分组 `grok-4.5` | 0.001 | 极廉价，别喂敏感代码 |
+| 海量脚本测活 | `free` 分组 `grok-4.5` | 0.001 | 极廉价|
 | 日常编码 | `gpt-5.6-luna`（Codex Plus） | 0.088 | 编码响应快 |
 | 复杂长上下文 | `gpt-6-astra` | 0.300 | 观察到网关侧系统前缀注入（约 11–4,114 token，随分组不同），输入成本会被抬高 |
 | 大上下文多模态 | `gemini-3.8-flash` | 0.350 | 需 gemini 分组 Key |
-| 当时的风险项 | Claude Kiro / Max 分组 | 0.13–1.3 | 窗口内 502/403 频发，**该观察已过期，必须重新核实再决定** |
+| 当时的风险项 | Claude Kiro / Max 分组 | 0.13–1.3 |模型性能强大 |
+
+> **上表是 09-21 前后的观察，不要当现价用。** 模型广场的分组、倍率与在架模型每天都在变，且页面还提示"登录后可查看你的专属分组与专属倍率"——**公开倍率不等于你的实付价**。当前的完整清单（14 个分组、每个组可用模型全列）见[《模型广场清单（10-18）》](docs/模型广场清单-2026-10-18.md)。
 
 ## 防掺水：模型真伪探针
 

@@ -1,3 +1,8 @@
+<!-- seo-meta
+  title: AI 中转站 FAQ 与报错排查：platform is not gemini、model_not_found
+  description: 接入第三方 AI API 中转站时的 30 个真实报错与问法，每条给出原因和可直接照抄的改法，按 Ctrl+F 搜报错原文即可定位。
+-->
+
 # NuoAPI FAQ 与排错
 
 接入第三方 AI API 中转站（OpenAI / Claude / Gemini 兼容网关）时的 30 个常见问题，标题都是用户真实会搜的问法。**按 Ctrl+F 直接搜报错原文**（如 `model_not_found`、`platform is not gemini`）即可定位。
@@ -72,7 +77,7 @@ supports_websockets = false
 
 注意对照报错原文：网关自身的响应是 `404 model_not_found`（模型不在当前 Key 的分组）；若上游透传 OpenAI 报错，还会看到 `The model 'xxx' does not exist or you do not have access to it` 这类文案，中文客户端可能显示"模型不存在或无访问权限"。两者排法相同。
 
-打开 [模型广场](https://nuoapi.net/model-plaza?embedded=1)，复制当前账号可见的精确模型名，不要手写猜测。
+打开 [模型广场](https://nuoapi.net/model-plaza) 用「分组」筛选到你 Key 所在的组，复制当前账号可见的精确模型名，不要手写猜测。
 
 ## 6. 返回 400 或 `invalid_request_error` 怎么办？
 
@@ -92,6 +97,8 @@ supports_websockets = false
 ## 8. 模型价格如何计算？
 
 模型广场通常按 `$ / 1M token` 展示输入、输出和缓存价格。图片模型按张计费，视频模型按秒计费。长上下文模型可能按不同上下文档位计价，同一模型也可能因分组不同而有不同倍率。
+
+倍率会变：同一模型可能挂在不同倍率组，分组也会上架下架，**任何写进教程的具体倍率都只是那个窗口的值**。当前窗口的完整清单（14 个分组、每个组可用模型全列）见[《模型广场清单（10-18）》](docs/模型广场清单-2026-10-18.md)。
 
 价格不是固定的公共 API 价格表。请以登录后模型广场、订单和用量记录为准。
 

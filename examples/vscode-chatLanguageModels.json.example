@@ -1,0 +1,19 @@
+[
+  {
+    "name": "NuoAPI",
+    "vendor": "customendpoint",
+    "apiKey": "${input:nuoapiApiKey}",
+    "apiType": "chat-completions",
+    "models": [
+      {
+        "id": "MODEL_NAME_FROM_MODEL_PLAZA",
+        "name": "MODEL_NAME_FROM_MODEL_PLAZA",
+        "url": "https://nuoapi.net/v1/chat/completions",
+        "toolCalling": true,
+        "vision": false,
+        "maxInputTokens": 128000,
+        "maxOutputTokens": 8192
+      }
+    ]
+  }
+]
