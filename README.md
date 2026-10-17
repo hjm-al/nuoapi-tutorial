@@ -48,6 +48,7 @@
 | [`docs/TEST_REPORT_SPEC.md`](docs/TEST_REPORT_SPEC.md) | 黑盒测试报告的六模块规范模板 |
 | [`docs/AI模型API协议科普-2026-10-12.md`](docs/AI模型API协议科普-2026-10-12.md) | Chat Completions、Responses、Messages、Gemini 原生协议与地址结构 |
 | [`docs/模型广场清单-2026-10-18.md`](docs/模型广场清单-2026-10-18.md) | 模型广场当前窗口（10-18）：抄模型名、看分组用这一份 |
+| [`docs/模型列表获取与排错-2026-10-18.md`](docs/模型列表获取与排错-2026-10-18.md) | `/v1/models` 的四个坑：分组绑定、字段形状随分组变、`/v1beta/models` 不是能力清单、列表里有≠能调；附解析脚本 |
 | [`docs/模型广场清单-2026-10-12.md`](docs/模型广场清单-2026-10-12.md) | 历史窗口（10-12），数字原样保留；不要拿它当现价或抄当前模型名 |
 | [`docs/接入第三方工具教程-2026-09-26.md`](docs/接入第三方工具教程-2026-09-26.md) | 按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法；下面三篇是 Codex / Claude Code / Gemini CLI 的症状短页 |
 | [`docs/Codex-一直Reconnecting-2026-10-18.md`](docs/Codex-一直Reconnecting-2026-10-18.md) | Codex 一直 `Reconnecting` 或日志出现 `wss://…/v1/responses`：一份配置加彻底重启 |
@@ -159,6 +160,8 @@ curl -s "https://nuoapi.net/v1/models" \
   -H "Authorization: Bearer YOUR_NUOAPI_API_KEY" \
   | python -c "import sys,json;[print(m['id']) for m in json.load(sys.stdin)['data']]"
 ```
+
+这条路径零成本，但有四个坑（分组绑定、字段形状也随分组变、`/v1beta/models` 不能当能力清单、列表里有不等于能调）。完整版与解析脚本见[《模型列表：怎么拿、怎么看》](docs/模型列表获取与排错-2026-10-18.md)。
 
 选型表是**取证窗口 2026-09-21 前后**的页面快照，倍率与状态仅作方法示范，下单前以模型广场实时页为准（页面计价约定 `1 CNY = 1 USD` 仅为站内换算）。要自己核对“我这个组到底能用哪些模型、倍率多少”，看[模型广场](https://nuoapi.net/model-plaza)：进页后选「分组」标签筛到你的 Key 所在组，再选「倍率」筛选价格档；不想开浏览器就用上面的 `/v1/models` 拉清单。
 

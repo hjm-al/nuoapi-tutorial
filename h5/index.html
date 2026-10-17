@@ -157,7 +157,7 @@ article tr:last-child td{border-bottom:none}
   <button id="menuBtn" class="menu-btn" aria-label="打开目录">&#9776;</button>
   <div>
     <div class="appbar-title">NuoAPI 接入脚手架</div>
-    <div class="appbar-sub">H5 版主教程 · 构建于 2026-10-18 03:10</div>
+    <div class="appbar-sub">H5 版主教程 · 构建于 2026-10-18 03:14</div>
   </div>
 </header>
 
@@ -262,16 +262,32 @@ article tr:last-child td{border-bottom:none}
 <td>Chat Completions、Responses、Messages、Gemini 原生协议与地址结构</td>
 </tr>
 <tr>
-<td><a href="../docs/模型广场清单-2026-10-12.md"><code>docs/模型广场清单-2026-10-12.md</code></a></td>
-<td>模型广场快照：分组倍率与计费口径（明细 <code>.xlsx</code>），抄精确模型名用</td>
+<td><a href="../docs/模型广场清单-2026-10-18.md"><code>docs/模型广场清单-2026-10-18.md</code></a></td>
+<td>模型广场当前窗口（10-18）：抄模型名、看分组用这一份</td>
 </tr>
 <tr>
-<td><a href="../docs/模型广场清单-2026-10-18.md"><code>docs/模型广场清单-2026-10-18.md</code></a></td>
-<td>模型广场快照（10-18 窗口）：14 个分组、144 行、每个分组可用模型全列（明细 xlsx 与准确模型名用）</td>
+<td><a href="../docs/模型列表获取与排错-2026-10-18.md"><code>docs/模型列表获取与排错-2026-10-18.md</code></a></td>
+<td><code>/v1/models</code> 的四个坑：分组绑定、字段形状随分组变、<code>/v1beta/models</code> 不是能力清单、列表里有≠能调；附解析脚本</td>
+</tr>
+<tr>
+<td><a href="../docs/模型广场清单-2026-10-12.md"><code>docs/模型广场清单-2026-10-12.md</code></a></td>
+<td>历史窗口（10-12），数字原样保留；不要拿它当现价或抄当前模型名</td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md"><code>docs/接入第三方工具教程-2026-09-26.md</code></a></td>
-<td>按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法</td>
+<td>按图形客户端、CLI、IDE/智能体、Provider 管理器分类的接入方法；下面三篇是 Codex / Claude Code / Gemini CLI 的症状短页</td>
+</tr>
+<tr>
+<td><a href="../docs/Codex-一直Reconnecting-2026-10-18.md"><code>docs/Codex-一直Reconnecting-2026-10-18.md</code></a></td>
+<td>Codex 一直 <code>Reconnecting</code> 或日志出现 <code>wss://…/v1/responses</code>：一份配置加彻底重启</td>
+</tr>
+<tr>
+<td><a href="../docs/Claude-Code-不要加v1-2026-10-18.md"><code>docs/Claude-Code-不要加v1-2026-10-18.md</code></a></td>
+<td>Claude Code 返回 <code>404</code>：Base URL 用根地址，Key 变量名是 <code>ANTHROPIC_AUTH_TOKEN</code></td>
+</tr>
+<tr>
+<td><a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md"><code>docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md</code></a></td>
+<td>Gemini CLI 报 <code>platform is not gemini</code>：<code>GOOGLE_GEMINI_BASE_URL</code> 只填根地址</td>
 </tr>
 <tr>
 <td><a href="../docs/图片生成实测教程-2026-09-28.md"><code>docs/图片生成实测教程-2026-09-28.md</code></a></td>
@@ -349,7 +365,7 @@ article tr:last-child td{border-bottom:none}
 </tr>
 </tbody>
 </table></div>
-<p>选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>（根地址）+ <code>GEMINI_API_KEY</code> + <code>GEMINI_MODEL</code>；报 <code>400 platform is not gemini</code> 优先查协议平台是否选错。</p>
+<p>选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>（根地址）+ <code>GEMINI_API_KEY</code> + <code>GEMINI_MODEL</code>；报 <code>400 platform is not gemini</code> 时按<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">这篇短页</a>改，不要先当成 Key 无效。</p>
 <h2 id="三分钟快速开始">三分钟快速开始</h2>
 <ol>
 <li>在 <a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net">https://nuoapi.net</a> 注册并创建一个<strong>专门用于测试</strong>的 API Key。</li>
@@ -379,14 +395,14 @@ bash ./examples/quick_setup.sh
 </thead>
 <tbody>
 <tr>
-<td><a href="../docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli"><strong>Codex CLI / 桌面端</strong></a></td>
+<td><a href="../docs/Codex-一直Reconnecting-2026-10-18.md"><strong>Codex CLI / 桌面端</strong></a></td>
 <td>Responses · <code>https://nuoapi.net/v1</code></td>
-<td><code>~/.codex/config.toml</code> 里 <code>wire_api = "responses"</code>、<code>supports_websockets = false</code>；Key 写 <code>auth.json</code>；桌面端共享同一配置，改完彻底重启。教程见<a href="../docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli">第 5.2 节</a>，模板见 <a href="../examples/codex/"><code>examples/codex/</code></a>，排错见 <a href="../FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办">FAQ §4</a>/<a href="../FAQ.md#11-codex-读取不到配置怎么办">§11</a></td>
+<td><code>~/.codex/config.toml</code> 里 <code>wire_api = "responses"</code>、<code>supports_websockets = false</code>；Key 写 <code>auth.json</code>；桌面端共享同一配置，改完彻底重启。步骤见<a href="../docs/Codex-一直Reconnecting-2026-10-18.md">短页</a>，总表索引在<a href="../docs/接入第三方工具教程-2026-09-26.md#52-codex-cli-与其他-responses-cli">第 5.2 节</a>，模板 <a href="../examples/codex/"><code>examples/codex/</code></a>，排错见 <a href="../FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办">FAQ §4</a>/<a href="../FAQ.md#11-codex-读取不到配置怎么办">§11</a></td>
 </tr>
 <tr>
-<td><a href="../docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具"><strong>Claude Code</strong></a></td>
+<td><a href="../docs/Claude-Code-不要加v1-2026-10-18.md"><strong>Claude Code</strong></a></td>
 <td>Messages · <code>https://nuoapi.net</code></td>
-<td><code>ANTHROPIC_BASE_URL</code> 用根地址，<strong>严禁加 <code>/v1</code></strong>；Key 变量名是 <code>ANTHROPIC_AUTH_TOKEN</code>。教程见<a href="../docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具">第 5.1 节</a>，模板 <a href="../examples/claude-code.env.example"><code>claude-code.env.example</code></a>，排错见 <a href="../FAQ.md#2-claude-code-的-base-url-要不要加-v1">FAQ §2</a></td>
+<td><code>ANTHROPIC_BASE_URL</code> 用根地址，<strong>严禁加 <code>/v1</code></strong>；Key 变量名是 <code>ANTHROPIC_AUTH_TOKEN</code>。步骤见<a href="../docs/Claude-Code-不要加v1-2026-10-18.md">短页</a>，总表索引在<a href="../docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具">第 5.1 节</a>，模板 <a href="../examples/claude-code.env.example"><code>claude-code.env.example</code></a>，排错见 <a href="../FAQ.md#2-claude-code-的-base-url-要不要加-v1">FAQ §2</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#51-claude-code-与-claude-类工具"><strong>Claude Desktop (Cowork)</strong></a></td>
@@ -394,9 +410,9 @@ bash ./examples/quick_setup.sh
 <td>登录页开启开发者模式 → Configure third-party inference，只填 Key 和根地址；模板 <a href="../examples/claude_desktop_config.json.example"><code>claude_desktop_config.json.example</code></a>（MCP 配置另见<a href="../docs/接入第三方工具教程-2026-09-26.md#8-mcp-工具">教程第 8 节</a>）</td>
 </tr>
 <tr>
-<td><a href="../docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli"><strong>Gemini CLI</strong></a></td>
+<td><a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md"><strong>Gemini CLI</strong></a></td>
 <td>Gemini · 根地址</td>
-<td><code>~/.gemini/.env</code> 写 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>，不加 <code>/v1beta</code>。工具配置见<a href="../docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli">教程第 5.3 节</a>，协议说明见<a href="../docs/AI模型API协议科普-2026-10-12.md#6-gemini-原生协议">协议科普第 6 节</a>，模板 <a href="../examples/gemini.env.example"><code>gemini.env.example</code></a>，排错见 <a href="../FAQ.md#9-gemini-cli-配置后没有响应怎么办">FAQ §9</a></td>
+<td><code>~/.gemini/.env</code> 写 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>，不加 <code>/v1beta</code>。步骤见<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">短页</a>，总表索引在<a href="../docs/接入第三方工具教程-2026-09-26.md#53-gemini-cli">第 5.3 节</a>，协议说明见<a href="../docs/AI模型API协议科普-2026-10-12.md#6-gemini-原生协议">协议科普第 6 节</a>，模板 <a href="../examples/gemini.env.example"><code>gemini.env.example</code></a>，排错见 <a href="../FAQ.md#9-gemini-cli-配置后没有响应怎么办">FAQ §9</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue"><strong>Cursor / Roo / Cline / Continue / Aider / OpenCode / Cherry</strong></a></td>
@@ -488,6 +504,7 @@ python examples/gemini_native.py        # Gemini 原生 /v1beta generateContent�
   -H &quot;Authorization: Bearer YOUR_NUOAPI_API_KEY&quot; \
   | python -c &quot;import sys,json;[print(m['id']) for m in json.load(sys.stdin)['data']]&quot;
 </code></pre>
+<p>这条路径零成本，但有四个坑（分组绑定、字段形状也随分组变、<code>/v1beta/models</code> 不能当能力清单、列表里有不等于能调）。完整版与解析脚本见<a href="../docs/模型列表获取与排错-2026-10-18.md">《模型列表：怎么拿、怎么看》</a>。</p>
 <p>选型表是<strong>取证窗口 2026-09-21 前后</strong>的页面快照，倍率与状态仅作方法示范，下单前以模型广场实时页为准（页面计价约定 <code>1 CNY = 1 USD</code> 仅为站内换算）。要自己核对“我这个组到底能用哪些模型、倍率多少”，看<a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net/model-plaza">模型广场</a>：进页后选「分组」标签筛到你的 Key 所在组，再选「倍率」筛选价格档；不想开浏览器就用上面的 <code>/v1/models</code> 拉清单。</p>
 <div class="table-wrap"><table>
 <thead>

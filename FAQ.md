@@ -36,7 +36,7 @@ ANTHROPIC_AUTH_TOKEN=YOUR_NUOAPI_API_KEY
 
 修改环境变量后重新打开终端或重启 Claude Code。
 
-误加 `/v1` 时，请求实际落在错误路径上，常见表现是 404（网关返回纯文本 `404 page not found`），而不是 Key 错误。逐步配置见[《Claude Code：不要加 /v1》](docs/Claude-Code-不要加v1-2026-10-18.md)。
+误加 `/v1` 时，请求实际落在 `/v1/messages`，常见表现是 404（网关返回纯文本 `404 page not found`），而不是 Key 错误。逐步配置见[《Claude Code：不要加 /v1》](docs/Claude-Code-不要加v1-2026-10-18.md)。
 
 ## 3. 返回 401 Unauthorized 怎么办？
 
@@ -203,6 +203,8 @@ Authorization: Bearer YOUR_NUOAPI_API_KEY
 ```
 
 它按当前 Key 的分组返回模型清单。`/v1beta/models` 是 Gemini 原生接口形状，实测返回的列表不等于网关实际可路由的完整清单，不能用它替代 `/v1/models`。
+
+三个容易踩的点：**①** 清单是分组的，换一把 Key 就是另一张表；**②** 连字段形状都随分组变（`owned_by` / `created_at` 可能整个缺失）；**③** 列表里有模型不代表能调。完整版含解析脚本与错误分支，见[《模型列表：怎么拿、怎么看》](docs/模型列表获取与排错-2026-10-18.md)。
 
 ## 24. `.net` 和 `.com` 的 Key 或余额能通用吗？
 
