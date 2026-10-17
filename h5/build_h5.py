@@ -102,7 +102,7 @@ __CSS__
 <header class="appbar">
   <button id="menuBtn" class="menu-btn" aria-label="打开目录">&#9776;</button>
   <div>
-    <div class="appbar-title">__TITLE__</div>
+    <div class="appbar-title">NuoAPI 接入脚手架</div>
     <div class="appbar-sub">H5 版主教程 · 构建于 __GEN_DATE__</div>
   </div>
 </header>
