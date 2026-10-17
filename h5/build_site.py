@@ -30,6 +30,7 @@ import json
 import os
 import posixpath
 import re
+import shutil
 import sys
 from datetime import date
 from pathlib import Path
@@ -278,9 +279,14 @@ TEMPLATE = """<!DOCTYPE html>
 <meta property="og:description" content="__DESC__">
 <meta property="og:url" content="__CANONICAL__">
 <meta property="og:locale" content="zh_CN">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="__OG_IMAGE__">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="__SITE_NAME__">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="__TITLE__">
 <meta name="twitter:description" content="__DESC__">
+<meta name="twitter:image" content="__OG_IMAGE__">
 __NOINDEX____JSONLD__
 __CSS__
 __SITE_CSS__
@@ -419,6 +425,8 @@ class SiteBuilder:
                 .replace("__TITLE__", html.escape(title, quote=True))
                 .replace("__DESC__", html.escape(desc, quote=True))
                 .replace("__CANONICAL__", html.escape(canonical, quote=True))
+                # 社交预览图：站点根下的相对地址，换域名不需要改代码
+                .replace("__OG_IMAGE__", html.escape(base + "/og-image.png", quote=True))
                 .replace("__PAGE_LABEL__", html.escape(label, quote=True))
                 .replace("__HOME__", html.escape(link_from(dst, "index.html"), quote=True))
                 .replace("__REPO_URL__", html.escape(repo_url, quote=True))
@@ -468,6 +476,13 @@ class SiteBuilder:
         )
         # Pages 默认用 Jekyll 处理，.nojekyll 让下划线开头的路径原样发布
         (out_dir / ".nojekyll").write_text("", encoding="utf-8")
+
+        # 社交预览图：og:image 指向站根，必须同步拷进产物，否则分享卡片是空白
+        og_src = ROOT / "docs" / "og-image.png"
+        if og_src.exists():
+            shutil.copyfile(og_src, out_dir / "og-image.png")
+        else:
+            errors.append("缺少 docs/og-image.png，og:image 将 404")
 
         print("built {0} pages -> {1}".format(len(written), out_dir))
         if errors:
