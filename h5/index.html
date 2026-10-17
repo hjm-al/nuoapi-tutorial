@@ -410,37 +410,37 @@ bash ./examples/quick_setup.sh
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#trae-cntrae-国内版桌面端--traecode"><strong>Trae CN（TRAE 国内版）</strong></a></td>
 <td>Chat Completions · <code>/v1</code>（也支持 Messages · 根地址）</td>
-<td>设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI <code>https://nuoapi.net/v1</code>、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手">IDE 与编程助手</a>（仅桌面端支持）</td>
+<td>设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI <code>https://nuoapi.net/v1</code>、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#73-其他-ide-与编程助手">IDE 与编程助手</a>（仅桌面端支持）</td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#zcode智谱-zai-桌面端"><strong>ZCode（智谱 Z.ai）</strong></a></td>
 <td>OpenAI <code>/v1</code> 与 Anthropic 根地址均可</td>
-<td>「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端">桌面客户端</a></td>
+<td>「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置">桌面客户端</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#workbuddy腾讯云桌面-agent"><strong>WorkBuddy（腾讯云）</strong></a></td>
 <td>Chat Completions · <strong>填完整 URL</strong></td>
-<td>头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 <code>https://nuoapi.net/v1/chat/completions</code>；模型名不支持别名；也可写 <code>~/.workbuddy/models.json</code>（UTF-8 无 BOM）。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端">桌面客户端</a></td>
+<td>头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 <code>https://nuoapi.net/v1/chat/completions</code>；模型名不支持别名；也可写 <code>~/.workbuddy/models.json</code>（UTF-8 无 BOM）。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置">桌面客户端</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#marvis腾讯操作系统级-ai-管家"><strong>Marvis（腾讯 AI 管家）</strong></a></td>
 <td>行业通用接口（字段以界面为准）</td>
-<td>设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见<a href="../docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端">桌面客户端</a></td>
+<td>设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见<a href="../docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置">桌面客户端</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#qoder国际版-ide--qoder-cli--qoder-cn"><strong>Qoder CN / Qoder CLI / 国际版</strong></a></td>
 <td>按形态分</td>
-<td><strong>Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）</strong>；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手">IDE 与编程助手</a></td>
+<td><strong>Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）</strong>；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#73-其他-ide-与编程助手">IDE 与编程助手</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#dshdeepseek-harness"><strong>dsh（DeepSeek Harness）</strong></a></td>
 <td>Chat Completions · <code>/v1</code></td>
-<td><code>dsh web</code> → Settings → Models → Add a custom provider，protocol 选 <code>openai-completions</code>、Base URL 填 <code>/v1</code>；或写 <code>~/.dsh/settings.yaml</code> 用 <code>apiKeyEnv</code> 引环境变量。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent">命令行 Agent</a></td>
+<td><code>dsh web</code> → Settings → Models → Add a custom provider，protocol 选 <code>openai-completions</code>、Base URL 填 <code>/v1</code>；或写 <code>~/.dsh/settings.yaml</code> 用 <code>apiKeyEnv</code> 引环境变量。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent">命令行 Agent</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#接不了中转站的minimax-climmx-cli区别于-minimax-code"><strong>MiniMax CLI（mmx-cli）</strong></a></td>
 <td><strong>不能接中转站</strong></td>
-<td>官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent">命令行 Agent</a></td>
+<td>官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见<a href="../docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent">命令行 Agent</a></td>
 </tr>
 <tr>
 <td><a href="../docs/接入第三方工具教程-2026-09-26.md#4-图形客户端"><strong>通用图形客户端</strong></a></td>
@@ -568,7 +568,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 <p><strong>取证与对账配套工具</strong>（均为零第三方依赖、默认 DRY RUN）：<a href="../examples/evidence_capture.py"><code>examples/evidence_capture.py</code></a> 把一次最小请求固化为 A 级证据包（UTC 毫秒时间戳、全量同名响应头、响应体 SHA-256，<code>--probe models</code> 零计费）；<a href="../examples/check_usage.py"><code>examples/check_usage.py</code></a> 只读查询 <code>/v1/usage</code> 并做 SPA 兜底与多级兜底解析；<a href="../examples/cost_audit.py"><code>examples/cost_audit.py</code></a> 消费证据包（或两条差分请求）估算系统前缀注入量与缓存读取占比。</p>
 <p>写正式取证报告时用 <a href="../docs/TEST_REPORT_SPEC.md">TEST_REPORT_SPEC.md</a> 的六模块结构（元数据与证据分级、路由全图、静默降级、真伪测谎、成本与前缀审计、风险台账）。</p>
 <h2 id="最小验收与静默降级">最小验收与静默降级</h2>
-<p>每个客户端至少做这五步（详见 <a href="../docs/接入第三方工具教程-2026-09-26.md#11-最小验收流程">接入教程第 11 节「最小验收流程」</a>）：</p>
+<p>每个客户端至少做这五步（详见 <a href="../docs/接入第三方工具教程-2026-09-26.md#10-最小验收流程">接入教程第 10 节「最小验收流程」</a>）：</p>
 <ol>
 <li>固定短句测活；2. 无持续重连/超时；3. 控制台调用记录与客户端一致（模型名、时间）；4. 再测真实需要的能力（流式/工具/图片）；5. 留存状态码、错误正文、模型名与时间，分享前抹掉 Key。</li>
 </ol>

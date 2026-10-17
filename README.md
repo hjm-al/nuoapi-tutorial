@@ -106,13 +106,13 @@ bash ./examples/quick_setup.sh
 | [**CC Switch**](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch) | 按目标工具分 | 图形化读写本机配置文件、不代理流量；安装与"导入到 CCS"一键导入见[教程第 6 节](docs/接入第三方工具教程-2026-09-26.md#6-provider-配置管理器cc-switch)；Claude 模式填根地址，Codex 模式填 `/v1`，切换后重启客户端。导入不生效见 [FAQ §10](FAQ.md#10-cc-switch-导入后没有生效怎么办) |
 | [**Hermes（养马）**](examples/README.md#配置示例) | Chat Completions · `/v1` | `~/.hermes/config.yaml` + `.env`，模板 [`hermes.yaml.example`](examples/hermes.yaml.example)、[`hermes.env.example`](examples/hermes.env.example)（[模板说明](examples/README.md#配置示例)）；VPS 常驻可用 [`linux_agent.service.example`](examples/linux_agent.service.example) |
 | [**OpenClaw（龙虾）**](examples/README.md#配置示例) | Chat Completions · `/v1` | `~/.openclaw/openclaw.json`，模板 [`openclaw.json.example`](examples/openclaw.json.example)（[模板说明](examples/README.md#配置示例)） |
-| [**Trae CN（TRAE 国内版）**](docs/接入第三方工具教程-2026-09-26.md#trae-cntrae-国内版桌面端--traecode) | Chat Completions · `/v1`（也支持 Messages · 根地址） | 设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI `https://nuoapi.net/v1`、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手)（仅桌面端支持） |
-| [**ZCode（智谱 Z.ai）**](docs/接入第三方工具教程-2026-09-26.md#zcode智谱-zai-桌面端) | OpenAI `/v1` 与 Anthropic 根地址均可 | 「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
-| [**WorkBuddy（腾讯云）**](docs/接入第三方工具教程-2026-09-26.md#workbuddy腾讯云桌面-agent) | Chat Completions · **填完整 URL** | 头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 `https://nuoapi.net/v1/chat/completions`；模型名不支持别名；也可写 `~/.workbuddy/models.json`（UTF-8 无 BOM）。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
-| [**Marvis（腾讯 AI 管家）**](docs/接入第三方工具教程-2026-09-26.md#marvis腾讯操作系统级-ai-管家) | 行业通用接口（字段以界面为准） | 设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#91-桌面客户端) |
-| [**Qoder CN / Qoder CLI / 国际版**](docs/接入第三方工具教程-2026-09-26.md#qoder国际版-ide--qoder-cli--qoder-cn) | 按形态分 | **Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）**；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#92-ide-与编程助手) |
-| [**dsh（DeepSeek Harness）**](docs/接入第三方工具教程-2026-09-26.md#dshdeepseek-harness) | Chat Completions · `/v1` | `dsh web` → Settings → Models → Add a custom provider，protocol 选 `openai-completions`、Base URL 填 `/v1`；或写 `~/.dsh/settings.yaml` 用 `apiKeyEnv` 引环境变量。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent) |
-| [**MiniMax CLI（mmx-cli）**](docs/接入第三方工具教程-2026-09-26.md#接不了中转站的minimax-climmx-cli区别于-minimax-code) | **不能接中转站** | 官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#93-命令行-agent) |
+| [**Trae CN（TRAE 国内版）**](docs/接入第三方工具教程-2026-09-26.md#trae-cntrae-国内版桌面端--traecode) | Chat Completions · `/v1`（也支持 Messages · 根地址） | 设置 → 模型 → 添加模型 → 自定义模型；「完整 URL」开关关掉填基础地址（OpenAI `https://nuoapi.net/v1`、Anthropic 根地址），打开则填整条；模型 ID 照抄，保存后记得切到该模型。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#73-其他-ide-与编程助手)（仅桌面端支持） |
+| [**ZCode（智谱 Z.ai）**](docs/接入第三方工具教程-2026-09-26.md#zcode智谱-zai-桌面端) | OpenAI `/v1` 与 Anthropic 根地址均可 | 「Agents 设置 / 模型 → 添加提供商」，自定义 Base URL + Key 后自动拉模型列表；代理项留空=直连、不跟随系统变量。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置) |
+| [**WorkBuddy（腾讯云）**](docs/接入第三方工具教程-2026-09-26.md#workbuddy腾讯云桌面-agent) | Chat Completions · **填完整 URL** | 头像 → 设置 → 模型 → 自定义模型 → Custom，接口地址要填到 `https://nuoapi.net/v1/chat/completions`；模型名不支持别名；也可写 `~/.workbuddy/models.json`（UTF-8 无 BOM）。详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置) |
+| [**Marvis（腾讯 AI 管家）**](docs/接入第三方工具教程-2026-09-26.md#marvis腾讯操作系统级-ai-管家) | 行业通用接口（字段以界面为准） | 设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置) |
+| [**Qoder CN / Qoder CLI / 国际版**](docs/接入第三方工具教程-2026-09-26.md#qoder国际版-ide--qoder-cli--qoder-cn) | 按形态分 | **Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）**；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#73-其他-ide-与编程助手) |
+| [**dsh（DeepSeek Harness）**](docs/接入第三方工具教程-2026-09-26.md#dshdeepseek-harness) | Chat Completions · `/v1` | `dsh web` → Settings → Models → Add a custom provider，protocol 选 `openai-completions`、Base URL 填 `/v1`；或写 `~/.dsh/settings.yaml` 用 `apiKeyEnv` 引环境变量。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent) |
+| [**MiniMax CLI（mmx-cli）**](docs/接入第三方工具教程-2026-09-26.md#接不了中转站的minimax-climmx-cli区别于-minimax-code) | **不能接中转站** | 官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent) |
 | [**通用图形客户端**](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) | 按上表对号入座 | 提供方类型选协议项（OpenAI Compatible / Anthropic / Gemini），而不是找站点名；通用填法见[教程第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) |
 
 Claude Code 环境变量（PowerShell）：
@@ -201,7 +201,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 
 ## 最小验收与静默降级
 
-每个客户端至少做这五步（详见 [接入教程第 11 节「最小验收流程」](docs/接入第三方工具教程-2026-09-26.md#11-最小验收流程)）：
+每个客户端至少做这五步（详见 [接入教程第 10 节「最小验收流程」](docs/接入第三方工具教程-2026-09-26.md#10-最小验收流程)）：
 
 1. 固定短句测活；2. 无持续重连/超时；3. 控制台调用记录与客户端一致（模型名、时间）；4. 再测真实需要的能力（流式/工具/图片）；5. 留存状态码、错误正文、模型名与时间，分享前抹掉 Key。
 
