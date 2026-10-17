@@ -1,0 +1,75 @@
+name: Pages
+
+# 把仓库 Markdown 构建成多页教程站并部署到 GitHub Pages。
+# 首次使用：仓库 Settings → Pages → Source 选 "GitHub Actions"。
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - "h5/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# 部署到 Pages 所需的最小权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一次部署；新推送取消排队中的旧任务，不取消进行中的发布
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # 站点根地址：优先用仓库变量（Settings → Variables），
+  # 未设置时按 GitHub Pages 默认的 project pages 形态推导。
+  SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+  REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 安装构建依赖
+        run: python -m pip install --quiet -r h5/requirements.txt
+
+      - name: 构建多页站点
+        run: python h5/build_site.py --base-url "$SITE_URL" --repo-url "$REPO_URL" --out _site
+
+      - name: 校验产物（页数 / sitemap / 站内链接）
+        run: |
+          python - <<'PY'
+          import pathlib, sys
+          site = pathlib.Path("_site")
+          pages = sorted(site.rglob("*.html"))
+          assert pages, "没有生成任何页面"
+          assert (site / "sitemap.xml").exists(), "缺少 sitemap.xml"
+          assert (site / "robots.txt").exists(), "缺少 robots.txt"
+          assert (site / ".nojekyll").exists(), "缺少 .nojekyll"
+          locs = (site / "sitemap.xml").read_text(encoding="utf-8").count("<loc>")
+          print("pages={0} sitemap_urls={1}".format(len(pages), locs))
+          if locs != len(pages):
+              sys.exit("sitemap 条目数与页面数不一致")
+          PY
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
