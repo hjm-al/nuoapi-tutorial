@@ -11,26 +11,77 @@
 > 2. 文中 "OpenAI"、"Codex"、"Claude"、"Gemini"、"Grok" 等名称与商标归各自厂商所有，提及它们仅为描述协议兼容性、格式转换与技术指引之必要用途。
 > 3. 所有示例只含占位符（`YOUR_NUOAPI_API_KEY`），不收集任何人的 Key；使用第三方服务前请自行核对其服务条款、隐私政策、价格与可用性。
 
+[![契约测试](https://github.com/nonamelia/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/nonamelia/nuoapi-tutorial/actions/workflows/ci.yml)
+[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2563eb)](https://nonamelia.github.io/nuoapi-tutorial/)
+[![许可证: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
+
+在线文档：<https://nonamelia.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/nonamelia/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [繁體中文](README.zh-Hant.md)
+
 一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
 
-本文以网关 `https://nuoapi.net`（模型广场：<https://nuoapi.net/model-plaza>，用「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，**一切以模型广场和控制台实时显示为准**；文中标注取证窗口的结论只代表该时间点的观察。
+## 先看计划，不花钱
+
+接入和核对都可以先在本地看一遍将要发生什么，再决定要不要发出会计费的请求。
+
+1. **怎么接**。Codex、Claude Code、Gemini CLI 的 Base URL 不是同一段，配错时常见的是 404，或者连上了但协议不对。
+2. **是不是声称的那个模型**。探针给出的是匹配、不匹配或证据不足，对应的是当场能看到的字段和分布，不是一个总分。
+3. **先看计划**。下面两条命令不读取 API Key，也不发出请求。
+
+```bash
+python examples/model_verify.py --selftest
+python examples/model_verify.py
+```
+
+`--selftest` 在本机核对探针自己的统计口径，不联网。第二条不带 `--run` 时，只打印将要发出的请求和预估用量。看过计划之后，再决定要不要加 `--run`。
+
+如果已经有一把测试 Key，只想核对模型名是否出现在当前分组里，可以用清单请求。不加 `--run` 时同样只打印计划：
+
+```bash
+python examples/evidence_capture.py --probe models
+```
+
+加上 `--run` 之后，这条是 `GET /v1/models`，不产生 token 费用。客户端配置可以改用 [`examples/quick_setup.ps1`](examples/quick_setup.ps1) 或 [`quick_setup.sh`](examples/quick_setup.sh)，已有文件会先备份。
+
+已经遇到报错时，可以先看对应的短页：[Gemini CLI 报 `platform is not gemini`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)、[Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.md)、[Claude Code 不要加 `/v1`](docs/Claude-Code-不要加v1-2026-10-18.md)。
+
+更多可直接搜索的报错原文：[`401 invalid_api_key`](docs/401-invalid-api-key.md)、[`model_not_found`](docs/model_not_found.md)、[`400 invalid_request_error`](docs/400-invalid-request-error.md)、[Cursor / Roo Code Base URL](docs/Cursor-Roo-Code-Base-URL.md)、[WSL `\r: command not found`](docs/WSL-command-not-found.md)。
+
+## 交给助手
+
+这些步骤也可以交给当前的编程助手。说明写在 `skills/nuoapi-setup/SKILL.md`，只在你提出来的时候使用。助手会先跑不带 `--run` 的探针，并把脚本印出的结论转述给你。
+
+### 会不会把 API Key 传走？
+
+示例和脚本都在你自己的电脑上运行。Key 来自环境变量，或来自你当时粘贴的内容；这个仓库不接收、也不保存它。打印出来的 Key 会打码。真正探测时，更稳妥的是单独建一把用完就删的测试 Key。
+
+### 不加 `--run` 会花钱吗？
+
+默认不会。`model_verify.py` 和 `evidence_capture.py` 不加 `--run` 时只打印计划。加上之后，`--probe models` 仍是一次清单请求，不计 token；对话探针才会产生费用，记在你自己的 Key 上。
+
+### 结果怎么读？
+
+探针给出三种说法：匹配、不匹配、证据不足。响应快慢，以及模型自己怎么称呼自己，只作记录，不单独形成结论。样本不够或请求失败时，记为证据不足，不能据此说成匹配。
+
+本文以网关 `https://nuoapi.net`（[模型广场](https://nuoapi.net/model-plaza)可按「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，**一切以模型广场和控制台实时显示为准**；文中标注取证窗口的结论只代表该时间点的观察。
 
 ---
 
 ## 目录
 
-1. [仓库里有什么](#仓库里有什么)
-2. [先认清四种协议面孔](#先认清四种协议面孔)
-3. [三分钟快速开始](#三分钟快速开始)
-4. [各客户端/CLI 接入要点](#各客户端cli-接入要点)
-5. [多语言调用样例与四协议最小示例](#多语言调用样例与四协议最小示例)
-6. [模型清单与选型（带取证窗口）](#模型清单与选型带取证窗口)
-7. [防掺水：模型真伪探针](#防掺水模型真伪探针)
-8. [最小验收与静默降级](#最小验收与静默降级)
-9. [常见错误与排错](#常见错误与排错)
-10. [安全收尾](#安全收尾)
-11. [证据纪律](#证据纪律)
-12. [许可证](#许可证)
+1. [先看计划，不花钱](#先看计划不花钱)
+2. [交给助手](#交给助手)
+3. [仓库里有什么](#仓库里有什么)
+4. [先认清四种协议面孔](#先认清四种协议面孔)
+5. [三分钟快速开始](#三分钟快速开始)
+6. [各客户端/CLI 接入要点](#各客户端cli-接入要点)
+7. [多语言调用样例与四协议最小示例](#多语言调用样例与四协议最小示例)
+8. [模型清单与选型（带取证窗口）](#模型清单与选型带取证窗口)
+9. [防掺水：模型真伪探针](#防掺水模型真伪探针)
+10. [最小验收与静默降级](#最小验收与静默降级)
+11. [常见错误与排错](#常见错误与排错)
+12. [安全收尾](#安全收尾)
+13. [证据纪律](#证据纪律)
+14. [许可证](#许可证)
 
 ---
 
@@ -58,9 +109,6 @@
 | [`docs/图像质量复盘方法-2026-10-18.md`](docs/图像质量复盘方法-2026-10-18.md) | 图像质量复盘：C1–C10 缺陷码、归因到提示词段落、版本哈希登记、对照实验与防退化四条硬约束 |
 | [`docs/余额与额度查询-2026-10-06.md`](docs/余额与额度查询-2026-10-06.md) | `/v1/usage` 只读额度查询：多级兜底解析、SPA 假成功防范、取证模板（C 级证据） |
 | [`FAQ.md`](FAQ.md) | 30 条常见问题与分层排错 |
-| [`docs/Claude-Code-不要加v1-2026-10-18.md`](docs/Claude-Code-不要加v1-2026-10-18.md) | 长尾排错页：Claude Code 报 404，根地址加没加 `/v1` |
-| [`docs/Codex-一直Reconnecting-2026-10-18.md`](docs/Codex-一直Reconnecting-2026-10-18.md) | 长尾排错页：Codex 一直 Reconnecting，关掉 WebSocket |
-| [`docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md) | 长尾排错页：Gemini CLI 报 `platform is not gemini` |
 | [`h5/`](h5/) | 站点构建：`build_h5.py` 生成移动端单文件页（[`h5/index.html`](h5/index.html)），`build_site.py` 生成本文档的多页静态站并部署到 GitHub Pages；`theme.py` 为两者共用的样式与交互脚本 |
 | [`tests/`](tests/) | 文档死链、凭据泄露、站点构建与产物同步的仓库自检 |
 
@@ -120,7 +168,6 @@ bash ./examples/quick_setup.sh
 | [**Marvis（腾讯 AI 管家）**](docs/接入第三方工具教程-2026-09-26.md#marvis腾讯操作系统级-ai-管家) | 行业通用接口（字段以界面为准） | 设置 → 模型管理 → 自定义模型（2026-09-01 上线，配置跨设备同步、走自己账户计费）；前缀/完整 URL 两种填法报 404 就互换。字段级证据不足，详见[桌面客户端](docs/接入第三方工具教程-2026-09-26.md#41-桌面客户端逐个配置) |
 | [**Qoder CN / Qoder CLI / 国际版**](docs/接入第三方工具教程-2026-09-26.md#qoder国际版-ide--qoder-cli--qoder-cn) | 按形态分 | **Qoder CN IDE 个人版只有百炼/智谱/Kimi/MiniMax 四家预置、填不了任意网关地址（文档窗口 2026-07）**；Qoder CLI ≥ v1.1.50（CN/国际均可）与国际版 IDE 支持 OpenAI/Anthropic Compatible 自定义端点。详见[IDE 与编程助手](docs/接入第三方工具教程-2026-09-26.md#73-其他-ide-与编程助手) |
 | [**dsh（DeepSeek Harness）**](docs/接入第三方工具教程-2026-09-26.md#dshdeepseek-harness) | Chat Completions · `/v1` | `dsh web` → Settings → Models → Add a custom provider，protocol 选 `openai-completions`、Base URL 填 `/v1`；或写 `~/.dsh/settings.yaml` 用 `apiKeyEnv` 引环境变量。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent) |
-| [**MiniMax CLI（mmx-cli）**](docs/接入第三方工具教程-2026-09-26.md#接不了中转站的minimax-climmx-cli区别于-minimax-code) | **不能接中转站** | 官方 CLI 只有 cn/global 两档、无自定义 Base URL 入口；要用 MiniMax 模型请改走支持自定义端点的通用客户端。详见[命令行 Agent](docs/接入第三方工具教程-2026-09-26.md#55-其他命令行-agent) |
 | [**通用图形客户端**](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) | 按上表对号入座 | 提供方类型选协议项（OpenAI Compatible / Anthropic / Gemini），而不是找站点名；通用填法见[教程第 4 节](docs/接入第三方工具教程-2026-09-26.md#4-图形客户端) |
 
 Claude Code 环境变量（PowerShell）：

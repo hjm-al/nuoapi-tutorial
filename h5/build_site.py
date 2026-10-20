@@ -32,31 +32,257 @@ import posixpath
 import re
 import shutil
 import sys
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import markdown
 
-from theme import CSS, JS
+from theme import CSS, JS, SITE_NAME, SITE_SHORT, footer_html, interaction_copy_json
 from build_h5 import github_slug
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 DEFAULT_OUT = SCRIPT_DIR / "_site"
 
-# 页面清单：源文件 → 站点内路径
+# 页面不是“源文件 → 文件名”的二元组：语言、翻译关系和结构化数据都属于同一份
+# 页面契约。导航、分页、canonical、hreflang、sitemap 与 llms.txt 都从这份契约
+# 派生，避免某个入口漏掉翻译页或伪造不存在的语言版本。
+LOCALE_ORDER = ("zh-CN", "en", "ja", "zh-Hant")
+
+LOCALES = {
+    "zh-CN": {
+        "html_lang": "zh-CN",
+        "og_locale": "zh_CN",
+        "label": "简体中文",
+        "short": "中",
+        "home_dst": "index.html",
+        "site_name": SITE_NAME,
+        "site_short": SITE_SHORT,
+        "home_features": [
+            "Codex、Claude Code、Gemini CLI 的 Base URL 怎么填",
+            "默认只打印计划，不加 --run 不产生计费",
+            "真伪结论只有匹配、不匹配、证据不足",
+            "报错短页：platform is not gemini、Reconnecting、401、model_not_found",
+        ],
+        "nav_groups": {
+            "start": "入口",
+            "errors": "报错速查",
+            "access": "接入教程",
+            "verification": "真伪与质量核对",
+            "snapshots": "模型广场快照",
+            "other": "其他",
+        },
+        "ui": {
+            "home": "首页",
+            "menu": "打开导航",
+            "nav": "站点导航",
+            "all_docs": "全部文档",
+            "close": "关闭导航",
+            "theme": "切换主题",
+            "to_top": "回到顶部",
+            "language": "语言",
+            "page_sections": "本页章节",
+            "toc": "本页目录",
+            "pager": "上一篇 / 下一篇",
+            "prev": "← 上一篇",
+            "next": "下一篇 →",
+            "source": "仓库 Markdown",
+        },
+    },
+    "en": {
+        "html_lang": "en",
+        "og_locale": "en_US",
+        "label": "English",
+        "short": "EN",
+        "home_dst": "en/index.html",
+        "site_name": "NuoAPI Starter and Model Verification Toolkit",
+        "site_short": "NuoAPI Starter",
+        "home_features": [
+            "Base URL setup for Codex, Claude Code, and Gemini CLI",
+            "Dry-run plans by default; no billing without --run",
+            "Verdicts are match, mismatch, or insufficient evidence",
+            "Error guides for platform is not gemini, Reconnecting, 401, and model_not_found",
+        ],
+        "nav_groups": {
+            "start": "Start here",
+            "errors": "Troubleshooting",
+            "access": "Setup",
+            "verification": "Verification",
+            "snapshots": "Model snapshots",
+            "other": "Other",
+        },
+        "ui": {
+            "home": "Home",
+            "menu": "Open navigation",
+            "nav": "Site navigation",
+            "all_docs": "All pages",
+            "close": "Close navigation",
+            "theme": "Toggle theme",
+            "to_top": "Back to top",
+            "language": "Language",
+            "page_sections": "On this page",
+            "toc": "Contents",
+            "pager": "Previous / next",
+            "prev": "← Previous",
+            "next": "Next →",
+            "source": "repository Markdown",
+        },
+    },
+    "ja": {
+        "html_lang": "ja",
+        "og_locale": "ja_JP",
+        "label": "日本語",
+        "short": "日",
+        "home_dst": "ja/index.html",
+        "site_name": "NuoAPI 接続スターターとモデル検証ツール",
+        "site_short": "NuoAPI スターター",
+        "home_features": [
+            "Codex、Claude Code、Gemini CLI の Base URL 設定",
+            "既定はドライラン。--run を付けない限り課金リクエストを送らない",
+            "判定は一致、不一致、証拠不足の三種類",
+            "platform is not gemini、Reconnecting、401、model_not_found の短い解説",
+        ],
+        "nav_groups": {
+            "start": "はじめに",
+            "errors": "エラー別対処",
+            "access": "接続設定",
+            "verification": "検証",
+            "snapshots": "モデル一覧の記録",
+            "other": "その他",
+        },
+        "ui": {
+            "home": "ホーム",
+            "menu": "ナビゲーションを開く",
+            "nav": "サイトナビゲーション",
+            "all_docs": "ページ一覧",
+            "close": "ナビゲーションを閉じる",
+            "theme": "テーマを切り替える",
+            "to_top": "ページ上部へ",
+            "language": "言語",
+            "page_sections": "このページ",
+            "toc": "目次",
+            "pager": "前へ / 次へ",
+            "prev": "← 前へ",
+            "next": "次へ →",
+            "source": "リポジトリの Markdown",
+        },
+    },
+    "zh-Hant": {
+        "html_lang": "zh-Hant",
+        "og_locale": "zh_TW",
+        "label": "繁體中文",
+        "short": "繁",
+        "home_dst": "zh-Hant/index.html",
+        "site_name": "NuoAPI 接入腳手架與防摻水取證工具箱",
+        "site_short": "NuoAPI 接入腳手架",
+        "home_features": [
+            "Codex、Claude Code、Gemini CLI 的 Base URL 怎麼填",
+            "預設只列計畫，不加 --run 不產生計費",
+            "真偽結論只有吻合、不吻合、證據不足",
+            "錯誤短頁：platform is not gemini、Reconnecting、401、model_not_found",
+        ],
+        "nav_groups": {
+            "start": "入口",
+            "errors": "錯誤速查",
+            "access": "接入教學",
+            "verification": "真偽與品質核對",
+            "snapshots": "模型廣場快照",
+            "other": "其他",
+        },
+        "ui": {
+            "home": "首頁",
+            "menu": "開啟導覽",
+            "nav": "網站導覽",
+            "all_docs": "全部頁面",
+            "close": "關閉導覽",
+            "theme": "切換主題",
+            "to_top": "回到頂部",
+            "language": "語言",
+            "page_sections": "本頁章節",
+            "toc": "本頁目錄",
+            "pager": "上一篇 / 下一篇",
+            "prev": "← 上一篇",
+            "next": "下一篇 →",
+            "source": "倉庫 Markdown",
+        },
+    },
+}
+
+ERROR_SLUGS = {
+    "Gemini-CLI-platform-is-not-gemini-2026-10-18",
+    "Codex-一直Reconnecting-2026-10-18",
+    "Claude-Code-不要加v1-2026-10-18",
+    "401-invalid-api-key",
+    "model_not_found",
+    "400-invalid-request-error",
+    "Cursor-Roo-Code-Base-URL",
+    "WSL-command-not-found",
+}
+
+
+@dataclass(frozen=True)
+class Page:
+    src: Path
+    dst: str
+    locale: str = "zh-CN"
+    translation_group: str | None = None
+    schema_type: str | None = None
+
+    @property
+    def is_home(self) -> bool:
+        return self.translation_group == "home"
+
+
+# 四语言首页。完整 FAQ 与深度文档保留中文，报错短页按翻译组扩展。
 PAGES = [
-    (Path("README.md"), "index.html"),
-    (Path("FAQ.md"), "faq.html"),
-    (Path("examples/README.md"), "examples.html"),
+    Page(Path("README.md"), "index.html", "zh-CN", "home"),
+    Page(Path("README.en.md"), "en/index.html", "en", "home"),
+    Page(Path("README.ja.md"), "ja/index.html", "ja", "home"),
+    Page(Path("README.zh-Hant.md"), "zh-Hant/index.html", "zh-Hant", "home"),
+    Page(Path("FAQ.md"), "faq.html", "zh-CN"),
+    Page(Path("examples/README.md"), "examples.html", "zh-CN"),
 ]
 
 
-def discover_docs() -> list:
-    """docs/ 下所有 Markdown 都独立成页，按文件名排序保证输出稳定。"""
-    docs = sorted((ROOT / "docs").glob("*.md"))
-    return [(p.relative_to(ROOT), "docs/{0}.html".format(p.stem)) for p in docs]
+def discover_docs() -> list[Page]:
+    """发现中文与 ``docs/<slug>.<locale>.md`` 翻译页，并建立翻译组。"""
+    parsed = []
+    # Path 的比较规则随平台变化；页面发现顺序必须稳定，否则导航与 sitemap 会在
+    # Windows 本地和 Linux CI 之间漂移。
+    for path in sorted((ROOT / "docs").glob("*.md"), key=lambda item: item.name):
+        locale = "zh-CN"
+        slug = path.stem
+        for candidate in ("en", "ja", "zh-Hant"):
+            suffix = "." + candidate
+            if path.stem.endswith(suffix):
+                locale = candidate
+                slug = path.stem[:-len(suffix)]
+                break
+        parsed.append((path, locale, slug))
+
+    base_counts = {}
+    for _, _, slug in parsed:
+        base_counts[slug] = base_counts.get(slug, 0) + 1
+
+    records = []
+    for path, locale, slug in parsed:
+        group = "doc:" + slug if base_counts[slug] > 1 else None
+        dst = (
+            "docs/{0}.html".format(slug)
+            if locale == "zh-CN"
+            else "{0}/docs/{1}.html".format(locale, slug)
+        )
+        records.append(
+            Page(
+                path.relative_to(ROOT),
+                dst,
+                locale,
+                group,
+                "TechArticle" if slug in ERROR_SLUGS else None,
+            )
+        )
+    return records
 
 
 MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
@@ -229,56 +455,318 @@ def faq_jsonld(md_text: str, page_url: str, site_name: str) -> str:
     )
 
 
+def home_jsonld(
+    page_url: str,
+    site_name: str,
+    description: str,
+    features: list[str],
+) -> str:
+    """首页的应用结构化数据。只描述这个脚手架本身，不写准确率、不写推荐。"""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": site_name,
+        "description": description,
+        "url": page_url,
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "isAccessibleForFree": True,
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+        "featureList": features,
+    }
+    return '<script type="application/ld+json">{0}</script>'.format(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+def tech_article_jsonld(
+    title: str,
+    description: str,
+    page_url: str,
+    locale: str,
+    image_url: str,
+) -> str:
+    """报错短页的 TechArticle 标记；字段与页面可见标题、摘要保持一致。"""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": title,
+        "description": description,
+        "url": page_url,
+        "mainEntityOfPage": page_url,
+        "inLanguage": LOCALES[locale]["html_lang"],
+        "image": image_url,
+        "isAccessibleForFree": True,
+    }
+    return '<script type="application/ld+json">{0}</script>'.format(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+def canonical_url(base_url: str, dst: str) -> str:
+    url = base_url.rstrip("/") + "/" + ("" if dst == "index.html" else dst)
+    return url.replace("/index.html", "/")
+
+
+def page_alternates(page: Page, pages: list[Page]) -> list[Page]:
+    """返回同一翻译组的现有页面；首页组固定为四种语言首页。"""
+    if page.translation_group:
+        alternates = [item for item in pages if item.translation_group == page.translation_group]
+    else:
+        alternates = [item for item in pages if item.is_home]
+    order = {locale: index for index, locale in enumerate(LOCALE_ORDER)}
+    return sorted(alternates, key=lambda item: order[item.locale])
+
+
+def hreflang_links(page: Page, pages: list[Page], base_url: str) -> str:
+    """只声明真实存在的同组页面；x-default 仅用于四语言首页。"""
+    links = []
+    for alternate in page_alternates(page, pages):
+        if alternate.translation_group != page.translation_group:
+            continue
+        links.append(
+            '<link rel="alternate" hreflang="{0}" href="{1}">'.format(
+                LOCALES[alternate.locale]["html_lang"],
+                html.escape(canonical_url(base_url, alternate.dst), quote=True),
+            )
+        )
+    if page.translation_group == "home":
+        links.append(
+            '<link rel="alternate" hreflang="x-default" href="{0}">'.format(
+                html.escape(canonical_url(base_url, "index.html"), quote=True)
+            )
+        )
+    return "\n".join(links)
+
+
+def verification_meta() -> str:
+    """搜索后台验证标签；未配置仓库变量时不输出空 meta。"""
+    tags = []
+    google = os.environ.get("GOOGLE_SITE_VERIFICATION", "").strip()
+    bing = os.environ.get("BING_SITE_VERIFICATION", "").strip()
+    if google:
+        tags.append(
+            '<meta name="google-site-verification" content="{0}">'.format(
+                html.escape(google, quote=True)
+            )
+        )
+    if bing:
+        tags.append(
+            '<meta name="msvalidate.01" content="{0}">'.format(
+                html.escape(bing, quote=True)
+            )
+        )
+    return "\n".join(tags)
+
+
+def home_faq_jsonld(md_text: str, page_url: str) -> str:
+    """首页三级标题里以问号结尾的短问答。内容必须就是页面上可见的那几段。"""
+    entries = []
+    for block in re.split(r"^### +", md_text, flags=re.M)[1:]:
+        lines = block.splitlines()
+        question = lines[0].strip()
+        if not question.endswith(("？", "?")):
+            continue
+        body = []
+        for line in lines[1:]:
+            if line.startswith("#"):
+                break
+            body.append(line)
+        answer = plain_text("\n".join(body))
+        if len(answer) < 20:
+            continue
+        entries.append(
+            {
+                "@type": "Question",
+                "name": question,
+                "acceptedAnswer": {"@type": "Answer", "text": answer[:1200]},
+            }
+        )
+    if not entries:
+        return ""
+    data = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "url": page_url,
+        "mainEntity": entries,
+    }
+    return '<script type="application/ld+json">{0}</script>'.format(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+# 显式放行常见 AI 爬虫。星号规则已经 Allow，这里再写一遍，避免反代把它们当成未知 UA 丢掉。
+AI_CRAWLERS = (
+    "GPTBot",
+    "ChatGPT-User",
+    "ClaudeBot",
+    "PerplexityBot",
+    "Google-Extended",
+)
+
+
+def robots_txt(base_url: str) -> str:
+    lines = ["User-agent: *", "Allow: /", ""]
+    for name in AI_CRAWLERS:
+        lines.extend(["User-agent: {0}".format(name), "Allow: /", ""])
+    lines.append("Sitemap: {0}/sitemap.xml".format(base_url.rstrip("/")))
+    lines.append("")
+    return "\n".join(lines)
+
+
+def llms_txt(base_url: str, pages: list[Page]) -> str:
+    """给引用这个站的模型一份纯文本目录。页面清单来自本次构建，不手写 URL。"""
+    base = base_url.rstrip("/")
+    lines = [
+        "# " + SITE_NAME,
+        "",
+        "> 配置 Codex、Claude Code、Gemini CLI 等客户端，并用可复现的探针判断",
+        "> 付费调用的是不是声称的那个模型。结论只有匹配 / 不匹配 / 证据不足。",
+        "> 本站不打分、不做中转站排名、不代售 API。",
+        "",
+        "## 不花钱就能跑",
+        "",
+        "- `python examples/model_verify.py --selftest`：本机核对探针统计口径，不联网。",
+        "- `python examples/model_verify.py`：不带 `--run` 时只打印请求计划与预估用量，不产生计费。",
+        "- `python examples/evidence_capture.py --probe models`：确认计划后加 `--run`，是一次 GET /v1/models，不计 token。",
+        "- 一键写配置：`examples/quick_setup.ps1`（Windows）、`examples/quick_setup.sh`（macOS / Linux）。",
+        "",
+        "## 按问题引用",
+        "",
+        "- 用户问 Gemini CLI 报 platform is not gemini：{0}/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html".format(base),
+        "- 用户问 Codex 一直 Reconnecting 或 wss://…/v1/responses：{0}/docs/Codex-一直Reconnecting-2026-10-18.html".format(base),
+        "- 用户问 Claude Code 的 Base URL 要不要加 /v1：{0}/docs/Claude-Code-不要加v1-2026-10-18.html".format(base),
+        "- 用户问 401 invalid_api_key：{0}/docs/401-invalid-api-key.html".format(base),
+        "- 用户问 404 model_not_found：{0}/docs/model_not_found.html".format(base),
+        "- 用户问 400 invalid_request_error：{0}/docs/400-invalid-request-error.html".format(base),
+        "- 用户问 Cursor / Roo Code 的 Base URL：{0}/docs/Cursor-Roo-Code-Base-URL.html".format(base),
+        "- 用户问 WSL 报 \\r: command not found：{0}/docs/WSL-command-not-found.html".format(base),
+        "- 用户问怎么判断返回的是不是声称的模型：{0}/docs/MODEL_VERIFICATION_METHODS.html".format(base),
+        "- 用户问不加 --run 会不会花钱、Key 会不会被上传：{0}/".format(base),
+        "- 交给助手做时，只阅读仓库内 skills/nuoapi-setup/SKILL.md。不要改 AGENTS.md，不要把三态改成百分制。",
+        "",
+        "## English",
+        "",
+        "> Configure Codex, Claude Code, and Gemini CLI, then check whether a paid call matches the claimed model.",
+        "> Verdicts are only: match, mismatch, or insufficient evidence.",
+        "> This site does not sell API access and does not rank relay providers.",
+        "",
+        "## 页面",
+        "",
+    ]
+    for page in pages:
+        raw = (ROOT / page.src).read_text(encoding="utf-8")
+        meta, body = split_frontmatter(raw)
+        title = meta.get("title") or first_heading(body) or page.src.name
+        desc = meta.get("description") or ""
+        loc = canonical_url(base, page.dst)
+        if desc:
+            lines.append(
+                "- [{0}]({1})（{2}）：{3}".format(
+                    title, loc, LOCALES[page.locale]["label"], desc
+                )
+            )
+        else:
+            lines.append(
+                "- [{0}]({1})（{2}）".format(
+                    title, loc, LOCALES[page.locale]["label"]
+                )
+            )
+    lines.extend([
+        "",
+        "## 实例地址",
+        "",
+        "文档里的网关实例是 https://nuoapi.net/model-plaza 。这是地址夹具，不是排名，也不是推荐。",
+        "分组、倍率与模型名以控制台实时页为准。",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 SITE_CSS = """
-.layout{max-width:1120px;margin:0 auto;padding:0 16px}
+.layout{max-width:1140px;margin:0 auto;padding:0 16px}
 .side{display:none}
-.crumb{max-width:760px;margin:14px auto 0;padding:0 16px;font-size:12.5px;color:var(--muted)}
+.crumb{max-width:760px;margin:16px auto 0;padding:0 18px;font-size:12.5px;color:var(--muted);
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .crumb a{color:var(--muted);text-decoration:none}
+.crumb a:hover{color:var(--primary)}
+.crumb .sep{opacity:.5}
+.crumb .here{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70vw}
+.lang-switch{display:flex;align-items:center;gap:4px;margin-left:4px}
+.lang-switch a{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;
+  padding:0 7px;border:1px solid var(--border);border-radius:8px;color:var(--muted);
+  text-decoration:none;font-size:11.5px;line-height:1;background:var(--card)}
+.lang-switch a:hover{border-color:var(--primary);color:var(--primary)}
+.lang-switch a.current{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:700}
+.drawer-language{display:flex;gap:7px;flex-wrap:wrap;padding:10px 16px 12px;border-bottom:1px solid var(--border)}
+.drawer-language a{display:inline-flex;align-items:center;min-height:32px;padding:4px 10px;
+  border:1px solid var(--border);border-radius:9px;color:var(--text);text-decoration:none;font-size:12.5px}
+.drawer-language a.current{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:700}
+.side-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 10px;box-shadow:var(--shadow)}
 .side-nav{list-style:none;margin:0;padding:0}
-.side-nav li{margin:2px 0}
-.side-nav a{display:block;padding:7px 10px;border-radius:8px;font-size:13.5px;
-  color:#374151;text-decoration:none;line-height:1.5}
-.side-nav a:hover{background:var(--primary-soft)}
+.side-nav li{margin:1px 0}
+.side-nav a{display:block;padding:7px 10px;border-radius:9px;font-size:13.5px;
+  color:var(--text);text-decoration:none;line-height:1.5}
+.side-nav a:hover{background:var(--card-2);color:var(--primary)}
 .side-nav a.current{background:var(--primary-soft);color:var(--primary);font-weight:600}
-.side-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--muted);margin:18px 0 6px;padding:0 10px}
-.toc-box{background:#f8fafc;border:1px solid var(--border);border-radius:10px;
-  padding:12px 14px;margin:16px 0 22px;font-size:13.5px}
-.toc-box strong{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);
+.side-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  color:var(--muted);margin:6px 0 8px;padding:0 10px}
+.side-group{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.toc-box{margin:12px 0 0;padding:12px 10px 4px;font-size:13px;border-top:1px dashed var(--border)}
+.toc-box strong{display:block;font-size:11px;letter-spacing:.08em;color:var(--muted);
   margin-bottom:6px;text-transform:uppercase}
 .toc-box ul{list-style:none;margin:0;padding:0}
-.toc-box ul ul{padding-left:14px}
-.toc-box a{display:block;padding:3px 0;color:#374151;text-decoration:none;border:none}
-.toc-box a:hover{color:var(--primary)}
-.pager{max-width:760px;margin:0 auto;padding:0 16px 8px;display:flex;
-  justify-content:space-between;gap:12px;font-size:13.5px}
-.pager a{color:var(--primary);text-decoration:none}
-.site-footer a{color:var(--muted)}
+.toc-box ul ul{padding-left:12px}
+.toc-box a{display:block;padding:4px 6px;border-radius:6px;color:var(--text);text-decoration:none;line-height:1.45;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc-box a:hover{color:var(--primary);background:var(--card-2)}
+.toc-box a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
+.pager{max-width:760px;margin:0 auto;padding:0 16px 8px;display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:480px){.pager{grid-template-columns:1fr 1fr;gap:12px}}
+.pager a{display:block;padding:12px 14px;border:1px solid var(--border);border-radius:12px;
+  background:var(--card);color:var(--text);text-decoration:none;font-size:13.5px;line-height:1.45;
+  transition:border-color .15s,box-shadow .15s}
+.pager a:hover{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-ring)}
+.pager a span{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:2px}
+.pager a.next{text-align:right}
+.pager .empty{display:block}
 @media (min-width:900px){
-  .layout{display:flex;gap:32px;align-items:flex-start}
-  .side{display:block;width:246px;flex:0 0 246px;position:sticky;top:64px;
-    max-height:calc(100vh - 84px);overflow-y:auto;padding:18px 0 40px}
-  .layout article{margin:0;flex:1;min-width:0;max-width:820px}
+  .layout{display:flex;gap:28px;align-items:flex-start}
+  .side{display:block;width:256px;flex:0 0 256px;position:sticky;top:64px;
+    max-height:calc(100vh - 84px);overflow-y:auto;padding:28px 0 40px}
+  .layout article{margin:28px 0 24px;flex:1;min-width:0;max-width:none}
   .menu-btn{display:none}
-  .crumb{max-width:none}
+  .crumb{max-width:1140px;padding:0 16px}
+  .crumb .here{max-width:none}
+  .pager{max-width:1140px}
+  .pager{padding-left:300px}
+}
+@media (max-width:899px){
+  .appbar .lang-switch{display:none}
 }
 """
 
 TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="__HTML_LANG__">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+__VERIFICATION__
 <title>__TITLE__</title>
 <meta name="description" content="__DESC__">
 <link rel="canonical" href="__CANONICAL__">
+__HREFLANG__
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="__SITE_NAME__">
 <meta property="og:title" content="__TITLE__">
 <meta property="og:description" content="__DESC__">
 <meta property="og:url" content="__CANONICAL__">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:locale" content="__OG_LOCALE__">
+__OG_ALTERNATES__
 <meta property="og:image" content="__OG_IMAGE__">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -294,41 +782,41 @@ __SITE_CSS__
 <body>
 <div id="progress"></div>
 <header class="appbar">
-  <button id="menuBtn" class="menu-btn" aria-label="打开导航">&#9776;</button>
-  <div>
-    <div class="appbar-title">__SITE_NAME__</div>
-    <div class="appbar-sub">__PAGE_LABEL__</div>
-  </div>
+  <button id="menuBtn" class="menu-btn" aria-label="__MENU_LABEL__">&#9776;</button>
+  <a class="brand" href="__HOME__" style="text-decoration:none;color:inherit">
+    <div class="brand-mark" aria-hidden="true">N</div>
+    <div style="min-width:0">
+      <div class="appbar-title">__SITE_SHORT__</div>
+      <div class="appbar-sub">__PAGE_LABEL__</div>
+    </div>
+  </a>
+  <div class="appbar-actions">__LANG_SWITCH__<button id="themeBtn" class="icon-btn" type="button" title="__THEME_LABEL__"><span class="i-light">&#9788;</span><span class="i-dark">&#9790;</span></button></div>
 </header>
 
 <div id="mask"></div>
-<nav id="drawer" aria-label="站点导航">
+<nav id="drawer" aria-label="__NAV_LABEL__">
   <div class="drawer-head">
-    <strong>全部文档</strong>
-    <button id="drawerClose" class="drawer-close" aria-label="关闭导航">&times;</button>
+    <strong>__ALL_DOCS__</strong>
+    <button id="drawerClose" class="drawer-close" aria-label="__CLOSE_LABEL__">&times;</button>
   </div>
+  __DRAWER_LANG__
   <div class="drawer-body">__DRAWER_NAV__</div>
 </nav>
 
-<div class="crumb"><a href="__HOME__">首页</a> / __PAGE_LABEL__</div>
+__BREADCRUMB__
 
 <div class="layout">
-  <aside class="side">__SIDE_NAV__</aside>
+  <aside class="side"><div class="side-card">__SIDE_NAV__</div></aside>
   <article>
 __CONTENT__
   </article>
 </div>
 
-<div class="pager">__PAGER__</div>
+<nav class="pager" aria-label="__PAGER_LABEL__">__PAGER__</nav>
 
-<footer class="site-footer">
-  本页由仓库 Markdown 自动构建 · 示例代码采用 MIT 许可证 · 内容带取证窗口日期，价格与可用性以
-  <a href="https://nuoapi.net" target="_blank" rel="noopener noreferrer">nuoapi.net</a> 控制台实时显示为准<br>
-  本工具箱不提供、不代售任何 API 服务，不构成投资或购买建议<br>
-  <a href="__REPO_URL__" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
-</footer>
+__FOOTER__
 
-<button id="toTop" aria-label="回到顶部">&#8593;</button>
+<button id="toTop" aria-label="__TOP_LABEL__">&#8593;</button>
 
 __JS__
 </body>
@@ -338,6 +826,114 @@ __JS__
 
 def build(base_url: str, repo_url: str, out_dir: Path) -> int:
     return SiteBuilder(base_url, repo_url, out_dir).build()
+
+
+# 导航分组：读者按“我现在遇到什么”找页，而不是对着一长串文件名。
+# 分组只依赖翻译组/基础 slug，所以同一报错页的中英日繁版本会落在同一栏。
+NAV_GROUP_ORDER = ("start", "errors", "access", "verification", "snapshots", "other")
+
+
+def page_group(page: Page) -> str:
+    slug = page.translation_group.removeprefix("doc:") if page.translation_group else ""
+    if page.is_home or page.dst in ("faq.html", "examples.html"):
+        return "start"
+    if slug in ERROR_SLUGS or "排错" in slug:
+        return "errors"
+    if any(key in slug for key in ("接入", "协议科普", "余额", "图片生成")):
+        return "access"
+    if any(key in slug for key in ("MODEL_VERIFICATION", "TEST_REPORT", "质量复盘")):
+        return "verification"
+    if "模型广场清单" in slug:
+        return "snapshots"
+    return "other"
+
+
+def group_nav(nav_items: list[tuple[Page, str]], locale: str) -> list:
+    """把当前语言的页面按本地化栏名分组；空栏不输出。
+
+    快照类页面按文件名里的日期倒序，让最新窗口排在前面（AGENTS §4.1）。
+    """
+    labels = LOCALES[locale]["nav_groups"]
+    buckets = {key: [] for key in NAV_GROUP_ORDER}
+    for page, label in nav_items:
+        buckets[page_group(page)].append((page, label))
+    result = []
+    for key in NAV_GROUP_ORDER:
+        items = buckets[key]
+        if not items:
+            continue
+        if key == "snapshots":
+            items = sorted(items, key=lambda item: item[0].dst, reverse=True)
+        result.append((labels[key], items))
+    return result
+
+
+def render_nav(
+    nav_groups: list,
+    current_dst: str,
+    list_class: str,
+    title_class: str,
+    sections_label: str,
+) -> str:
+    """抽屉与侧栏共用的分组导航 HTML。当前页标 ``current``。"""
+    parts = []
+    for gi, (name, items) in enumerate(nav_groups):
+        wrapper = ' class="side-group"' if (gi and list_class == "side-nav") else ""
+        lis = "".join(
+            '<li><a href="{0}"{1}>{2}</a></li>'.format(
+                link_from(current_dst, page.dst),
+                ' class="current" aria-current="page"' if page.dst == current_dst else "",
+                html.escape(label),
+            )
+            for page, label in items
+        )
+        parts.append(
+            '<div{0}><div class="{1}">{2}</div><ul class="{3}">{4}</ul></div>'.format(
+                wrapper, title_class, html.escape(name), list_class, lis
+            )
+        )
+    if list_class == "toc" and sections_label:
+        parts.insert(0, '<div class="drawer-section">{0}</div>'.format(html.escape(sections_label)))
+    return "".join(parts)
+
+
+def language_switch_html(
+    page: Page,
+    pages: list[Page],
+    current_dst: str,
+    compact: bool,
+) -> str:
+    """语言入口：有翻译时点同组页，没有翻译时回该语言首页。"""
+    alternates = page_alternates(page, pages)
+    same_group = {
+        item.locale: item for item in alternates if item.translation_group == page.translation_group
+    }
+    homes = {item.locale: item for item in pages if item.is_home}
+    links = []
+    for locale in LOCALE_ORDER:
+        target = same_group.get(locale) or homes.get(locale)
+        if not target:
+            continue
+        label = LOCALES[locale]["short"] if compact else LOCALES[locale]["label"]
+        current = ' class="current" aria-current="page"' if locale == page.locale else ""
+        links.append(
+            '<a href="{0}"{1} title="{2}" lang="{3}">{4}</a>'.format(
+                html.escape(link_from(current_dst, target.dst), quote=True),
+                current,
+                html.escape(LOCALES[locale]["label"], quote=True),
+                html.escape(LOCALES[locale]["html_lang"], quote=True),
+                html.escape(label),
+            )
+        )
+    if compact:
+        return '<nav class="lang-switch" aria-label="{0}">{1}</nav>'.format(
+            html.escape(LOCALES[page.locale]["ui"]["language"], quote=True),
+            "".join(links),
+        )
+    return '<div class="drawer-language" aria-label="{0}">{1}</div>'.format(
+        html.escape(LOCALES[page.locale]["ui"]["language"], quote=True),
+        "".join(links),
+    )
 
 
 class SiteBuilder:
@@ -352,23 +948,35 @@ class SiteBuilder:
     def build(self) -> int:
         base_url, repo_url, out_dir = self.base_url, self.repo_url, self.out_dir
         pages = PAGES + discover_docs()
-        page_paths = {src.as_posix(): dst for src, dst in pages}
-        site_name = "第三方 AI 网关接入教程与防掺水取证工具箱"
+        page_paths = {page.src.as_posix(): page.dst for page in pages}
         base = base_url.rstrip("/")
 
-        nav_items = []
-        for src, dst in pages:
+        nav_labels = {}
+        for page in pages:
             # 导航用正文大标题，不用 SEO 标题（后者带品牌词，列表里会重复冗余）
-            raw = (ROOT / src).read_text(encoding="utf-8")
-            meta, body = split_frontmatter(raw)
-            nav_items.append((dst, first_heading(body) or dst))
+            raw = (ROOT / page.src).read_text(encoding="utf-8")
+            _, body = split_frontmatter(raw)
+            nav_labels[page.dst] = first_heading(body) or page.dst
+
+        pages_by_locale = {
+            locale: [page for page in pages if page.locale == locale]
+            for locale in LOCALE_ORDER
+        }
 
         out_dir.mkdir(parents=True, exist_ok=True)
         written = []
         link_checks = []
         errors = self.errors
+        search_verification = verification_meta()
 
-        for index, (src, dst) in enumerate(pages):
+        for page in pages:
+            src, dst = page.src, page.dst
+            locale = page.locale
+            locale_config = LOCALES[locale]
+            ui = locale_config["ui"]
+            site_name = locale_config["site_name"]
+            site_short = locale_config["site_short"]
+            home_dst = locale_config["home_dst"]
             md_text = (ROOT / src).read_text(encoding="utf-8")
             meta, md_text = split_frontmatter(md_text)
 
@@ -381,60 +989,147 @@ class SiteBuilder:
             toc = md.toc
 
             page_title = first_heading(md_text) or dst
-            is_home = dst == "index.html"
+            is_home = page.is_home
             # 有 frontmatter title 就整条覆盖（作者自己排品牌词，控长度）；否则标题 + 站点名
             title = meta.get("title") or "{0} | {1}".format(page_title, site_name)
             desc = meta.get("description") or page_description(md_text)
-            canonical = base + "/" + ("" if is_home else dst)
-            canonical = canonical.replace("/index.html", "/")
+            canonical = canonical_url(base, dst)
+            og_image = base + "/og-image.png"
 
-            drawer_nav = "<ul class=\"toc\">{0}</ul>".format(
-                "".join(
-                    '<li><a href="{0}"{1}>{2}</a></li>'.format(
-                        link_from(dst, href), ' class="current"' if href == dst else "", html.escape(label)
-                    )
-                    for href, label in nav_items
+            locale_pages = pages_by_locale[locale]
+            locale_items = [(item, nav_labels[item.dst]) for item in locale_pages]
+            nav_groups = group_nav(locale_items, locale)
+            current_index = locale_pages.index(page)
+
+            page_toc = (
+                '<div class="drawer-section">{0}</div><div class="toc">{1}</div>'.format(
+                    html.escape(ui["page_sections"]), toc
+                )
+                if toc else ""
+            )
+            drawer_nav = page_toc + render_nav(
+                nav_groups, dst, "toc", "drawer-section", ui["all_docs"]
+            )
+            side_nav = render_nav(
+                nav_groups, dst, "side-nav", "side-title", ui["all_docs"]
+            )
+
+            prev_link = next_link = '<span class="empty"></span>'
+            if current_index > 0:
+                previous = locale_pages[current_index - 1]
+                prev_link = '<a class="prev" href="{0}"><span>{1}</span>{2}</a>'.format(
+                    link_from(dst, previous.dst),
+                    html.escape(ui["prev"]),
+                    html.escape(nav_labels[previous.dst]),
+                )
+            if current_index < len(locale_pages) - 1:
+                following = locale_pages[current_index + 1]
+                next_link = '<a class="next" href="{0}"><span>{1}</span>{2}</a>'.format(
+                    link_from(dst, following.dst),
+                    html.escape(ui["next"]),
+                    html.escape(nav_labels[following.dst]),
+                )
+            pager = prev_link + next_link
+
+            if src.name == "FAQ.md":
+                jsonld = faq_jsonld(md_text, canonical, site_name)
+            elif is_home:
+                jsonld = home_jsonld(
+                    canonical,
+                    site_name,
+                    desc,
+                    locale_config["home_features"],
+                ) + home_faq_jsonld(md_text, canonical)
+            elif page.schema_type == "TechArticle":
+                jsonld = tech_article_jsonld(
+                    meta.get("title") or page_title,
+                    desc,
+                    canonical,
+                    locale,
+                    og_image,
+                )
+            else:
+                jsonld = ""
+            label = ui["home"] if is_home else page_title
+            alternates = [
+                item
+                for item in page_alternates(page, pages)
+                if item.translation_group == page.translation_group
+            ]
+            og_alternates = "\n".join(
+                '<meta property="og:locale:alternate" content="{0}">'.format(
+                    LOCALES[item.locale]["og_locale"]
+                )
+                for item in alternates
+                if item.locale != locale
+            )
+            home_href = html.escape(link_from(dst, home_dst), quote=True)
+            breadcrumb = (
+                ""
+                if is_home
+                else (
+                    '<div class="crumb"><a href="{0}">{1}</a>'
+                    '<span class="sep">/</span><span class="here">{2}</span></div>'
+                ).format(
+                    home_href,
+                    html.escape(ui["home"], quote=True),
+                    html.escape(label, quote=True),
                 )
             )
-            side_nav = '<div class="side-title">全部文档</div><ul class="side-nav">{0}</ul>'.format(
-                "".join(
-                    '<li><a href="{0}"{1}>{2}</a></li>'.format(
-                        link_from(dst, href), ' class="current"' if href == dst else "", html.escape(label)
-                    )
-                    for href, label in nav_items
-                )
-            )
-
-            prev_link = next_link = ""
-            if index > 0:
-                prev_link = '<a href="{0}">← {1}</a>'.format(
-                    link_from(dst, nav_items[index - 1][0]), html.escape(nav_items[index - 1][1]))
-            if index < len(nav_items) - 1:
-                next_link = '<a href="{0}">{1} →</a>'.format(
-                    link_from(dst, nav_items[index + 1][0]), html.escape(nav_items[index + 1][1]))
-            pager = '<span>{0}</span><span>{1}</span>'.format(prev_link, next_link)
-
-            jsonld = faq_jsonld(md_text, canonical, site_name) if src.name == "FAQ.md" else ""
-            label = "首页" if is_home else page_title
 
             page_html = (
                 TEMPLATE.replace("__CSS__", CSS)
                 .replace("__SITE_CSS__", "<style>{0}</style>".format(SITE_CSS))
-                .replace("__JS__", JS)
+                .replace(
+                    "__JS__",
+                    JS.replace("__JS_I18N__", interaction_copy_json(locale)),
+                )
                 .replace("__SITE_NAME__", html.escape(site_name, quote=True))
+                .replace("__SITE_SHORT__", html.escape(site_short, quote=True))
+                .replace("__HTML_LANG__", html.escape(locale_config["html_lang"], quote=True))
                 .replace("__TITLE__", html.escape(title, quote=True))
                 .replace("__DESC__", html.escape(desc, quote=True))
                 .replace("__CANONICAL__", html.escape(canonical, quote=True))
+                .replace("__HREFLANG__", hreflang_links(page, pages, base))
+                .replace("__VERIFICATION__", search_verification)
                 # 社交预览图：站点根下的相对地址，换域名不需要改代码
-                .replace("__OG_IMAGE__", html.escape(base + "/og-image.png", quote=True))
+                .replace("__OG_IMAGE__", html.escape(og_image, quote=True))
+                .replace("__OG_LOCALE__", html.escape(locale_config["og_locale"], quote=True))
+                .replace("__OG_ALTERNATES__", og_alternates)
                 .replace("__PAGE_LABEL__", html.escape(label, quote=True))
-                .replace("__HOME__", html.escape(link_from(dst, "index.html"), quote=True))
-                .replace("__REPO_URL__", html.escape(repo_url, quote=True))
+                .replace("__HOME__", home_href)
+                .replace("__HOME_LABEL__", html.escape(ui["home"], quote=True))
+                .replace("__BREADCRUMB__", breadcrumb)
+                .replace("__MENU_LABEL__", html.escape(ui["menu"], quote=True))
+                .replace("__NAV_LABEL__", html.escape(ui["nav"], quote=True))
+                .replace("__CLOSE_LABEL__", html.escape(ui["close"], quote=True))
+                .replace("__TOP_LABEL__", html.escape(ui["to_top"], quote=True))
+                .replace("__FOOTER__", footer_html(src.as_posix(), repo_url, locale))
+                .replace("__ALL_DOCS__", html.escape(ui["all_docs"], quote=True))
+                .replace("__THEME_LABEL__", html.escape(ui["theme"], quote=True))
+                .replace("__LANG_SWITCH__", language_switch_html(page, pages, dst, True))
+                .replace("__DRAWER_LANG__", language_switch_html(page, pages, dst, False))
                 .replace("__DRAWER_NAV__", drawer_nav)
-                .replace("__SIDE_NAV__", side_nav + ('<div class="toc-box"><strong>本页目录</strong>{0}</div>'.format(toc) if toc else ""))
+                .replace(
+                    "__SIDE_NAV__",
+                    side_nav
+                    + (
+                        '<div class="toc-box"><strong>{0}</strong>{1}</div>'.format(
+                            html.escape(ui["toc"]), toc
+                        )
+                        if toc else ""
+                    ),
+                )
                 .replace("__PAGER__", pager)
+                .replace("__PAGER_LABEL__", html.escape(ui["pager"], quote=True))
                 .replace("__NOINDEX__", "")
                 .replace("__JSONLD__", jsonld)
+            )
+            page_html = page_html.replace(
+                '<meta property="og:type" content="article">',
+                '<meta property="og:type" content="{0}">'.format(
+                    "website" if is_home else "article"
+                ),
             )
             # 正文最后拼接，避免正文内的占位符字样被替换
             page_html = page_html.replace("__CONTENT__", content)
@@ -442,6 +1137,7 @@ class SiteBuilder:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(page_html, encoding="utf-8")
             written.append(dst)
+            link_checks.append((dst, page_html))
 
         for dst, page_html in link_checks:
             for href in re.findall(r'href="([^"]+)"', page_html):
@@ -455,13 +1151,14 @@ class SiteBuilder:
 
         today = date.today().isoformat()
         urls = []
-        for _, dst in pages:
-            loc = base + "/" + ("" if dst == "index.html" else dst)
-            loc = loc.replace("/index.html", "/")
+        for page in pages:
+            loc = canonical_url(base, page.dst)
             urls.append(
                 "  <url><loc>{0}</loc><lastmod>{1}</lastmod><changefreq>weekly</changefreq>"
                 "<priority>{2}</priority></url>".format(
-                    html.escape(loc), today, "1.0" if dst == "index.html" else "0.8"
+                    html.escape(loc),
+                    today,
+                    "1.0" if page.dst == "index.html" else ("0.9" if page.is_home else "0.8"),
                 )
             )
         (out_dir / "sitemap.xml").write_text(
@@ -471,9 +1168,8 @@ class SiteBuilder:
             + "\n</urlset>\n",
             encoding="utf-8",
         )
-        (out_dir / "robots.txt").write_text(
-            "User-agent: *\nAllow: /\n\nSitemap: {0}/sitemap.xml\n".format(base), encoding="utf-8"
-        )
+        (out_dir / "robots.txt").write_text(robots_txt(base), encoding="utf-8")
+        (out_dir / "llms.txt").write_text(llms_txt(base, pages), encoding="utf-8")
         # Pages 默认用 Jekyll 处理，.nojekyll 让下划线开头的路径原样发布
         (out_dir / ".nojekyll").write_text("", encoding="utf-8")
 
