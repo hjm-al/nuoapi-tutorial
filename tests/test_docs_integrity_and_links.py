@@ -4,7 +4,7 @@
 目的：
 1. 遍历仓库中所有 Markdown 文件，提取其中的相对链接（含 #锚点）；
 2. 严格核验所有内部相对链接的目标文件是否存在、锚点是否能在目标文件中定位，杜绝内部 404 死链；
-3. 核验中文 README 必须包含法律与商标免责声明及不代售声明（仓库策略：仅维护一份中文 README）；
+3. 核验四种语言的 README 必须包含法律与商标免责声明及不代售声明；
 4. 抽取反引号中以仓库内路径形态出现的引用，核验目标存在（防止"纯文本路径指向未发布文件"）。
 """
 
@@ -168,9 +168,24 @@ class TestDocsIntegrityAndLinks(unittest.TestCase):
         self.assertTrue((ROOT / "README.md").exists(), "核心入口缺失: README.md")
 
     def test_legal_and_trademark_disclaimer_present(self):
-        """断言主 README 必须包含法律与商标免责声明和不代售声明。"""
+        """断言四语言首页都必须包含法律与商标免责声明和不代售声明。"""
         disclaimer_checks = {
-            ROOT / "README.md": ["法律与第三方商标免责声明", "本仓库本身不提供、不代售任何 API 服务"],
+            ROOT / "README.md": [
+                "法律与第三方商标免责声明",
+                "本仓库本身不提供、不代售任何 API 服务",
+            ],
+            ROOT / "README.en.md": [
+                "Legal and trademark notice",
+                "does not provide or resell API access",
+            ],
+            ROOT / "README.ja.md": [
+                "法的通知と商標について",
+                "API サービスを提供・再販しません",
+            ],
+            ROOT / "README.zh-Hant.md": [
+                "法律與第三方商標免責聲明",
+                "不提供、不代售任何 API 服務",
+            ],
         }
 
         for path, required_texts in disclaimer_checks.items():
