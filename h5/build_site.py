@@ -595,7 +595,18 @@ def home_faq_jsonld(md_text: str, page_url: str) -> str:
     )
 
 
-# 显式放行常见 AI 爬虫。星号规则已经 Allow，这里再写一遍，避免反代把它们当成未知 UA 丢掉。
+# 星号规则已经 Allow；主流搜索与 AI 爬虫再显式写一遍，便于抓取端审计和反代放行。
+SEARCH_CRAWLERS = (
+    "Googlebot",
+    "Bingbot",
+    "Baiduspider",
+    "Applebot",
+)
+
+# IndexNow 的公开验证文件。文件名和内容必须一致；它位于本站子目录，
+# 提交时通过 keyLocation 指向具体 URL。
+INDEXNOW_KEY = "b8a860a9074b6feebaec4870aaa80bed"
+
 AI_CRAWLERS = (
     "GPTBot",
     "ChatGPT-User",
@@ -604,10 +615,12 @@ AI_CRAWLERS = (
     "Google-Extended",
 )
 
+CRAWLERS = SEARCH_CRAWLERS + AI_CRAWLERS
+
 
 def robots_txt(base_url: str) -> str:
     lines = ["User-agent: *", "Allow: /", ""]
-    for name in AI_CRAWLERS:
+    for name in CRAWLERS:
         lines.extend(["User-agent: {0}".format(name), "Allow: /", ""])
     lines.append("Sitemap: {0}/sitemap.xml".format(base_url.rstrip("/")))
     lines.append("")
@@ -755,6 +768,7 @@ TEMPLATE = """<!DOCTYPE html>
 <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
+<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
 __VERIFICATION__
 <title>__TITLE__</title>
 <meta name="description" content="__DESC__">
@@ -1169,6 +1183,9 @@ class SiteBuilder:
             encoding="utf-8",
         )
         (out_dir / "robots.txt").write_text(robots_txt(base), encoding="utf-8")
+        (out_dir / "{0}.txt".format(INDEXNOW_KEY)).write_text(
+            INDEXNOW_KEY, encoding="utf-8"
+        )
         (out_dir / "llms.txt").write_text(llms_txt(base, pages), encoding="utf-8")
         # Pages 默认用 Jekyll 处理，.nojekyll 让下划线开头的路径原样发布
         (out_dir / ".nojekyll").write_text("", encoding="utf-8")
