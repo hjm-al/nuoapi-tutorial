@@ -64,7 +64,13 @@ class TestSiteBuild(unittest.TestCase):
 
     def test_pages_and_required_files(self):
         """四语言首页、固定页和全部 docs 应生成恰好 33 个产物。"""
-        for required in ("sitemap.xml", "robots.txt", "llms.txt", ".nojekyll"):
+        for required in (
+            "sitemap.xml",
+            "robots.txt",
+            "llms.txt",
+            ".nojekyll",
+            build_site.INDEXNOW_KEY + ".txt",
+        ):
             self.assertTrue((self.site / required).exists(), "缺少 " + required)
         names = {p.relative_to(self.site).as_posix() for p in self.pages}
         self.assertEqual(names, {page.dst for page in self.records})
@@ -85,10 +91,10 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(set(locs), expected)
         self.assertIn(BASE_URL + "/", locs)
 
-    def test_robots_allows_ai_crawlers_and_llms_lists_dry_run(self):
-        """AI 爬虫显式放行；llms.txt 只引导到不花钱的探针和三态结论。"""
+    def test_robots_allows_crawlers_and_llms_lists_dry_run(self):
+        """搜索与 AI 爬虫显式放行；llms.txt 只引导到不花钱的探针和三态结论。"""
         robots = (self.site / "robots.txt").read_text(encoding="utf-8")
-        for name in build_site.AI_CRAWLERS:
+        for name in build_site.CRAWLERS:
             self.assertIn("User-agent: {0}".format(name), robots)
         self.assertIn("Sitemap: {0}/sitemap.xml".format(BASE_URL), robots)
         llms = (self.site / "llms.txt").read_text(encoding="utf-8")
@@ -100,11 +106,25 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn(BASE_URL + "/", llms)
         self.assertNotIn("utm_", llms)
         home = (self.site / "index.html").read_text(encoding="utf-8")
+        self.assertIn(
+            'name="robots" content="index,follow,max-snippet:-1,'
+            'max-image-preview:large,max-video-preview:-1"',
+            home,
+        )
         self.assertIn('"@type":"WebApplication"', home)
         self.assertIn('"featureList":', home)
         self.assertIn('"@type":"FAQPage"', home)
         self.assertIn("会不会把 API Key 传走", home)
         self.assertNotIn("98%", home)
+
+    def test_indexnow_key_file_matches_its_name(self):
+        """IndexNow 子目录验证文件必须存在，且内容与文件名完全一致。"""
+        key = build_site.INDEXNOW_KEY
+        self.assertRegex(key, r"^[A-Za-z0-9-]{8,128}$")
+        self.assertEqual(
+            (self.site / (key + ".txt")).read_text(encoding="utf-8"),
+            key,
+        )
 
     def test_internal_links_resolve(self):
         """站内链接必须指向真实产物，HTML 页内锚点也必须在目标中可见。"""
