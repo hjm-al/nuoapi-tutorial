@@ -27,6 +27,9 @@ env:
   # 未设置时按 GitHub Pages 默认的 project pages 形态推导。
   SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
   REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+  # 搜索后台的站点验证码。只在仓库 Variables 中设置后输出到页面，源码不保存验证码。
+  GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+  BING_SITE_VERIFICATION: ${{ vars.BING_SITE_VERIFICATION }}
 
 jobs:
   build:
