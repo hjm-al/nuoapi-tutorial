@@ -7,9 +7,9 @@
 
 > **Legal and trademark notice**
 >
-> 1. This is an independent technical guide and diagnostic toolkit. It does not provide or resell API access. It is not affiliated with OpenAI, Anthropic, Google, xAI, or any model vendor.
+> 1. This is an independent technical research project, configuration scaffold, and diagnostic test suite maintained by an individual developer. It does not provide or resell API access. It has no official affiliation, investment, sponsorship, or partnership relationship with OpenAI, Anthropic, Google, xAI, ByteDance, DeepSeek, MiniMax, or any other model vendor.
 > 2. Product and company names are trademarks of their respective owners. They are used only to explain protocol compatibility and configuration.
-> 3. Examples contain placeholders only. Review each provider's terms, privacy policy, pricing, and availability before use.
+> 3. All examples contain placeholders only (`YOUR_NUOAPI_API_KEY`). This repository does not collect anyone's API key. Review each provider's terms, privacy policy, pricing, and availability before use.
 
 This repository helps you connect Codex, Claude Code, Gemini CLI, and other compatible clients to a third-party AI gateway. It also gives you reproducible checks for a narrower question: **did the paid response come from the model claimed by the service?**
 
