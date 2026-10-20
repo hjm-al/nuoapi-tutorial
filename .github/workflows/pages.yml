@@ -8,6 +8,7 @@ on:
     paths:
       - "**.md"
       - "h5/**"
+      - "docs/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 

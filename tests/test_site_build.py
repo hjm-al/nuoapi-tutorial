@@ -19,6 +19,7 @@ import unicodedata
 import unittest
 from pathlib import Path
 from unittest import mock
+from urllib.parse import parse_qsl, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 H5 = ROOT / "h5"
@@ -315,6 +316,7 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("actions/upload-pages-artifact@", workflow)
         self.assertIn("pages: write", workflow)
         self.assertIn("build_site.py", workflow)
+        self.assertIn('"docs/**"', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
 
@@ -351,14 +353,28 @@ class TestOutboundLinks(unittest.TestCase):
                 len(hits), limit, "{0} 实例链接超过 {1} 处，会变成硬广".format(dst, limit))
 
     def test_outbound_links_carry_no_tracking_params(self):
-        """实例链接只用规范页，不带 UTM、ref、aff 或 iframe 嵌入参数。"""
-        for page in self.site.rglob("*.html"):
+        """所有外链都不带追踪参数；实例链接只使用无查询串的规范页。"""
+        tracking_key = re.compile(r"^(?:utm_.+|ref|aff)$", re.IGNORECASE)
+        pages = [H5 / "index.html"] + sorted(self.site.rglob("*.html"))
+        for page in pages:
             text = page.read_text(encoding="utf-8")
             for href in re.findall(r'href="(https?://[^"]+)"', text):
-                if "nuoapi.net" not in href:
-                    continue
-                self.assertNotIn("?", href, "{0} 中的外链带了查询参数：{1}".format(page.name, href))
-                self.assertNotIn("#", href, "{0} 中的外链带了片段：{1}".format(page.name, href))
+                parsed = urlsplit(href)
+                tracking_params = [
+                    key for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+                    if tracking_key.match(key)
+                ]
+                self.assertEqual(
+                    tracking_params,
+                    [],
+                    "{0} 中的外链带了追踪参数：{1}".format(page.name, href),
+                )
+                hostname = (parsed.hostname or "").lower()
+                if hostname == "nuoapi.net" or hostname.endswith(".nuoapi.net"):
+                    self.assertEqual(
+                        parsed.query, "", "{0} 中的实例链接带了查询参数：{1}".format(page.name, href))
+                    self.assertEqual(
+                        parsed.fragment, "", "{0} 中的实例链接带了片段：{1}".format(page.name, href))
 
 
 class TestSearchMetadata(unittest.TestCase):

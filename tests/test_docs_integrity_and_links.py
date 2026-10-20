@@ -164,33 +164,37 @@ class TestDocsIntegrityAndLinks(unittest.TestCase):
         )
 
     def test_readme_exists(self):
-        """断言中文主门户文档存在（仓库策略：仅维护一份中文 README）。"""
-        self.assertTrue((ROOT / "README.md").exists(), "核心入口缺失: README.md")
+        """断言中文默认入口与英、日、繁三个语言入口都存在。"""
+        for name in ("README.md", "README.en.md", "README.ja.md", "README.zh-Hant.md"):
+            self.assertTrue((ROOT / name).exists(), f"核心入口缺失: {name}")
 
     def test_legal_and_trademark_disclaimer_present(self):
-        """断言四语言首页都必须包含法律与商标免责声明和不代售声明。"""
+        """断言四语言首页都包含等量的法律、不代售、厂商关系与 Key 保护声明。"""
         disclaimer_checks = {
             ROOT / "README.md": [
                 "法律与第三方商标免责声明",
                 "本仓库本身不提供、不代售任何 API 服务",
+                "不收集任何人的 Key",
             ],
             ROOT / "README.en.md": [
                 "Legal and trademark notice",
                 "does not provide or resell API access",
+                "does not collect anyone's API key",
             ],
             ROOT / "README.ja.md": [
                 "法的通知と商標について",
                 "API サービスを提供・再販しません",
+                "API キーも収集しません",
             ],
             ROOT / "README.zh-Hant.md": [
                 "法律與第三方商標免責聲明",
                 "不提供、不代售任何 API 服務",
+                "不收集任何人的 API Key",
             ],
         }
 
         for path, required_texts in disclaimer_checks.items():
-            if not path.exists():
-                continue
+            self.assertTrue(path.exists(), f"核心入口缺失: {path.name}")
             content = path.read_text(encoding="utf-8")
             for req in required_texts:
                 self.assertIn(
@@ -198,6 +202,9 @@ class TestDocsIntegrityAndLinks(unittest.TestCase):
                     content,
                     f"{path.name} 缺少必要的免责声明文本片段: '{req}'"
                 )
+            self.assertIn("YOUR_NUOAPI_API_KEY", content)
+            for vendor in ("OpenAI", "Anthropic", "Google", "xAI", "ByteDance", "DeepSeek", "MiniMax"):
+                self.assertIn(vendor, content, f"{path.name} 的厂商关系声明漏掉了 {vendor}")
 
 
 if __name__ == "__main__":
