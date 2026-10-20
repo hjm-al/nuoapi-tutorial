@@ -11,11 +11,11 @@
 > 2. 文中 "OpenAI"、"Codex"、"Claude"、"Gemini"、"Grok" 等名称与商标归各自厂商所有，提及它们仅为描述协议兼容性、格式转换与技术指引之必要用途。
 > 3. 所有示例只含占位符（`YOUR_NUOAPI_API_KEY`），不收集任何人的 Key；使用第三方服务前请自行核对其服务条款、隐私政策、价格与可用性。
 
-[![契约测试](https://github.com/nonamelia/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/nonamelia/nuoapi-tutorial/actions/workflows/ci.yml)
-[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2563eb)](https://nonamelia.github.io/nuoapi-tutorial/)
+[![契约测试](https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml)
+[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2563eb)](https://hjm-al.github.io/nuoapi-tutorial/)
 [![许可证: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
-在线文档：<https://nonamelia.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/nonamelia/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [繁體中文](README.zh-Hant.md)
+在线文档：<https://hjm-al.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [繁體中文](README.zh-Hant.md)
 
 一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
 

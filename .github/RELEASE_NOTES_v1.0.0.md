@@ -2,7 +2,7 @@
 
 这是 `nuoapi-tutorial` 的首个对外版本。它把 AI 客户端接入、协议路径、报错排错与模型核验整理成可离线试跑、可复核证据的公开工具，而不是一份服务推荐页。
 
-在线文档：<https://nonamelia.github.io/nuoapi-tutorial/>
+在线文档：<https://hjm-al.github.io/nuoapi-tutorial/>
 
 ## 本版重点
 
@@ -24,11 +24,11 @@ python examples/model_verify.py
 
 ## 报错入口
 
-- [401 invalid_api_key](https://nonamelia.github.io/nuoapi-tutorial/docs/401-invalid-api-key.html)
-- [404 model_not_found](https://nonamelia.github.io/nuoapi-tutorial/docs/model_not_found.html)
-- [400 invalid_request_error](https://nonamelia.github.io/nuoapi-tutorial/docs/400-invalid-request-error.html)
-- [Cursor / Roo Code Base URL](https://nonamelia.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html)
-- [WSL `\r: command not found`](https://nonamelia.github.io/nuoapi-tutorial/docs/WSL-command-not-found.html)
+- [401 invalid_api_key](https://hjm-al.github.io/nuoapi-tutorial/docs/401-invalid-api-key.html)
+- [404 model_not_found](https://hjm-al.github.io/nuoapi-tutorial/docs/model_not_found.html)
+- [400 invalid_request_error](https://hjm-al.github.io/nuoapi-tutorial/docs/400-invalid-request-error.html)
+- [Cursor / Roo Code Base URL](https://hjm-al.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html)
+- [WSL `\r: command not found`](https://hjm-al.github.io/nuoapi-tutorial/docs/WSL-command-not-found.html)
 
 ## 取证窗口
 

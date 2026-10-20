@@ -35,7 +35,7 @@ DOCS_DIR = SCRIPT_DIR.parent / "docs"
 # 多页站（GitHub Pages）的根地址。单文件页与多页站首页内容相同，canonical 指向多页站，
 # 避免两个首页在搜索结果里互相抢同一个查询；抽屉里的专题文档也链到多页站的 .html，
 # 而不是浏览器会当成裸文本打开的 ../docs/*.md。可用环境变量 SITE_URL 覆盖（与 pages.yml 同名）。
-SITE_URL = os.environ.get("SITE_URL", "https://nonamelia.github.io/nuoapi-tutorial").rstrip("/")
+SITE_URL = os.environ.get("SITE_URL", "https://hjm-al.github.io/nuoapi-tutorial").rstrip("/")
 
 # Markdown 头部的 SEO 键值块（与 build_site.py 同一约定，用 HTML 注释包着所以
 # 在 GitHub 与本站两个渲染面都不可见）：
