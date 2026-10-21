@@ -77,3 +77,26 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 通知 IndexNow
+        shell: bash
+        run: |
+          # submit_indexnow.py writes status and URL counts to GITHUB_STEP_SUMMARY.
+          set +e
+          python h5/submit_indexnow.py --site-url "$SITE_URL"
+          exit_code=$?
+          set -e
+          if [ "$exit_code" -ne 0 ]; then
+            echo "::warning::IndexNow notification failed; the Pages deployment remains active."
+          fi
+          exit 0

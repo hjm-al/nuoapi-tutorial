@@ -4,6 +4,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- 四语言 README 的首标题把 `NuoAPI` 设为指向规范模型广场的真实链接，首屏实例入口可直接点击。
+- 四语言 README 在第一步操作前增加本地化的六项报错速查，覆盖 Gemini CLI、Codex、Claude Code、401、400 与 `model_not_found`。
+- 新增 `h5/submit_indexnow.py` 与 Pages 部署后通知任务；支持零网络请求的 dry-run、URL 去重与同站过滤，并把 HTTP 状态和 URL 数量写入 Actions Summary。
+
+### 变更
+
+- 中文 README 注册步骤中的自动链接改为行内代码，确保首页正文的真实实例锚点不超过 3 处。
+- 索引通知失败只产生警告，不回滚已经完成的 GitHub Pages 部署；IndexNow 提交不代表已被搜索引擎收录。
+
 ## [1.0.0] - 2026-10-20
 
 首个对外版本。取证窗口：**2026-09-21 01:30 UTC**（协议与端点）、**2026-10-12**（模型广场第一份快照）、**2026-10-18**（模型广场第二份快照）。
