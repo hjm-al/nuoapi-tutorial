@@ -81,7 +81,7 @@ def docs_drawer_html() -> str:
     # Path 在 Windows 上按大小写不敏感规则比较，Linux 上则按码点比较。
     # 固定用文件名字符串作键，保证单文件抽屉在本地与 CI 生成相同顺序。
     for path in sorted(DOCS_DIR.glob("*.md"), key=lambda item: item.name):
-        if any(path.stem.endswith("." + locale) for locale in ("en", "ja", "zh-Hant")):
+        if any(path.stem.endswith("." + locale) for locale in ("en", "ja", "es", "zh-Hant")):
             continue
         _meta, body = split_frontmatter(path.read_text(encoding="utf-8"))
         match = re.search(r"^#\s+(.+)$", body, flags=re.M)

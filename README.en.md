@@ -11,9 +11,15 @@
 > 2. Product and company names are trademarks of their respective owners. They are used only to explain protocol compatibility and configuration.
 > 3. All examples contain placeholders only (`YOUR_NUOAPI_API_KEY`). This repository does not collect anyone's API key. Review each provider's terms, privacy policy, pricing, and availability before use.
 
-This repository helps you connect Codex, Claude Code, Gemini CLI, and other compatible clients to a third-party AI gateway. It also gives you reproducible checks for a narrower question: **did the paid response come from the model claimed by the service?**
+This repository helps you connect Codex, Claude Code, Gemini CLI, and other compatible clients to a third-party AI gateway. It also gives you reproducible checks for a narrower question: **did the paid response come from the model claimed by the service?** Read the [model verification methodology](docs/MODEL_VERIFICATION_METHODS.md) before turning one observation into a conclusion.
 
-[简体中文](README.md) · English · [日本語](README.ja.md) · [繁體中文](README.zh-Hant.md)
+[简体中文](README.md) · English · [日本語](README.ja.md) · [Español](README.es.md) · [繁體中文](README.zh-Hant.md)
+
+## Verification paths by language
+
+- [English: LLM gateway checklist](docs/llm-gateway-checklist.en.md) for model consistency, data residency, BYOK, audit logs, and failover.
+- [日本語: minimum charge and pricing](docs/minimum-charge-and-pricing.ja.md) for top-up thresholds and cost conversion.
+- [Español: cost per 1M tokens](docs/cost-per-1m-tokens.es.md) for input, output, cache, and effective cost.
 
 ## Common errors at a glance
 

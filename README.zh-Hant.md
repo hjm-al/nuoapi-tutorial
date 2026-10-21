@@ -11,9 +11,15 @@
 > 2. 文中產品與公司名稱屬於各自所有者商標，只用於說明協定相容性與設定方式。
 > 3. 所有範例只含佔位符（`YOUR_NUOAPI_API_KEY`）；本倉庫不收集任何人的 API Key。使用第三方服務前，請自行核對服務條款、隱私政策、價格與可用性。
 
-這個倉庫協助你把 Codex、Claude Code、Gemini CLI 等用戶端接到第三方 AI 閘道，並用可重現的檢查回答一個更窄的問題：**付費收到的回應，是否真的來自服務聲稱的模型？**
+這個倉庫協助你把 Codex、Claude Code、Gemini CLI 等用戶端接到第三方 AI 閘道，並用可重現的檢查回答一個更窄的問題：**付費收到的回應，是否真的來自服務聲稱的模型？** 判定依據與三態寫法見[模型驗證方法學](docs/MODEL_VERIFICATION_METHODS.md)。
 
-[简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · 繁體中文
+[简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [Español](README.es.md) · 繁體中文
+
+## 多語言核驗入口
+
+- [English：LLM gateway checklist](docs/llm-gateway-checklist.en.md)：模型一致性、資料駐留、BYOK、稽核與故障轉移。
+- [日本語：最低儲值與費用](docs/minimum-charge-and-pricing.ja.md)：最低儲值、額度換算、公開價與實際支付價。
+- [Español：每百萬 Token 價格](docs/cost-per-1m-tokens.es.md)：輸入、輸出、快取、長上下文與總成本模擬。
 
 ## 常見問題速查
 

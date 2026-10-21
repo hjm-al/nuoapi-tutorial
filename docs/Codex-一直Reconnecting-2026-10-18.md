@@ -3,7 +3,9 @@
   description: 日志出现 wss:// 的 /v1/responses，或 Codex 一直 Reconnecting 时，把 wire_api 设为 responses 并关掉 WebSocket，保存后彻底重启。
 -->
 
-# Codex：关掉 WebSocket
+# Codex 一直 Reconnecting：关闭 supports_websockets
+
+直接结论：把 Codex 的 `wire_api` 设为 `responses`，并把 `supports_websockets` 设为 `false`；保存后必须彻底退出再重启。
 
 > **法律与第三方商标免责声明**
 >
@@ -15,7 +17,7 @@
 
 CLI 还没装时，先看[接入教程第 2 节](接入第三方工具教程-2026-09-26.md#2-命令行客户端先安装-nodejs-与-cli)。其他客户端仍留在[接入教程](接入第三方工具教程-2026-09-26.md)。
 
-## 症状
+## 30 秒判断
 
 Codex CLI 或桌面端一直显示 `Reconnecting`，或日志里出现下面任一原文：
 
@@ -26,7 +28,9 @@ Codex CLI 或桌面端一直显示 `Reconnecting`，或日志里出现下面任�
 
 这是客户端先去试 WebSocket。当前要走的是 HTTP Responses，不是另一套协议。只在环境变量里加代理，关不掉这次重试。
 
-## 一份配置
+## 最短修复
+
+**主操作**：编辑 `~/.codex/config.toml`，保留下面这一份 Provider 配置并保存。
 
 `~/.codex/config.toml`（Windows：`%USERPROFILE%\.codex\config.toml`）：
 
@@ -52,7 +56,7 @@ Key 不要写进这个 toml。放到同目录的 `auth.json`：
 
 `base_url` 只到 `/v1`，不要再拼一次 `/v1` 或 `/responses`。桌面端和 CLI 读的是同一对文件。模板：[`../examples/codex/`](../examples/codex/)。
 
-## 重启
+## 成功判据
 
 保存后完全退出 Codex，再打开。不要只关对话页。
 

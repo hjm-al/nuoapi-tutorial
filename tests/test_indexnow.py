@@ -219,7 +219,7 @@ class TestIndexNow(unittest.TestCase):
                     "run_submission",
                     side_effect=submit_indexnow.SubmissionError(
                         "HTTP 503",
-                        url_count=33,
+                        url_count=37,
                         http_status=503,
                         attempts=3,
                     ),
@@ -230,7 +230,7 @@ class TestIndexNow(unittest.TestCase):
                     ]), 1)
 
             text = summary.read_text(encoding="utf-8")
-            self.assertIn("Eligible URLs: 33", text)
+            self.assertIn("Eligible URLs: 37", text)
             self.assertIn("HTTP status: 503", text)
             self.assertIn("Attempts: 3", text)
 

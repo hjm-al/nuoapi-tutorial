@@ -15,9 +15,15 @@
 [![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2563eb)](https://hjm-al.github.io/nuoapi-tutorial/)
 [![许可证: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
-在线文档：<https://hjm-al.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [繁體中文](README.zh-Hant.md)
+在线文档：<https://hjm-al.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [Español](README.es.md) / [繁體中文](README.zh-Hant.md)
 
-一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
+一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关）。如果正在判断 AI 中转站是否换模型、检查模型真伪，先看[模型真伪与防掺水方法学](docs/MODEL_VERIFICATION_METHODS.md)，再用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
+
+### 多语言核验入口
+
+- [English：LLM Gateway Checklist](docs/llm-gateway-checklist.en.md)：模型一致性、数据驻留、BYOK、审计与故障转移。
+- [日本語：最低チャージと料金](docs/minimum-charge-and-pricing.ja.md)：最低充值、额度换算、公开价与实际支付价。
+- [Español：每百万 Token 价格](docs/cost-per-1m-tokens.es.md)：输入、输出、缓存、长上下文与总成本模拟。
 
 ## 常见问题速查
 

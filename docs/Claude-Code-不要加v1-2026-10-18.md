@@ -3,7 +3,9 @@
   description: ANTHROPIC_BASE_URL 填站点根地址，Key 放进 ANTHROPIC_AUTH_TOKEN。误加 /v1 会落到未注册路径并返回 404，改完必须重开终端。
 -->
 
-# Claude Code：不要加 /v1
+# Claude Code 报 404：ANTHROPIC_BASE_URL 不要加 /v1
+
+直接结论：把 `ANTHROPIC_BASE_URL` 设为站点根地址，不要加 `/v1`；Key 放进 `ANTHROPIC_AUTH_TOKEN`，然后新开终端。
 
 > **法律与第三方商标免责声明**
 >
@@ -15,13 +17,15 @@
 
 CLI 还没装时，先看[接入教程第 2 节](接入第三方工具教程-2026-09-26.md#2-命令行客户端先安装-nodejs-与-cli)。VS Code / Cursor 插件不读下面这份环境变量，见[接入教程第 5.4 节](接入第三方工具教程-2026-09-26.md#54-claude-code-编辑器插件vs-code--cursor)。
 
-## 症状
+## 30 秒判断
 
 请求返回纯文本 `404 page not found`，而不是 `401`。常见原因是 Base URL 多写了 `/v1`，客户端再拼上 `/v1/messages`，路径对不上。
 
 Key 变量名也容易错：要用 `ANTHROPIC_AUTH_TOKEN`，不是 `ANTHROPIC_API_KEY`。
 
-## 一份配置
+## 最短修复
+
+**主操作**：把下面两项写进当前终端或系统环境变量，保持 Base URL 末尾没有 `/v1`。
 
 ```text
 ANTHROPIC_BASE_URL=https://nuoapi.net
@@ -37,7 +41,7 @@ $env:ANTHROPIC_AUTH_TOKEN = "YOUR_NUOAPI_API_KEY"
 
 要写进用户环境、换终端仍在，用系统的环境变量界面或 `setx` 一类入口；已打开的终端不会自动吃到新值。其他系统的写法见[接入教程第 3 节](接入第三方工具教程-2026-09-26.md#3-通用配置载体)。模板：[`../examples/claude-code.env.example`](../examples/claude-code.env.example)。
 
-## 重启
+## 成功判据
 
 新开一个终端，再启动 Claude Code。在旧窗口里 `echo` 到的还是改之前的值。
 

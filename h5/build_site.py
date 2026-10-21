@@ -31,9 +31,9 @@ import os
 import posixpath
 import re
 import shutil
+import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 
 import markdown
@@ -49,7 +49,7 @@ DEFAULT_OUT = SCRIPT_DIR / "_site"
 # 页面不是“源文件 → 文件名”的二元组：语言、翻译关系和结构化数据都属于同一份
 # 页面契约。导航、分页、canonical、hreflang、sitemap 与 llms.txt 都从这份契约
 # 派生，避免某个入口漏掉翻译页或伪造不存在的语言版本。
-LOCALE_ORDER = ("zh-CN", "en", "ja", "zh-Hant")
+LOCALE_ORDER = ("zh-CN", "en", "ja", "es", "zh-Hant")
 
 LOCALES = {
     "zh-CN": {
@@ -169,6 +169,45 @@ LOCALES = {
             "source": "リポジトリの Markdown",
         },
     },
+    "es": {
+        "html_lang": "es",
+        "og_locale": "es_ES",
+        "label": "Español",
+        "short": "ES",
+        "home_dst": "es/index.html",
+        "site_name": "NuoAPI Starter y kit de verificación de modelos",
+        "site_short": "NuoAPI Starter",
+        "home_features": [
+            "Configuración de Base URL para Codex, Claude Code y Gemini CLI",
+            "Planes dry-run por defecto; sin --run no se envía ninguna llamada facturable",
+            "Los resultados solo pueden ser coincidencia, discrepancia o evidencia insuficiente",
+            "Guías breves para platform is not gemini, Reconnecting, 401 y model_not_found",
+        ],
+        "nav_groups": {
+            "start": "Empieza aquí",
+            "errors": "Solución de errores",
+            "access": "Configuración",
+            "verification": "Verificación",
+            "snapshots": "Instantáneas de modelos",
+            "other": "Otros",
+        },
+        "ui": {
+            "home": "Inicio",
+            "menu": "Abrir navegación",
+            "nav": "Navegación del sitio",
+            "all_docs": "Todas las páginas",
+            "close": "Cerrar navegación",
+            "theme": "Cambiar tema",
+            "to_top": "Volver arriba",
+            "language": "Idioma",
+            "page_sections": "En esta página",
+            "toc": "Contenido",
+            "pager": "Anterior / siguiente",
+            "prev": "← Anterior",
+            "next": "Siguiente →",
+            "source": "Markdown del repositorio",
+        },
+    },
     "zh-Hant": {
         "html_lang": "zh-Hant",
         "og_locale": "zh_TW",
@@ -235,11 +274,12 @@ class Page:
         return self.translation_group == "home"
 
 
-# 四语言首页。完整 FAQ 与深度文档保留中文，报错短页按翻译组扩展。
+# 五语言首页。完整 FAQ 与深度文档保留中文，报错短页按翻译组扩展。
 PAGES = [
     Page(Path("README.md"), "index.html", "zh-CN", "home"),
     Page(Path("README.en.md"), "en/index.html", "en", "home"),
     Page(Path("README.ja.md"), "ja/index.html", "ja", "home"),
+    Page(Path("README.es.md"), "es/index.html", "es", "home"),
     Page(Path("README.zh-Hant.md"), "zh-Hant/index.html", "zh-Hant", "home"),
     Page(Path("FAQ.md"), "faq.html", "zh-CN"),
     Page(Path("examples/README.md"), "examples.html", "zh-CN"),
@@ -254,7 +294,7 @@ def discover_docs() -> list[Page]:
     for path in sorted((ROOT / "docs").glob("*.md"), key=lambda item: item.name):
         locale = "zh-CN"
         slug = path.stem
-        for candidate in ("en", "ja", "zh-Hant"):
+        for candidate in ("en", "ja", "es", "zh-Hant"):
             suffix = "." + candidate
             if path.stem.endswith(suffix):
                 locale = candidate
@@ -486,6 +526,7 @@ def tech_article_jsonld(
     page_url: str,
     locale: str,
     image_url: str,
+    date_modified: str | None = None,
 ) -> str:
     """报错短页的 TechArticle 标记；字段与页面可见标题、摘要保持一致。"""
     data = {
@@ -499,6 +540,8 @@ def tech_article_jsonld(
         "image": image_url,
         "isAccessibleForFree": True,
     }
+    if date_modified:
+        data["dateModified"] = date_modified
     return '<script type="application/ld+json">{0}</script>'.format(
         json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     )
@@ -520,7 +563,7 @@ def page_alternates(page: Page, pages: list[Page]) -> list[Page]:
 
 
 def hreflang_links(page: Page, pages: list[Page], base_url: str) -> str:
-    """只声明真实存在的同组页面；x-default 仅用于四语言首页。"""
+    """只声明真实存在的同组页面；x-default 仅用于多语言首页。"""
     links = []
     for alternate in page_alternates(page, pages):
         if alternate.translation_group != page.translation_group:
@@ -545,6 +588,7 @@ def verification_meta() -> str:
     tags = []
     google = os.environ.get("GOOGLE_SITE_VERIFICATION", "").strip()
     bing = os.environ.get("BING_SITE_VERIFICATION", "").strip()
+    baidu = os.environ.get("BAIDU_SITE_VERIFICATION", "").strip()
     if google:
         tags.append(
             '<meta name="google-site-verification" content="{0}">'.format(
@@ -557,7 +601,31 @@ def verification_meta() -> str:
                 html.escape(bing, quote=True)
             )
         )
+    if baidu:
+        tags.append(
+            '<meta name="baidu-site-verification" content="{0}">'.format(
+                html.escape(baidu, quote=True)
+            )
+        )
     return "\n".join(tags)
+
+
+def source_last_modified(src: Path) -> str | None:
+    """Return the source Markdown's last Git commit date, or no date if unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), "log", "-1", "--format=%cs", "--", src.as_posix()],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+    except (OSError, ValueError):
+        return None
+    value = result.stdout.strip()
+    if result.returncode != 0 or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return None
+    return value
 
 
 def home_faq_jsonld(md_text: str, page_url: str) -> str:
@@ -856,7 +924,18 @@ def page_group(page: Page) -> str:
         return "errors"
     if any(key in slug for key in ("接入", "协议科普", "余额", "图片生成")):
         return "access"
-    if any(key in slug for key in ("MODEL_VERIFICATION", "TEST_REPORT", "质量复盘")):
+    if "llm-gateway-checklist" in slug:
+        return "verification"
+    if any(
+        key in slug
+        for key in (
+            "MODEL_VERIFICATION",
+            "TEST_REPORT",
+            "质量复盘",
+            "minimum-charge-and-pricing",
+            "cost-per-1m-tokens",
+        )
+    ):
         return "verification"
     if "模型广场清单" in slug:
         return "snapshots"
@@ -975,6 +1054,7 @@ class SiteBuilder:
         base_url, repo_url, out_dir = self.base_url, self.repo_url, self.out_dir
         pages = PAGES + discover_docs()
         page_paths = {page.src.as_posix(): page.dst for page in pages}
+        last_modified = {page.dst: source_last_modified(page.src) for page in pages}
         base = base_url.rstrip("/")
 
         nav_labels = {}
@@ -982,7 +1062,8 @@ class SiteBuilder:
             # 导航用正文大标题，不用 SEO 标题（后者带品牌词，列表里会重复冗余）
             raw = (ROOT / page.src).read_text(encoding="utf-8")
             _, body = split_frontmatter(raw)
-            nav_labels[page.dst] = first_heading(body) or page.dst
+            # 标题里的链接与强调只用于正文渲染；导航需要读者可见的纯文本。
+            nav_labels[page.dst] = plain_text(first_heading(body)) or page.dst
 
         pages_by_locale = {
             locale: [page for page in pages if page.locale == locale]
@@ -1084,6 +1165,7 @@ class SiteBuilder:
                     canonical,
                     locale,
                     og_image,
+                    last_modified[page.dst],
                 )
             else:
                 jsonld = ""
@@ -1178,15 +1260,20 @@ class SiteBuilder:
                 if not (out_dir / target_rel).exists():
                     errors.append("{0}: 死链 {1}".format(dst, href))
 
-        today = date.today().isoformat()
         urls = []
         for page in pages:
             loc = canonical_url(base, page.dst)
+            modified = last_modified[page.dst]
+            modified_xml = (
+                "<lastmod>{0}</lastmod>".format(html.escape(modified))
+                if modified
+                else ""
+            )
             urls.append(
-                "  <url><loc>{0}</loc><lastmod>{1}</lastmod><changefreq>weekly</changefreq>"
+                "  <url><loc>{0}</loc>{1}<changefreq>weekly</changefreq>"
                 "<priority>{2}</priority></url>".format(
                     html.escape(loc),
-                    today,
+                    modified_xml,
                     "1.0" if page.dst == "index.html" else ("0.9" if page.is_home else "0.8"),
                 )
             )

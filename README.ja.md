@@ -11,9 +11,15 @@
 > 2. 各製品名・会社名は各所有者の商標です。プロトコル互換性と設定を説明する目的でのみ記載します。
 > 3. すべてのサンプルはプレースホルダー（`YOUR_NUOAPI_API_KEY`）のみです。本リポジトリは誰の API キーも収集しません。利用前に各サービスの規約、プライバシーポリシー、価格、可用性を確認してください。
 
-Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲートウェイへ接続し、**課金された応答が表示上のモデルと一致するか**を再現可能な手順で確認するためのリポジトリです。
+Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲートウェイへ接続し、**課金された応答が表示上のモデルと一致するか**を再現可能な手順で確認するためのリポジトリです。判定の根拠と三状態の書き方は[モデル検証の方法論](docs/MODEL_VERIFICATION_METHODS.md)にまとめています。
 
-[简体中文](README.md) · [English](README.en.md) · 日本語 · [繁體中文](README.zh-Hant.md)
+[简体中文](README.md) · [English](README.en.md) · 日本語 · [Español](README.es.md) · [繁體中文](README.zh-Hant.md)
+
+## 言語別の検証入口
+
+- [English: LLM gateway checklist](docs/llm-gateway-checklist.en.md)：モデルの一貫性、データ所在、BYOK、監査、フェイルオーバー。
+- [日本語：最低チャージと料金](docs/minimum-charge-and-pricing.ja.md)：最低入金額、クレジット換算、公開価格と実効価格。
+- [Español：1M token あたりの料金](docs/cost-per-1m-tokens.es.md)：入力、出力、キャッシュ、長い文脈を含む総コスト。
 
 ## よくあるエラー早見表
 

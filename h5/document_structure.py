@@ -37,6 +37,13 @@ ROLE_LABELS = {
         "related": "関連",
         "detail": "詳細",
     },
+    "es": {
+        "symptom": "Síntoma",
+        "fix": "Configuración / solución",
+        "verify": "Verificación",
+        "related": "Relacionado",
+        "detail": "Detalles",
+    },
     "zh-Hant": {
         "symptom": "症狀",
         "fix": "設定 / 解法",
@@ -55,14 +62,17 @@ def heading_text(heading_html: str) -> str:
 def section_role(title: str) -> str:
     """Map known error-page headings to a layout role.
 
-    Matching uses all four site locales, but still falls back to ``detail``.
+    Matching uses all site locales, but still falls back to ``detail``.
     The fallback is intentional: an unfamiliar translation must render even
     when its wording has no entry here.
     """
     title = title.strip().lower()
     if any(token in title for token in ("相关深页", "相關深頁", "関連ページ", "related")):
         return "related"
-    if any(token in title for token in ("症状", "症狀", "symptom")):
+    if any(
+        token in title
+        for token in ("症状", "症狀", "symptom", "síntoma", "30 秒判断", "30秒判断")
+    ):
         return "symptom"
     if any(
         token in title
@@ -76,6 +86,11 @@ def section_role(title: str) -> str:
             "重启",
             "重啟",
             "restart",
+            "成功判据",
+            "成功判據",
+            "success criteria",
+            "success check",
+            "criterio de éxito",
         )
     ):
         return "verify"
@@ -88,6 +103,11 @@ def section_role(title: str) -> str:
             "一つの設定",
             "單一設定",
             "one configuration",
+            "最短修复",
+            "最短修復",
+            "quickest fix",
+            "shortest fix",
+            "solución más breve",
         )
     ):
         return "fix"

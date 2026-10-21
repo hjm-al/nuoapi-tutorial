@@ -5,6 +5,8 @@
 
 # Gemini CLI：platform is not gemini
 
+直接结论：`GOOGLE_GEMINI_BASE_URL` 只填站点根地址，不要带 `/v1` 或 `/v1beta`；模型 ID 必须从当前分组逐字符复制。
+
 > **法律与第三方商标免责声明**
 >
 > 1. 本文是独立开发者维护的配置说明，与 OpenAI、Anthropic、Google 或其他模型厂商不存在官方关联、投资、赞助或合作关系。文中商标仅用于协议兼容性说明。
@@ -15,7 +17,7 @@
 
 CLI 还没装时，先看[接入教程第 2 节](接入第三方工具教程-2026-09-26.md#2-命令行客户端先安装-nodejs-与-cli)。协议为什么填根地址、不填 `/v1beta`，见[协议科普第 6 节](AI模型API协议科普-2026-10-12.md#6-gemini-原生协议)。
 
-## 症状
+## 30 秒判断
 
 两条不要混：
 
@@ -24,7 +26,9 @@ CLI 还没装时，先看[接入教程第 2 节](接入第三方工具教程-202
 
 若正文是 `API_KEY_INVALID` 或 `API key not valid`，那是 Key 没被接受，和上面两条不是同一件事。分层排错见 [FAQ §20](../FAQ.md#20-如何按错误层级排查)。
 
-## 一份配置
+## 最短修复
+
+**主操作**：把 `~/.gemini/.env` 的 Base URL 改为根地址，并保持模型 ID 与当前分组完全一致。
 
 `~/.gemini/.env`：
 
@@ -36,7 +40,7 @@ GEMINI_MODEL=MODEL_NAME_FROM_MODEL_PLAZA
 
 不要在 `GOOGLE_GEMINI_BASE_URL` 后面加 `/v1` 或 `/v1beta`。`GEMINI_MODEL` 与模型广场上的名字逐字符一致，包含日期后缀。模板：[`../examples/gemini.env.example`](../examples/gemini.env.example)。
 
-## 重启
+## 成功判据
 
 保存后退出 Gemini CLI，新开终端再启动。发一句固定短句，到控制台核对模型名和时间。
 

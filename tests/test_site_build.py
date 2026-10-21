@@ -32,7 +32,51 @@ import build_site  # noqa: E402
 import document_structure  # noqa: E402
 BASE_URL = "https://example.github.io/nuoapi-tutorial"
 REPO_URL = "https://github.com/example/nuoapi-tutorial"
-EXPECTED_PAGE_COUNT = 33
+EXPECTED_PAGE_COUNT = 37
+PRIORITY_PAGES = {
+    Path("docs/MODEL_VERIFICATION_METHODS.md"): {
+        "h1": "模型真伪与防掺水：中转站换模型怎么判断",
+        "phrases": ("模型真伪", "防掺水", "AI 中转站 防掺水", "中转站换模型怎么判断"),
+    },
+    Path("docs/Codex-一直Reconnecting-2026-10-18.md"): {
+        "h1": "Codex 一直 Reconnecting：关闭 supports_websockets",
+        "phrases": ("Codex 一直 Reconnecting", "supports_websockets"),
+    },
+    Path("docs/Claude-Code-不要加v1-2026-10-18.md"): {
+        "h1": "Claude Code 报 404：ANTHROPIC_BASE_URL 不要加 /v1",
+        "phrases": ("Claude Code 报 404", "ANTHROPIC_BASE_URL", "/v1"),
+    },
+    Path("docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md"): {
+        "h1": "Gemini CLI：platform is not gemini",
+        "phrases": ("Gemini CLI", "platform is not gemini", "/v1beta"),
+    },
+    Path("docs/model_not_found.md"): {
+        "h1": "404 model_not_found：先核对当前分组的模型 ID",
+        "phrases": ("404 model_not_found", "当前分组", "模型 ID"),
+    },
+    Path("docs/401-invalid-api-key.md"): {
+        "h1": "401 invalid_api_key：先确认客户端读到哪把 Key",
+        "phrases": ("401 invalid_api_key", "Key", "变量名"),
+    },
+}
+ERROR_SECTION_HEADINGS = ("## 30 秒判断", "## 最短修复", "## 成功判据")
+MULTILINGUAL_ENTRY_PAGES = {
+    Path("docs/llm-gateway-checklist.en.md"): {
+        "h1": "LLM Gateway Checklist: Model Consistency, Data Residency and Failover",
+        "action": "**Primary action**",
+        "phrases": ("data residency", "audit", "failover", "BYOK", "cost"),
+    },
+    Path("docs/minimum-charge-and-pricing.ja.md"): {
+        "h1": "AI API の最低チャージと料金を確認する方法",
+        "action": "**主な操作**",
+        "phrases": ("最低チャージ", "クレジット換算", "SLA", "状態ページ"),
+    },
+    Path("docs/cost-per-1m-tokens.es.md"): {
+        "h1": "Cómo comparar el precio por 1M de tokens de una API de IA",
+        "action": "**Acción principal**",
+        "phrases": ("precio por 1M de tokens", "entrada", "salida", "caché", "recarga mínima"),
+    },
+}
 
 
 def all_page_records():
@@ -54,7 +98,12 @@ class TestSiteBuild(unittest.TestCase):
         cls.site = Path(cls._tmp.name) / "site"
         with mock.patch.dict(
             os.environ,
-            {"GOOGLE_SITE_VERIFICATION": "", "BING_SITE_VERIFICATION": ""},
+            {
+                "GOOGLE_SITE_VERIFICATION": "",
+                "BING_SITE_VERIFICATION": "",
+                "BAIDU_SITE_VERIFICATION": "",
+            },
+            clear=False,
         ):
             run_build(cls.site)
         cls.pages = sorted(cls.site.rglob("*.html"))
@@ -66,7 +115,7 @@ class TestSiteBuild(unittest.TestCase):
         cls._tmp.cleanup()
 
     def test_pages_and_required_files(self):
-        """四语言首页、固定页和全部 docs 应生成恰好 33 个产物。"""
+        """五语言首页、固定页和全部 docs 应生成恰好 37 个产物。"""
         for required in (
             "sitemap.xml",
             "robots.txt",
@@ -80,6 +129,7 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(len(self.pages), EXPECTED_PAGE_COUNT)
         self.assertIn("en/index.html", names)
         self.assertIn("ja/index.html", names)
+        self.assertIn("es/index.html", names)
         self.assertIn("zh-Hant/index.html", names)
 
     def test_sitemap_matches_page_count(self):
@@ -93,6 +143,39 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(len(locs), len(set(locs)), "sitemap 存在重复 URL")
         self.assertEqual(set(locs), expected)
         self.assertIn(BASE_URL + "/", locs)
+
+    def test_sitemap_lastmod_uses_source_git_date(self):
+        """sitemap 的 lastmod 来自源 Markdown 最后一次提交，不用构建当天填充。"""
+        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        expected = {}
+        for page in self.records:
+            modified = build_site.source_last_modified(page.src)
+            if modified is not None:
+                self.assertRegex(modified, r"^\d{4}-\d{2}-\d{2}$", page.src.as_posix())
+            expected[build_site.canonical_url(BASE_URL, page.dst)] = modified
+        actual = {}
+        for block in re.findall(r"<url>(.*?)</url>", sitemap, re.S):
+            loc = re.search(r"<loc>(.*?)</loc>", block, re.S)
+            lastmod = re.search(r"<lastmod>(.*?)</lastmod>", block, re.S)
+            self.assertIsNotNone(loc, block)
+            actual[loc.group(1)] = lastmod.group(1) if lastmod else None
+        self.assertEqual(actual, expected)
+
+    def test_sitemap_omits_lastmod_when_git_date_is_unavailable(self):
+        """没有可信 Git 日期时整批省略 lastmod，不能退回构建日期。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            undated = Path(tmp) / "site"
+            with mock.patch.object(build_site, "source_last_modified", return_value=None):
+                run_build(undated)
+            sitemap = (undated / "sitemap.xml").read_text(encoding="utf-8")
+            self.assertNotIn("<lastmod>", sitemap)
+            for record in self.records:
+                if record.schema_type != "TechArticle":
+                    continue
+                data = parse_jsonld((undated / record.dst).read_text(encoding="utf-8"))
+                articles = [item for item in data if item.get("@type") == "TechArticle"]
+                self.assertEqual(len(articles), 1, record.dst)
+                self.assertNotIn("dateModified", articles[0], record.dst)
 
     def test_robots_allows_crawlers_and_llms_lists_dry_run(self):
         """搜索与 AI 爬虫显式放行；llms.txt 只引导到不花钱的探针和三态结论。"""
@@ -188,6 +271,11 @@ class TestSiteBuild(unittest.TestCase):
                 "ナビゲーションを絞り込む",
                 "コードをコピー",
             ),
+            "es/index.html": (
+                "Abrir navegación",
+                "Filtrar navegación",
+                "Copiar código",
+            ),
             "zh-Hant/index.html": (
                 "開啟導覽",
                 "篩選目錄",
@@ -218,7 +306,7 @@ class TestSiteBuild(unittest.TestCase):
         self.assertNotIn("__JS_I18N__", text, translated_doc)
 
     def test_hreflang_groups_are_symmetric_and_not_fabricated(self):
-        """只声明真实同组翻译；首页四语言与 x-default 完整，未翻译页不伪造互链。"""
+        """只声明真实同组翻译；首页五语言与 x-default 完整，未翻译页不伪造互链。"""
         records_by_group = {}
         for record in self.records:
             records_by_group.setdefault(record.translation_group, []).append(record)
@@ -291,10 +379,15 @@ class TestSiteBuild(unittest.TestCase):
                 build_site.LOCALES[record.locale]["html_lang"],
                 record.dst,
             )
+            self.assertEqual(
+                article.get("dateModified"),
+                build_site.source_last_modified(record.src),
+                record.dst,
+            )
 
     def test_page_kind_contract_matches_page_records(self):
-        """33 个页面都通过稳定的 body 标识声明版式类型。"""
-        expected = Counter({"home": 4, "faq": 1, "error": 17, "doc": 11})
+        """37 个页面都通过稳定的 body 标识声明版式类型。"""
+        expected = Counter({"home": 5, "faq": 1, "error": 17, "doc": 14})
         self.assertEqual(
             Counter(build_site.page_kind(page) for page in self.records),
             expected,
@@ -348,6 +441,9 @@ class TestSiteBuild(unittest.TestCase):
         """未知翻译仍会渲染，不能因标题词表漏项而丢掉章节包装。"""
         self.assertEqual(document_structure.section_role("未识别章节"), "detail")
         self.assertEqual(document_structure.section_role("A new locale heading"), "detail")
+        self.assertEqual(document_structure.section_role("30 秒判断"), "symptom")
+        self.assertEqual(document_structure.section_role("最短修复"), "fix")
+        self.assertEqual(document_structure.section_role("成功判据"), "verify")
 
     def test_og_image_has_expected_social_dimensions(self):
         """社交预览图保持 1200×630，避免平台裁切后丢失纸面排版。"""
@@ -357,8 +453,14 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual((width, height), (1200, 630))
 
     def test_home_jsonld_and_language_variants(self):
-        """四个首页都有 WebApplication；不能把中文 FAQ 结构化数据复制到译文首页。"""
-        for dst in ("index.html", "en/index.html", "ja/index.html", "zh-Hant/index.html"):
+        """五个首页都有 WebApplication；不能把中文 FAQ 结构化数据复制到译文首页。"""
+        for dst in (
+            "index.html",
+            "en/index.html",
+            "ja/index.html",
+            "es/index.html",
+            "zh-Hant/index.html",
+        ):
             data = parse_jsonld((self.site / dst).read_text(encoding="utf-8"))
             self.assertEqual(data[0]["@type"], "WebApplication", dst)
             faq_pages = [item for item in data if item.get("@type") == "FAQPage"]
@@ -368,13 +470,14 @@ class TestSiteBuild(unittest.TestCase):
                 self.assertEqual(faq_pages, [], dst)
 
     def test_search_verification_meta_toggles_with_environment(self):
-        """仓库变量为空时不输出验证标签，有值时每页输出 Google/Bing 两个标签。"""
+        """仓库变量为空时不输出验证标签，有值时每页输出三家搜索平台标签。"""
         for text in (
             (self.site / page.dst).read_text(encoding="utf-8")
             for page in self.records
         ):
             self.assertNotIn("google-site-verification", text)
             self.assertNotIn("msvalidate.01", text)
+            self.assertNotIn("baidu-site-verification", text)
 
         with tempfile.TemporaryDirectory() as tmp:
             verified = Path(tmp) / "site"
@@ -383,6 +486,7 @@ class TestSiteBuild(unittest.TestCase):
                 {
                     "GOOGLE_SITE_VERIFICATION": "google-test-token",
                     "BING_SITE_VERIFICATION": "bing-test-token",
+                    "BAIDU_SITE_VERIFICATION": "baidu-test-token",
                 },
             ):
                 run_build(verified)
@@ -396,14 +500,19 @@ class TestSiteBuild(unittest.TestCase):
                     '<meta name="msvalidate.01" content="bing-test-token">',
                     text,
                 )
+                self.assertIn(
+                    '<meta name="baidu-site-verification" content="baidu-test-token">',
+                    text,
+                )
 
     def test_readme_first_headings_link_nuapi(self):
-        """四语言首标题的第一个词必须是可点击的规范实例页链接。"""
+        """五语言首标题的第一个词必须是可点击的规范实例页链接。"""
         expected = "[NuoAPI](https://nuoapi.net/model-plaza)"
         for readme in (
             Path("README.md"),
             Path("README.en.md"),
             Path("README.ja.md"),
+            Path("README.es.md"),
             Path("README.zh-Hant.md"),
         ):
             _, body = build_site.split_frontmatter(
@@ -431,8 +540,16 @@ class TestSiteBuild(unittest.TestCase):
                 "{0} 的构建后 H1 缺少 NuoAPI 真实链接".format(page.dst),
             )
 
+        for page in self.records:
+            text = (self.site / page.dst).read_text(encoding="utf-8")
+            self.assertNotIn(
+                "[NuoAPI](",
+                text,
+                "{0} 的导航仍显示原始 Markdown 标题".format(page.dst),
+            )
+
     def test_readme_hero_prioritizes_plan_and_keeps_error_guides(self):
-        """四语言首页先给不花钱的计划，再放状态行和六个高意图报错入口。"""
+        """五语言首页先给不花钱的计划，再放状态行和六个高意图报错入口。"""
         guides = (
             (
                 Path("README.md"),
@@ -471,6 +588,20 @@ class TestSiteBuild(unittest.TestCase):
                     "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md",
                     "docs/Codex-一直Reconnecting-2026-10-18.ja.md",
                     "docs/Claude-Code-不要加v1-2026-10-18.ja.md",
+                    "docs/401-invalid-api-key.md",
+                    "docs/400-invalid-request-error.md",
+                    "docs/model_not_found.md",
+                ),
+            ),
+            (
+                Path("README.es.md"),
+                "es/index.html",
+                "Errores frecuentes",
+                "Empieza sin gastar",
+                (
+                    "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md",
+                    "docs/Codex-一直Reconnecting-2026-10-18.en.md",
+                    "docs/Claude-Code-不要加v1-2026-10-18.en.md",
                     "docs/401-invalid-api-key.md",
                     "docs/400-invalid-request-error.md",
                     "docs/model_not_found.md",
@@ -557,6 +688,11 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn('"docs/**"', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
+        self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
+        self.assertEqual(workflow.count("fetch-depth: 0"), 2)
+
+        ci_workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("fetch-depth: 0", ci_workflow)
 
     def test_pages_workflow_notifies_indexnow_after_deploy(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
@@ -630,6 +766,7 @@ class TestSearchMetadata(unittest.TestCase):
         Path("README.md"),
         Path("README.en.md"),
         Path("README.ja.md"),
+        Path("README.es.md"),
         Path("README.zh-Hant.md"),
         Path("FAQ.md"),
         Path("examples/README.md"),
@@ -655,11 +792,12 @@ class TestSearchMetadata(unittest.TestCase):
             self.assertTrue(build_site.first_heading(body), doc.as_posix())
 
     def test_all_documents_are_covered_once(self):
-        """元数据扫描必须覆盖四语言首页、固定页和全部 docs，不漏掉翻译页。"""
+        """元数据扫描必须覆盖五语言首页、固定页和全部 docs，不漏掉翻译页。"""
         expected = {
             Path("README.md"),
             Path("README.en.md"),
             Path("README.ja.md"),
+            Path("README.es.md"),
             Path("README.zh-Hant.md"),
             Path("FAQ.md"),
             Path("examples/README.md"),
@@ -683,6 +821,96 @@ class TestSearchMetadata(unittest.TestCase):
             any(word in meta["title"] for word in ("model_not_found", "platform is not gemini", "400", "401")),
             "FAQ 标题应包含用户会直接搜索的报错原文",
         )
+
+    def test_priority_pages_put_search_intent_in_title_h1_or_lead(self):
+        """六个优先页的首屏必须出现目标意图，标题与 H1 不能各写各的。"""
+        for path, expected in PRIORITY_PAGES.items():
+            meta, body = build_site.split_frontmatter(
+                (ROOT / path).read_text(encoding="utf-8")
+            )
+            self.assertEqual(build_site.first_heading(body), expected["h1"], path.as_posix())
+            first_paragraph = next(
+                (
+                    line.strip()
+                    for line in body.splitlines()
+                    if line.strip() and not line.startswith(("#", ">", "-", "|", "```"))
+                ),
+                "",
+            )
+            searchable = " ".join((meta["title"], expected["h1"], first_paragraph))
+            normalized = re.sub(r"\s+", "", searchable)
+            for phrase in expected["phrases"]:
+                self.assertIn(
+                    re.sub(r"\s+", "", phrase),
+                    normalized,
+                    "{0} 的首屏缺少目标短语：{1}".format(path, phrase),
+                )
+
+    def test_error_pages_use_three_fixed_sections_and_one_primary_action(self):
+        """五个报错页固定三段式，只设一个主操作，并保留一条相关 FAQ 排错内链。"""
+        for path in list(PRIORITY_PAGES)[1:]:
+            source = (ROOT / path).read_text(encoding="utf-8")
+            _meta, body = build_site.split_frontmatter(source)
+            for heading in ERROR_SECTION_HEADINGS:
+                self.assertEqual(
+                    len(re.findall(r"(?m)^" + re.escape(heading) + r"\s*$", body)),
+                    1,
+                    "{0} 缺少或不唯一的章节：{1}".format(path, heading),
+                )
+            self.assertEqual(
+                body.count("**主操作**"),
+                1,
+                "{0} 必须且只能有一个主操作".format(path),
+            )
+            self.assertRegex(
+                body,
+                r"\]\([^)]*FAQ\.md#[^)]+\)",
+                "{0} 缺少相关 FAQ 排错内链".format(path),
+            )
+
+    def test_methodology_hub_has_four_steps_and_safe_entry_action(self):
+        """方法学页首屏给出四步流程、三态结论和唯一离线主操作。"""
+        source = (ROOT / "docs" / "MODEL_VERIFICATION_METHODS.md").read_text(encoding="utf-8")
+        _meta, body = build_site.split_frontmatter(source)
+        lead = body.split("\n## ", 1)[0]
+        for phrase in ("同一协议入口", "输出分布", "长上下文", "证据不足"):
+            self.assertIn(phrase, lead)
+        self.assertIn("**匹配 / 不匹配 / 证据不足**", lead)
+        self.assertEqual(body.count("**主操作**"), 1)
+        self.assertIn("python examples/model_verify.py --selftest", body)
+        self.assertIn("https://nuoapi.net/model-plaza", body)
+        self.assertNotIn("https://nuoapi.net)", body)
+
+    def test_multilingual_entry_pages_have_one_action_and_context_link(self):
+        """英日西入口页各自回答一个市场问题，并保留单一主操作与核验内链。"""
+        for path, expected in MULTILINGUAL_ENTRY_PAGES.items():
+            meta, body = build_site.split_frontmatter(
+                (ROOT / path).read_text(encoding="utf-8")
+            )
+            self.assertEqual(build_site.first_heading(body), expected["h1"], path.as_posix())
+            self.assertEqual(
+                body.count(expected["action"]),
+                1,
+                "{0} 必须且只能有一个主操作".format(path),
+            )
+            searchable = re.sub(
+                r"\s+",
+                "",
+                " ".join((meta["title"], expected["h1"], body)),
+            ).casefold()
+            for phrase in expected["phrases"]:
+                self.assertIn(
+                    re.sub(r"\s+", "", phrase).casefold(),
+                    searchable,
+                    "{0} 的首屏缺少目标短语：{1}".format(path, phrase),
+                )
+            self.assertRegex(
+                body,
+                r"\]\(MODEL_VERIFICATION_METHODS\.md(?:#[^)]+)?\)",
+                "{0} 缺少模型核验方法学内链".format(path),
+            )
+            self.assertGreaterEqual(body.count("https://nuoapi.net/model-plaza"), 1, path)
+            self.assertLessEqual(body.count("https://nuoapi.net/model-plaza"), 2, path)
 
 
 class TestSingleFileSync(unittest.TestCase):
@@ -716,7 +944,7 @@ class TestSingleFileSync(unittest.TestCase):
         chinese_docs = [
             doc
             for doc in docs
-            if not any(doc.stem.endswith("." + locale) for locale in ("en", "ja", "zh-Hant"))
+            if not any(doc.stem.endswith("." + locale) for locale in ("en", "ja", "es", "zh-Hant"))
         ]
         for doc in chinese_docs:
             href = "/docs/{0}.html".format(doc.stem)
