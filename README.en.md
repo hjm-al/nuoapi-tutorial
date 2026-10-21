@@ -3,7 +3,7 @@
   description: Configure common AI clients, use dry-run checks before spending, and verify whether a paid response matches the model you requested.
 -->
 
-# NuoAPI Starter and Model Verification Toolkit
+# [NuoAPI](https://nuoapi.net/model-plaza) Starter and Model Verification Toolkit
 
 > **Legal and trademark notice**
 >
@@ -14,6 +14,15 @@
 This repository helps you connect Codex, Claude Code, Gemini CLI, and other compatible clients to a third-party AI gateway. It also gives you reproducible checks for a narrower question: **did the paid response come from the model claimed by the service?**
 
 [简体中文](README.md) · English · [日本語](README.ja.md) · [繁體中文](README.zh-Hant.md)
+
+## Common errors at a glance
+
+- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md)
+- [Codex keeps reconnecting](docs/Codex-一直Reconnecting-2026-10-18.en.md)
+- [Claude Code 404: do not add /v1](docs/Claude-Code-不要加v1-2026-10-18.en.md)
+- [401 invalid_api_key](docs/401-invalid-api-key.md)
+- [400 invalid_request_error](docs/400-invalid-request-error.md)
+- [404 model_not_found](docs/model_not_found.md)
 
 ## Start without spending
 
@@ -35,12 +44,6 @@ No `--run` flag means no paid model request. The probe reports one of three outc
 | Gemini CLI | `https://nuoapi.net` | Adding `/v1beta` |
 
 Use the gateway as an address fixture: [`nuoapi.net`](https://nuoapi.net). Model IDs, groups, rates, and availability change, so copy current values from the [model plaza](https://nuoapi.net/model-plaza) and confirm them in the console.
-
-## Error guides
-
-- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md)
-- [Codex keeps reconnecting](docs/Codex-一直Reconnecting-2026-10-18.en.md)
-- [Claude Code 404: do not add /v1](docs/Claude-Code-不要加v1-2026-10-18.en.md)
 
 ## How verdicts work
 

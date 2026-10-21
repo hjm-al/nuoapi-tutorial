@@ -3,44 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171a18" media="(prefers-color-scheme: dark)">
 <meta name="description" content="四种协议（Chat Completions、Responses、Messages、Gemini REST）怎么选、16+ 客户端怎么接、模型真伪怎么验，附可直接跑的探针与一键配置脚本。">
 <link rel="canonical" href="https://hjm-al.github.io/nuoapi-tutorial/">
 <title>NuoAPI 接入脚手架：Codex / Claude Code / Gemini 配置与防掺水</title>
 <style>
 :root{
-  --primary:#2563eb; --primary-dark:#1d4ed8; --primary-soft:#eff6ff; --primary-ring:rgba(37,99,235,.18);
-  --accent:#7c3aed;
-  --bg:#f3f5f9; --card:#ffffff; --card-2:#f8fafc;
-  --text:#1e293b; --text-strong:#0f172a; --muted:#64748b;
-  --border:#e2e8f0; --border-strong:#cbd5e1;
-  --code-bg:#0b1220; --code-text:#e2e8f0; --code-inline-bg:#eef2ff; --code-inline-text:#3730a3;
-  --quote-bg:#f8fafc; --quote-bar:#94a3b8;
-  --shadow:0 12px 36px rgba(15,23,42,.07);
-  --radius:16px;
+  --paper:#f5f6f2; --surface:#fbfbf8; --surface-2:#eff1ec; --ink:#191b19; --ink-strong:#101210;
+  --muted:#65706a; --line:#d7dcd6; --line-strong:#b8c0b9;
+  --rust:#a64b2f; --rust-dark:#843a25; --rust-soft:#f3e7e1;
+  --teal:#176f63; --teal-soft:#e7f1ee;
+  --primary:var(--rust); --primary-dark:var(--rust-dark); --primary-soft:var(--rust-soft); --primary-ring:rgba(166,75,47,.18);
+  --accent:var(--teal);
+  --bg:var(--paper); --card:var(--surface); --card-2:var(--surface-2);
+  --text:#343a35; --text-strong:var(--ink); --border:var(--line); --border-strong:var(--line-strong);
+  --code-bg:#1b1f1d; --code-text:#eceee9; --code-inline-bg:#e8ebe5; --code-inline-text:#30463d;
+  --quote-bg:#f0f2ed; --quote-bar:#aeb7b0;
+  --shadow:none;
+  --radius:6px;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --primary:#60a5fa; --primary-dark:#93c5fd; --primary-soft:rgba(96,165,250,.12); --primary-ring:rgba(96,165,250,.25);
-    --accent:#a78bfa;
-    --bg:#0b1220; --card:#111a2e; --card-2:#0f172a;
-    --text:#cbd5e1; --text-strong:#f1f5f9; --muted:#94a3b8;
-    --border:#1f2a44; --border-strong:#334155;
-    --code-bg:#060b16; --code-text:#e2e8f0; --code-inline-bg:rgba(129,140,248,.16); --code-inline-text:#c7d2fe;
-    --quote-bg:#0f172a; --quote-bar:#475569;
-    --shadow:0 12px 36px rgba(0,0,0,.35);
+    --paper:#171a18; --surface:#1e221f; --surface-2:#242925; --ink:#eceee9; --ink-strong:#f6f7f4;
+    --muted:#a5ada6; --line:#353c36; --line-strong:#505a52;
+    --rust:#d17a5d; --rust-dark:#e59a80; --rust-soft:#34221c;
+    --teal:#69b6aa; --teal-soft:#1c302b;
+    --primary-ring:rgba(209,122,93,.24);
+    --text:#d7dbd5; --code-bg:#101311; --code-text:#eef0ec; --code-inline-bg:#2b312c; --code-inline-text:#d7e4dd;
+    --quote-bg:#202521; --quote-bar:#57615a;
   }
 }
 /* 手动切换（顶栏按钮）：与上面一组变量保持一致 */
 :root[data-theme="dark"]{
-  --primary:#60a5fa; --primary-dark:#93c5fd; --primary-soft:rgba(96,165,250,.12); --primary-ring:rgba(96,165,250,.25);
-  --accent:#a78bfa;
-  --bg:#0b1220; --card:#111a2e; --card-2:#0f172a;
-  --text:#cbd5e1; --text-strong:#f1f5f9; --muted:#94a3b8;
-  --border:#1f2a44; --border-strong:#334155;
-  --code-bg:#060b16; --code-text:#e2e8f0; --code-inline-bg:rgba(129,140,248,.16); --code-inline-text:#c7d2fe;
-  --quote-bg:#0f172a; --quote-bar:#475569;
-  --shadow:0 12px 36px rgba(0,0,0,.35);
+  --paper:#171a18; --surface:#1e221f; --surface-2:#242925; --ink:#eceee9; --ink-strong:#f6f7f4;
+  --muted:#a5ada6; --line:#353c36; --line-strong:#505a52;
+  --rust:#d17a5d; --rust-dark:#e59a80; --rust-soft:#34221c;
+  --teal:#69b6aa; --teal-soft:#1c302b;
+  --primary-ring:rgba(209,122,93,.24);
+  --text:#d7dbd5; --code-bg:#101311; --code-text:#eef0ec; --code-inline-bg:#2b312c; --code-inline-text:#d7e4dd;
+  --quote-bg:#202521; --quote-bar:#57615a;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:76px;scroll-behavior:smooth}
@@ -48,16 +50,14 @@ body{
   margin:0;color:var(--text);font-size:16px;line-height:1.8;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
     "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
-  background:
-    radial-gradient(1000px 320px at 50% -80px, var(--primary-ring), transparent 70%),
-    var(--bg);
+  background:var(--bg);
 }
 ::selection{background:#bfdbfe;color:#0f172a}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
 /* 顶部进度条 + 应用栏 */
 #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:60;
-  background:linear-gradient(90deg,var(--primary),var(--accent))}
+  background:var(--primary)}
 .appbar{
   position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
   padding:10px 16px;background:color-mix(in srgb,var(--card) 88%,transparent);
@@ -68,17 +68,17 @@ body{
   .appbar{background:var(--card)}
 }
 .menu-btn{
-  flex:0 0 auto;width:38px;height:38px;border:none;border-radius:11px;
+  flex:0 0 auto;width:38px;height:38px;border:1px solid var(--border);border-radius:4px;
   background:var(--primary-soft);color:var(--primary);font-size:18px;
   display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
-.menu-btn:hover{box-shadow:0 0 0 3px var(--primary-ring)}
+.menu-btn:hover{background:var(--surface-2);border-color:var(--line-strong)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.brand-mark{flex:0 0 auto;width:30px;height:30px;border-radius:9px;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
-  color:#fff;font-weight:800;font-size:13px;letter-spacing:-.02em;
+.brand-mark{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--ink);border-radius:3px;
+  background:transparent;
+  color:var(--ink);font-weight:800;font-size:13px;letter-spacing:0;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 12px var(--primary-ring)}
+}
 .appbar-title{font-size:15px;font-weight:650;color:var(--text-strong);
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;letter-spacing:.01em;line-height:1.3}
 .appbar-sub{font-size:11.5px;color:var(--muted);letter-spacing:.02em;line-height:1.3;
@@ -91,14 +91,14 @@ body{
 #drawer{
   position:fixed;top:0;left:0;bottom:0;width:86%;max-width:330px;z-index:50;
   background:var(--card);transform:translateX(-100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);
-  display:flex;flex-direction:column;box-shadow:4px 0 28px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;border-right:1px solid var(--border);
 }
 #drawer.open{transform:translateX(0)}
 .drawer-head{display:flex;align-items:center;justify-content:space-between;
   padding:16px 18px;border-bottom:1px solid var(--border)}
 .drawer-head strong{font-size:15px;color:var(--text-strong)}
 .drawer-close{border:none;background:none;font-size:24px;color:var(--muted);
-  line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
+  line-height:1;cursor:pointer;padding:4px 8px;border-radius:4px}
 .drawer-close:hover{background:var(--primary-soft);color:var(--primary)}
 .drawer-body{overflow-y:auto;padding:6px 0 24px}
 .drawer-section{margin:16px 18px 4px;font-size:11.5px;font-weight:700;
@@ -118,12 +118,10 @@ article{max-width:760px;margin:0 auto;padding:26px 18px 64px;
   background:var(--card);min-height:60vh}
 article h1{font-size:26px;line-height:1.3;margin:4px 0 20px;color:var(--text-strong);
   font-weight:800;letter-spacing:-.02em;padding-bottom:16px;
-  background-image:linear-gradient(90deg,var(--primary),var(--accent));
-  background-repeat:no-repeat;background-size:72px 4px;background-position:left bottom}
+  background:none}
 article h2{font-size:20px;line-height:1.4;margin:44px 0 14px;color:var(--text-strong);
-  font-weight:750;letter-spacing:-.01em;position:relative;padding-left:14px}
-article h2::before{content:"";position:absolute;left:0;top:.28em;bottom:.28em;width:4px;border-radius:99px;
-  background:linear-gradient(180deg,var(--primary),var(--accent))}
+  font-weight:750;letter-spacing:0;position:relative;padding-left:0}
+article h2::before{display:none}
 article h3{font-size:16.5px;margin:26px 0 8px;color:var(--text-strong);font-weight:700}
 article h4{font-size:15px;margin:20px 0 6px;color:var(--text-strong);font-weight:700}
 article p{margin:10px 0}
@@ -136,12 +134,12 @@ article ul,article ol{padding-left:1.4em;margin:10px 0}
 article li{margin:6px 0}
 article li::marker{color:var(--muted)}
 article hr{border:none;border-top:1px solid var(--border);margin:32px 0}
-article img{max-width:100%;height:auto;border-radius:10px}
+article img{max-width:100%;height:auto;border-radius:4px}
 
 /* 目录节（README 里的「目录」标题下紧跟的有序列表）*/
 article h2#\76ee\5f55 + ol{
   margin:4px 0 8px;padding:10px 14px 10px 30px;list-style:decimal;
-  background:var(--card-2);border:1px solid var(--border);border-radius:12px;
+  background:var(--card-2);border:1px solid var(--border);border-radius:6px;
 }
 article h2#\76ee\5f55 + ol li{margin:2px 0}
 article h2#\76ee\5f55 + ol a{text-decoration:none}
@@ -149,13 +147,13 @@ article h2#\76ee\5f55 + ol a:hover{text-decoration:underline}
 
 /* 引用块：默认蓝色提示；文首第一块（免责声明/取证窗口）为中性灰 */
 article blockquote{
-  margin:16px 0;padding:12px 16px;background:var(--primary-soft);
-  border-left:4px solid var(--primary);border-radius:0 12px 12px 0;color:var(--text);
+  margin:16px 0;padding:12px 16px;background:var(--quote-bg);
+  border-left:2px solid var(--quote-bar);border-radius:0;color:var(--text);
   font-size:14.5px;
 }
 article blockquote:first-of-type{
   background:var(--quote-bg);border-left-color:var(--quote-bar);
-  border:1px solid var(--border);border-left:4px solid var(--quote-bar);
+  border:1px solid var(--border);border-left:2px solid var(--quote-bar);
   font-size:13.5px;line-height:1.7;color:var(--muted)}
 article blockquote:first-of-type strong{color:var(--text)}
 article blockquote p{margin:6px 0}
@@ -164,12 +162,11 @@ article blockquote ol,article blockquote ul{margin:6px 0}
 /* 代码 */
 article code{
   font-family:ui-monospace,"Cascadia Code",Consolas,"SFMono-Regular",Menlo,monospace;font-size:.86em;
-  background:var(--code-inline-bg);color:var(--code-inline-text);padding:2px 6px;border-radius:6px;
+  background:var(--code-inline-bg);color:var(--code-inline-text);padding:2px 6px;border-radius:3px;
 }
 article pre{
   position:relative;margin:18px 0;padding:42px 16px 16px;background:var(--code-bg);
-  border-radius:14px;overflow-x:auto;line-height:1.65;color-scheme:dark;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 8px 24px rgba(2,6,23,.18);
+  border:1px solid #303733;border-radius:6px;overflow-x:auto;line-height:1.65;color-scheme:dark;
 }
 article pre code{background:none;color:var(--code-text);padding:0;
   font-size:13px;line-height:1.65}
@@ -180,14 +177,14 @@ article pre::before{
 .copy-btn{
   position:absolute;top:8px;right:8px;font-size:12px;line-height:1;
   color:#e2e8f0;background:rgba(255,255,255,.08);
-  border:1px solid rgba(148,163,184,.35);border-radius:999px;padding:6px 12px;cursor:pointer;
+  border:1px solid rgba(148,163,184,.35);border-radius:4px;padding:6px 12px;cursor:pointer;
   transition:background .15s}
 .copy-btn:hover{background:rgba(255,255,255,.16)}
 .copy-btn.done{background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.5)}
 
 /* 表格 */
 .table-wrap{overflow-x:auto;margin:18px 0;border:1px solid var(--border);
-  border-radius:12px;-webkit-overflow-scrolling:touch;background:var(--card)}
+  border-radius:6px;-webkit-overflow-scrolling:touch;background:var(--card)}
 article table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
 article th,article td{padding:10px 12px;text-align:left;vertical-align:top;
   border-bottom:1px solid var(--border);line-height:1.6}
@@ -216,19 +213,18 @@ article tr:last-child td{border-bottom:none}
   text-decoration-color:var(--border-strong)}
 .site-footer a:hover{color:var(--primary)}
 .site-footer .foot-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;
-  color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:0 8px;margin-right:6px;
+  color:var(--muted);border:1px solid var(--border);border-radius:3px;padding:0 8px;margin-right:6px;
   vertical-align:middle;line-height:18px}
 
 #toTop{
   position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));
-  width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+  width:46px;height:46px;border-radius:4px;border:1px solid var(--border-strong);cursor:pointer;
   background:var(--primary);color:#fff;font-size:20px;z-index:30;
   display:none;align-items:center;justify-content:center;
-  box-shadow:0 8px 20px var(--primary-ring);
 }
 #toTop:hover{background:var(--primary-dark)}
 @media (min-width:768px){
-  article{margin:28px auto 24px;border-radius:var(--radius);box-shadow:var(--shadow);
+  article{margin:28px auto 24px;border-radius:0;
     padding:40px 44px 72px;border:1px solid var(--border)}
   article h1{font-size:32px}
   article h2{font-size:22px}
@@ -237,12 +233,12 @@ article tr:last-child td{border-bottom:none}
 }
 @media print{
   .appbar,#drawer,#mask,#toTop,#progress,.copy-btn,.anchor,.table-toggle{display:none!important}
-  article{box-shadow:none;border:none;max-width:none}
+  article{border:none;max-width:none}
 }
 
 /* 顶栏右侧：主题切换 */
 .appbar-actions{margin-left:auto;display:flex;gap:6px;flex:0 0 auto}
-.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:10px;background:var(--card);
+.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:4px;background:var(--card);
   color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1}
 .icon-btn:hover{color:var(--primary);border-color:var(--primary)}
 .icon-btn .i-dark{display:none}
@@ -263,9 +259,9 @@ h2:hover .anchor,h3:hover .anchor,.anchor:focus{opacity:1}
 
 /* 抽屉：过滤框 */
 .drawer-filter{margin:10px 14px 2px}
-.drawer-filter input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:10px;
+.drawer-filter input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:4px;
   background:var(--card-2);color:var(--text);font-size:14px;outline:none;-webkit-appearance:none}
-.drawer-filter input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-ring)}
+.drawer-filter input:focus{border-color:var(--primary)}
 #drawer li.hide,#drawer .drawer-section.hide{display:none}
 .drawer-empty{display:none;padding:14px 18px;color:var(--muted);font-size:13px}
 .drawer-empty.show{display:block}
@@ -275,7 +271,7 @@ article a[target="_blank"]::after{content:"\2197";font-size:.72em;margin-left:2p
 
 /* 宽表横滚时首列吸附 */
 .table-wrap td:first-child,.table-wrap th:first-child{position:sticky;left:0;background:var(--card);z-index:1;
-  box-shadow:inset -1px 0 0 var(--border)}
+  border-right:1px solid var(--border)}
 .table-wrap th:first-child{background:var(--card-2);z-index:2}
 article tbody tr:hover td:first-child{background:var(--primary-soft)}
 
@@ -287,7 +283,7 @@ article tbody tr:hover td:first-child{background:var(--primary-soft)}
   .page article{flex:1;min-width:0;max-width:none;margin-left:0;margin-right:0}
   .page-side{display:block;width:250px;flex:0 0 250px;position:sticky;top:72px;max-height:calc(100vh - 92px);
     overflow-y:auto;margin-top:28px;padding:12px 8px;background:var(--card);border:1px solid var(--border);
-    border-radius:var(--radius);box-shadow:var(--shadow);font-size:13px}
+    border-radius:0;font-size:13px}
   .page-side .side-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
     color:var(--muted);margin:4px 0 8px;padding:0 8px}
   .page-side ul{list-style:none;margin:0;padding:0}
@@ -298,13 +294,408 @@ article tbody tr:hover td:first-child{background:var(--primary-soft)}
   .page-side a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
 }
 
+/* 技术手册视觉层：纸面、细线、编号与低密度强调色 */
+body{
+  background:var(--paper);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.78;
+}
+::selection{background:var(--rust-soft);color:var(--ink-strong)}
+:focus-visible{outline:2px solid var(--rust);outline-offset:3px}
+.appbar{
+  gap:14px;padding:10px 18px;background:var(--paper);
+  border-bottom:1px solid var(--line);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+#progress{height:2px;background:var(--rust)}
+.menu-btn,.icon-btn,.drawer-close{
+  border:1px solid var(--line);border-radius:4px;background:transparent;
+  color:var(--ink);box-shadow:none;
+}
+.menu-btn:hover,.icon-btn:hover,.drawer-close:hover{
+  border-color:var(--line-strong);color:var(--rust);background:var(--surface-2);
+}
+.brand{gap:11px}
+.brand-mark{
+  width:30px;height:30px;border:1px solid var(--ink);border-radius:3px;
+  background:transparent;color:var(--ink);box-shadow:none;
+  font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:13px;font-weight:700;letter-spacing:0;
+}
+.appbar-title{
+  color:var(--ink-strong);font-size:14.5px;font-weight:650;letter-spacing:0;
+}
+.appbar-sub{
+  color:var(--muted);font-size:11px;letter-spacing:.025em;
+}
+.appbar-actions{gap:8px;min-width:0}
+.lang-switch a{
+  min-width:31px;height:30px;padding:0 7px;border:1px solid var(--line);
+  border-radius:4px;background:transparent;color:var(--muted);font-size:11px;
+}
+.lang-switch a:hover{border-color:var(--line-strong);color:var(--rust);background:var(--surface-2)}
+.lang-switch a.current{border-color:var(--ink);background:transparent;color:var(--ink);font-weight:650}
+
+#mask{background:rgba(12,15,13,.46)}
+#drawer{
+  background:var(--paper);border-right:1px solid var(--line);
+  box-shadow:none;
+}
+.drawer-head{padding:16px 18px;border-bottom:1px solid var(--line)}
+.drawer-head strong{font-size:14px;color:var(--ink)}
+.drawer-language{border-bottom:1px solid var(--line)}
+.drawer-language a{border:1px solid var(--line);border-radius:4px;color:var(--text)}
+.drawer-language a.current{border-color:var(--ink);background:transparent;color:var(--ink)}
+.drawer-section,.side-title,.toc-box strong{
+  color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.11em;
+}
+#drawer .toc a{
+  border-left:0;padding:8px 18px;color:var(--text);
+}
+#drawer .toc a:hover{background:var(--surface-2);color:var(--rust)}
+#drawer .toc a.active,#drawer .toc a.current{
+  border-left:0;background:var(--surface-2);color:var(--rust);font-weight:650;
+}
+.drawer-filter input{
+  border:1px solid var(--line);border-radius:4px;background:var(--surface);
+  color:var(--ink);
+}
+.drawer-filter input:focus{border-color:var(--rust);box-shadow:none;outline:1px solid var(--rust)}
+
+article{
+  max-width:760px;min-width:0;padding:40px 24px 76px;margin:0 auto;
+  background:transparent;border:0;border-radius:0;box-shadow:none;
+}
+article > *{min-width:0}
+article h1{
+  margin:0 0 24px;padding:0;background:none;color:var(--ink-strong);
+  font-size:32px;line-height:1.25;font-weight:760;letter-spacing:0;
+  overflow-wrap:anywhere;
+}
+article h2{
+  margin:0 0 16px;padding:0;color:var(--ink-strong);
+  font-size:24px;line-height:1.35;font-weight:700;letter-spacing:0;
+}
+article h2::before{display:none}
+article h3{
+  margin:28px 0 8px;color:var(--ink-strong);
+  font-size:18px;line-height:1.45;font-weight:680;letter-spacing:0;
+}
+article h4{margin:22px 0 7px;color:var(--ink);font-size:15.5px;letter-spacing:0}
+article p{margin:12px 0}
+article a{
+  color:var(--rust);text-decoration-color:rgba(166,75,47,.42);
+  text-decoration-thickness:1px;text-underline-offset:3px;
+  overflow-wrap:anywhere;
+}
+article a:hover{color:var(--rust-dark);text-decoration-color:currentColor}
+article strong{color:var(--ink-strong)}
+article ul,article ol{padding-left:1.35em}
+article li{margin:7px 0}
+article li::marker{color:var(--muted)}
+article hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+article img{max-width:100%;height:auto;border-radius:4px}
+
+.doc-section{
+  padding:40px 0 10px;margin:0;min-width:0;
+}
+article > .doc-section + .doc-section{border-top:1px solid var(--line)}
+.doc-section > :last-child{margin-bottom:0}
+.doc-section:first-child{padding-top:4px}
+
+article blockquote{
+  margin:20px 0;padding:13px 16px;border:0;border-left:2px solid var(--line-strong);
+  border-radius:0;background:var(--quote-bg);color:var(--text);font-size:14.5px;
+}
+article blockquote:first-of-type{
+  border:0;border-left:2px solid var(--line-strong);color:var(--text);
+  background:var(--quote-bg);font-size:14.5px;line-height:1.72;
+}
+article blockquote p{margin:6px 0}
+article blockquote:first-of-type strong{color:var(--ink-strong)}
+
+article code{
+  border-radius:3px;background:var(--code-inline-bg);color:var(--code-inline-text);
+  padding:.12em .35em;font-size:.86em;overflow-wrap:anywhere;
+}
+article pre{
+  max-width:100%;margin:20px 0;padding:40px 16px 16px;border:1px solid #303733;
+  border-radius:6px;background:var(--code-bg);box-shadow:none;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+article pre code{overflow-wrap:normal;word-break:normal;white-space:pre}
+article pre::before{color:#a9b3ac;font-size:10px;letter-spacing:.11em}
+.copy-btn{
+  top:8px;right:8px;padding:5px 10px;border:1px solid #4b554e;border-radius:3px;
+  background:#262c28;color:#e2e7e1;font-size:11px;
+}
+.copy-btn:hover{background:#343b36}
+.copy-btn.done{border-color:#4f8c78;background:#223b32}
+
+.table-wrap{
+  max-width:100%;margin:22px 0;border:1px solid var(--line);border-radius:6px;
+  background:var(--surface);overflow-x:auto;overscroll-behavior-inline:contain;
+}
+article table{min-width:560px;font-size:13.5px}
+article th,article td{padding:10px 12px;border-bottom:1px solid var(--line)}
+article th{background:var(--surface-2);color:var(--ink-strong);font-weight:650;white-space:normal}
+article tbody tr:hover{background:var(--surface-2)}
+.table-wrap td:first-child,.table-wrap th:first-child{background:var(--surface)}
+.table-wrap th:first-child{background:var(--surface-2)}
+article tbody tr:hover td:first-child{background:var(--surface-2)}
+.table-toggle{
+  border:0;border-bottom:1px solid var(--line);border-radius:0;
+  background:var(--surface-2);color:var(--rust);
+}
+
+.internal-toc{padding-top:36px}
+.internal-toc > ol{
+  margin:0;padding:18px 18px 18px 2.2em;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);background:transparent;border-radius:0;
+  color:var(--text);
+}
+.internal-toc > ol a{color:var(--text);text-decoration:none}
+.internal-toc > ol a:hover{color:var(--rust);text-decoration:underline}
+
+.home-hero{padding:6px 0 34px;border-bottom:1px solid var(--line)}
+article .home-hero h1{margin-bottom:20px}
+.home-disclaimer{
+  margin:0 0 24px;padding:11px 0;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.7;
+}
+.home-disclaimer summary{
+  cursor:pointer;color:var(--ink);font-weight:650;letter-spacing:.01em;
+}
+.home-disclaimer summary:hover{color:var(--rust)}
+.home-disclaimer .legal-copy{padding:8px 0 1px 1.25em}
+.home-disclaimer ol{margin:2px 0;padding-left:1.15em}
+.home-disclaimer li{margin:5px 0}
+.home-lede{
+  max-width:720px;margin:0;color:var(--ink);font-size:20px;line-height:1.65;
+  overflow-wrap:anywhere;
+}
+.home-lede strong{font-weight:680}
+.home-hero + .doc-section{padding-top:34px}
+.home-hero + .doc-section > ol{
+  counter-reset:home-task;list-style:none;margin:24px 0;padding:0;
+  border-top:1px solid var(--line);
+}
+.home-hero + .doc-section > ol > li{
+  counter-increment:home-task;position:relative;display:block;min-width:0;
+  margin:0;padding:16px 0 16px 64px;
+  border-bottom:1px solid var(--line);
+  overflow-wrap:anywhere;
+}
+.home-hero + .doc-section > ol > li::before{
+  content:counter(home-task,decimal-leading-zero);position:absolute;left:0;top:16px;
+  color:var(--rust);
+  font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:12px;font-weight:700;line-height:1.9;letter-spacing:.04em;
+}
+.home-status{
+  margin:0 0 12px;padding:13px 0 15px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.75;
+}
+.home-status p{
+  display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;margin:5px 0;
+  overflow-wrap:anywhere;
+}
+.home-status img{display:inline-block;width:auto;max-width:100%;height:20px;border-radius:0}
+.home-status a{color:var(--muted);text-decoration-color:var(--line-strong)}
+.home-status a:hover{color:var(--rust)}
+
+body[data-page-kind="faq"] .faq-entry{
+  display:grid;grid-template-columns:50px minmax(0,1fr);column-gap:20px;
+  padding:28px 0;border-top:1px solid var(--line);
+}
+body[data-page-kind="faq"] .faq-entry::before{
+  content:attr(data-entry);grid-column:1;grid-row:1 / span 20;
+  color:var(--rust);font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:12px;font-weight:700;line-height:1.9;letter-spacing:.05em;
+}
+body[data-page-kind="faq"] .faq-entry > *{grid-column:2;min-width:0}
+body[data-page-kind="faq"] .faq-entry > h2{
+  margin:0 0 10px;font-size:20px;line-height:1.45;
+}
+body[data-page-kind="faq"] .faq-entry > h2 .anchor{margin-top:1px}
+body[data-page-kind="faq"] .faq-entry:first-of-type{border-top:0;padding-top:20px}
+
+body[data-page-kind="error"] .doc-section[data-role]{
+  display:grid;grid-template-columns:104px minmax(0,1fr);column-gap:24px;
+  padding:30px 0;border-top:1px solid var(--line);
+}
+body[data-page-kind="error"] .doc-section[data-role]::before{
+  content:attr(data-section-index) " / " attr(data-role-label);
+  grid-column:1;grid-row:1 / span 24;color:var(--muted);
+  font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:10.5px;font-weight:700;line-height:1.7;letter-spacing:.055em;
+  text-transform:uppercase;overflow-wrap:anywhere;
+}
+body[data-page-kind="error"] .doc-section[data-role] > *{
+  grid-column:2;min-width:0;
+}
+body[data-page-kind="error"] .doc-section[data-role] > h2{
+  margin:0 0 12px;font-size:22px;
+}
+body[data-page-kind="error"] .doc-section[data-role="symptom"]::before{color:var(--rust)}
+body[data-page-kind="error"] .doc-section[data-role="fix"]::before{color:var(--ink)}
+body[data-page-kind="error"] .doc-section[data-role="verify"]::before{color:var(--teal)}
+body[data-page-kind="error"] .doc-section[data-role="verify"]{
+  border-top-color:var(--teal);
+}
+body[data-page-kind="error"] .doc-section[data-role="related"],
+body[data-page-kind="error"] .doc-section[data-role="detail"]{
+  padding-top:24px;padding-bottom:24px;font-size:14.5px;
+}
+body[data-page-kind="error"] .doc-section[data-role="related"] > h2,
+body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19px}
+
+.crumb{
+  max-width:760px;margin:20px auto 0;padding:0 24px;color:var(--muted);font-size:12px;
+}
+.crumb a:hover{color:var(--rust)}
+.side-card{
+  padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+}
+.side-title{margin:6px 0 9px;padding:0}
+.side-nav a,.toc-box a,.page-side a{
+  border-radius:3px;color:var(--text);padding:5px 7px;
+}
+.side-nav a:hover,.toc-box a:hover,.page-side a:hover{
+  background:var(--surface-2);color:var(--rust);
+}
+.side-nav a.current,.toc-box a.active,.page-side a.active{
+  background:var(--surface-2);color:var(--rust);font-weight:650;
+}
+.side-group{
+  margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+}
+.toc-box{
+  margin:0 0 20px;padding:0 0 18px;border:0;border-bottom:1px solid var(--line);
+}
+.toc-box strong{margin-bottom:8px}
+.page-side{
+  font-size:13px;background:transparent;border:0;border-radius:0;box-shadow:none;
+}
+.pager{
+  max-width:760px;gap:0;padding:0 24px 8px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.pager a{
+  padding:15px 0;border:0;border-radius:0;background:transparent;color:var(--text);
+}
+.pager a + a{border-left:0}
+.pager a:hover{border-color:transparent;box-shadow:none;color:var(--rust)}
+.pager a span{color:var(--muted);font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
+.pager a.next{text-align:right}
+.site-footer{
+  max-width:760px;padding:20px 24px 58px;color:var(--muted);font-size:12px;
+}
+.site-footer .foot-card{border-top:1px solid var(--line);padding-top:18px;text-align:left}
+.site-footer .foot-label{
+  border:0;border-radius:0;padding:0;color:var(--ink);font-size:10.5px;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.site-footer a:hover{color:var(--rust)}
+#toTop{
+  width:40px;height:40px;border:1px solid var(--line-strong);border-radius:4px;
+  background:var(--paper);color:var(--ink);box-shadow:none;
+}
+#toTop:hover{background:var(--surface-2);color:var(--rust)}
+.anchor{color:var(--muted)}
+.anchor.copied{color:var(--teal)}
+
+@media (min-width:768px){
+  article{padding:48px 32px 88px}
+  article h1{font-size:38px}
+  article h2{font-size:25px}
+  .home-lede{font-size:21px}
+  .pager{grid-template-columns:1fr 1fr;gap:0}
+  .pager a:first-child{padding-right:22px}
+  .pager a.next{padding-left:22px;border-left:1px solid var(--line)}
+}
+@media (min-width:900px){
+  .menu-btn{display:none}
+  .layout{
+    display:grid;grid-template-columns:260px minmax(0,760px);
+    justify-content:center;gap:56px;max-width:1120px;padding:0 24px;
+  }
+  .side{
+    display:block;position:sticky;top:72px;max-height:calc(100vh - 92px);
+    overflow-y:auto;padding:34px 0 48px;
+  }
+  .layout article{width:100%;max-width:760px;margin:0;padding:46px 0 88px}
+  .crumb{max-width:1120px;padding:0 24px}
+  .pager{max-width:760px;padding-left:0;padding-right:0;margin-left:calc((100% - 760px) / 2)}
+  .site-footer{max-width:760px;padding-left:0;padding-right:0;margin-left:calc((100% - 760px) / 2)}
+}
+@media (min-width:1000px){
+  .page{
+    display:grid;grid-template-columns:minmax(0,760px) 238px;
+    justify-content:center;gap:52px;max-width:1090px;padding:0 24px;
+  }
+  .page article{width:100%;max-width:760px;margin:0;padding:46px 0 88px}
+  .page-side{
+    display:block;width:238px;position:sticky;top:72px;
+    max-height:calc(100vh - 92px);overflow-y:auto;margin:46px 0 0;padding:0;
+  }
+}
+@media (max-width:899px){
+  .internal-toc{display:none}
+  .appbar{padding:10px 14px}
+  .appbar .lang-switch{display:none}
+  .doc-section{padding:34px 0 8px}
+  body[data-page-kind="faq"] .faq-entry{
+    grid-template-columns:42px minmax(0,1fr);column-gap:14px;padding:24px 0;
+  }
+  body[data-page-kind="error"] .doc-section[data-role]{
+    display:block;padding:28px 0;
+  }
+  body[data-page-kind="error"] .doc-section[data-role]::before{
+    display:block;margin:0 0 9px;
+  }
+  body[data-page-kind="error"] .doc-section[data-role="verify"]{
+    background:none;
+  }
+  .pager{grid-template-columns:1fr;gap:0}
+  .pager a.next{border-left:0;border-top:1px solid var(--line);text-align:left}
+}
+@media (max-width:520px){
+  html{scroll-padding-top:68px}
+  .appbar{gap:10px;padding:9px 12px}
+  .brand-mark{width:28px;height:28px}
+  .appbar-title{font-size:13.5px}
+  .appbar-sub{display:none}
+  .appbar-actions{gap:5px}
+  .icon-btn{width:34px;height:34px}
+  article{padding:30px 16px 64px}
+  article h1{font-size:29px;line-height:1.28}
+  article h2{font-size:22px}
+  article h3{font-size:17px}
+  .home-hero{padding-bottom:28px}
+  .home-lede{font-size:18px;line-height:1.65}
+  .home-hero + .doc-section > ol > li{padding-left:48px}
+  .home-status p{display:block}
+  .home-status a{display:inline}
+  body[data-page-kind="faq"] .faq-entry{
+    grid-template-columns:34px minmax(0,1fr);column-gap:10px;
+  }
+  body[data-page-kind="faq"] .faq-entry > h2{font-size:18.5px}
+  body[data-page-kind="error"] .doc-section[data-role] > h2{font-size:20px}
+  .pager{padding-left:16px;padding-right:16px}
+  .site-footer{padding-left:16px;padding-right:16px}
+  article pre{font-size:12.5px}
+}
+
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{transition:none!important;animation:none!important}
 }
 </style>
 </head>
-<body>
+<body data-page-kind="home">
 <div id="progress"></div>
 <header class="appbar">
   <button id="menuBtn" class="menu-btn" aria-label="打开目录">&#9776;</button>
@@ -312,7 +703,7 @@ article tbody tr:hover td:first-child{background:var(--primary-soft)}
     <div class="brand-mark" aria-hidden="true">N</div>
     <div>
       <div class="appbar-title">NuoAPI 接入脚手架</div>
-      <div class="appbar-sub">离线单页版 · 构建于 2026-10-20 23:41</div>
+      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 13:28</div>
     </div>
   </div>
   <div class="appbar-actions"><button id="themeBtn" class="icon-btn" type="button" title="切换主题"><span class="i-light">&#9788;</span><span class="i-dark">&#9790;</span></button></div>
@@ -326,6 +717,7 @@ article tbody tr:hover td:first-child{background:var(--primary-soft)}
   </div>
   <div class="drawer-body"><div class="drawer-section">本页章节</div><div class="toc">
 <ul>
+<li><a href="#常见问题速查">常见问题速查</a></li>
 <li><a href="#先看计划不花钱">先看计划，不花钱</a></li>
 <li><a href="#交给助手">交给助手</a><ul>
 <li><a href="#会不会把-api-key-传走">会不会把 API Key 传走？</a></li>
@@ -353,21 +745,13 @@ article tbody tr:hover td:first-child{background:var(--primary-soft)}
 
 <div class="page">
 <article>
-<h1 id="nuoapi-接入脚手架与防掺水取证工具箱">NuoAPI 接入脚手架与防掺水取证工具箱</h1>
-<blockquote>
-<p><strong>法律与第三方商标免责声明</strong></p>
+<header class="home-hero"><h1 id="nuoapi-接入脚手架与防掺水取证工具箱"><a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net/model-plaza">NuoAPI</a> 接入脚手架与防掺水取证工具箱</h1><details class="home-disclaimer"><summary>法律与第三方商标免责声明</summary><div class="legal-copy">
 <ol>
 <li>本项目是独立开发者维护的技术研究、配置脚手架与诊断测试套件，<strong>本仓库本身不提供、不代售任何 API 服务</strong>，与 OpenAI、Anthropic、Google、xAI、ByteDance（字节跳动）、DeepSeek、MiniMax 等厂商不存在官方关联、投资、赞助或合作关系。</li>
 <li>文中 "OpenAI"、"Codex"、"Claude"、"Gemini"、"Grok" 等名称与商标归各自厂商所有，提及它们仅为描述协议兼容性、格式转换与技术指引之必要用途。</li>
 <li>所有示例只含占位符（<code>YOUR_NUOAPI_API_KEY</code>），不收集任何人的 Key；使用第三方服务前请自行核对其服务条款、隐私政策、价格与可用性。</li>
 </ol>
-</blockquote>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml"><img alt="契约测试" src="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg" /></a>
-<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/"><img alt="GitHub Pages" src="https://img.shields.io/badge/docs-GitHub%20Pages-2563eb" /></a>
-<a href="../LICENSE"><img alt="许可证: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a></p>
-<p>在线文档：<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/">https://hjm-al.github.io/nuoapi-tutorial/</a> · 仓库：<a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial">https://github.com/hjm-al/nuoapi-tutorial</a> · 语言：<a href="../README.md">简体中文</a> / <a href="../README.en.md">English</a> / <a href="../README.ja.md">日本語</a> / <a href="../README.zh-Hant.md">繁體中文</a></p>
-<p>一套面向<strong>买方视角</strong>的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——<strong>"我付费调用的，是不是它声称的那个模型？"</strong></p>
-<h2 id="先看计划不花钱">先看计划，不花钱</h2>
+</div></details><p class="home-lede">一套面向<strong>买方视角</strong>的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——<strong>"我付费调用的，是不是它声称的那个模型？"</strong></p></header><section class="doc-section" data-section-index="02"><h2 id="先看计划不花钱">先看计划，不花钱</h2>
 <p>接入和核对都可以先在本地看一遍将要发生什么，再决定要不要发出会计费的请求。</p>
 <ol>
 <li><strong>怎么接</strong>。Codex、Claude Code、Gemini CLI 的 Base URL 不是同一段，配错时常见的是 404，或者连上了但协议不对。</li>
@@ -382,9 +766,18 @@ python examples/model_verify.py
 <pre><code class="language-bash">python examples/evidence_capture.py --probe models
 </code></pre>
 <p>加上 <code>--run</code> 之后，这条是 <code>GET /v1/models</code>，不产生 token 费用。客户端配置可以改用 <a href="../examples/quick_setup.ps1"><code>examples/quick_setup.ps1</code></a> 或 <a href="../examples/quick_setup.sh"><code>quick_setup.sh</code></a>，已有文件会先备份。</p>
-<p>已经遇到报错时，可以先看对应的短页：<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">Gemini CLI 报 <code>platform is not gemini</code></a>、<a href="../docs/Codex-一直Reconnecting-2026-10-18.md">Codex 一直 Reconnecting</a>、<a href="../docs/Claude-Code-不要加v1-2026-10-18.md">Claude Code 不要加 <code>/v1</code></a>。</p>
-<p>更多可直接搜索的报错原文：<a href="../docs/401-invalid-api-key.md"><code>401 invalid_api_key</code></a>、<a href="../docs/model_not_found.md"><code>model_not_found</code></a>、<a href="../docs/400-invalid-request-error.md"><code>400 invalid_request_error</code></a>、<a href="../docs/Cursor-Roo-Code-Base-URL.md">Cursor / Roo Code Base URL</a>、<a href="../docs/WSL-command-not-found.md">WSL <code>\r: command not found</code></a>。</p>
-<h2 id="交给助手">交给助手</h2>
+</section><div class="home-status"><p><a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml"><img alt="契约测试" src="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg" /></a>
+<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/"><img alt="GitHub Pages" src="https://img.shields.io/badge/docs-GitHub%20Pages-2563eb" /></a>
+<a href="../LICENSE"><img alt="许可证: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a></p><p>在线文档：<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/">https://hjm-al.github.io/nuoapi-tutorial/</a> · 仓库：<a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial">https://github.com/hjm-al/nuoapi-tutorial</a> · 语言：<a href="../README.md">简体中文</a> / <a href="../README.en.md">English</a> / <a href="../README.ja.md">日本語</a> / <a href="../README.zh-Hant.md">繁體中文</a></p></div><section class="doc-section" data-section-index="01"><h2 id="常见问题速查">常见问题速查</h2>
+<ul>
+<li><a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">Gemini CLI 报 <code>platform is not gemini</code></a></li>
+<li><a href="../docs/Codex-一直Reconnecting-2026-10-18.md">Codex 一直 Reconnecting</a></li>
+<li><a href="../docs/Claude-Code-不要加v1-2026-10-18.md">Claude Code 不要加 <code>/v1</code></a></li>
+<li><a href="../docs/401-invalid-api-key.md"><code>401 invalid_api_key</code></a></li>
+<li><a href="../docs/400-invalid-request-error.md"><code>400 invalid_request_error</code></a></li>
+<li><a href="../docs/model_not_found.md"><code>404 model_not_found</code></a></li>
+</ul>
+</section><section class="doc-section" data-section-index="03"><h2 id="交给助手">交给助手</h2>
 <p>这些步骤也可以交给当前的编程助手。说明写在 <code>skills/nuoapi-setup/SKILL.md</code>，只在你提出来的时候使用。助手会先跑不带 <code>--run</code> 的探针，并把脚本印出的结论转述给你。</p>
 <h3 id="会不会把-api-key-传走">会不会把 API Key 传走？</h3>
 <p>示例和脚本都在你自己的电脑上运行。Key 来自环境变量，或来自你当时粘贴的内容；这个仓库不接收、也不保存它。打印出来的 Key 会打码。真正探测时，更稳妥的是单独建一把用完就删的测试 Key。</p>
@@ -394,7 +787,7 @@ python examples/model_verify.py
 <p>探针给出三种说法：匹配、不匹配、证据不足。响应快慢，以及模型自己怎么称呼自己，只作记录，不单独形成结论。样本不够或请求失败时，记为证据不足，不能据此说成匹配。</p>
 <p>本文以网关 <code>https://nuoapi.net</code>（<a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net/model-plaza">模型广场</a>可按「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，<strong>一切以模型广场和控制台实时显示为准</strong>；文中标注取证窗口的结论只代表该时间点的观察。</p>
 <hr />
-<h2 id="目录">目录</h2>
+</section><section class="doc-section internal-toc" data-section-index="04" data-landmark="toc"><h2 id="目录">目录</h2>
 <ol>
 <li><a href="#先看计划不花钱">先看计划，不花钱</a></li>
 <li><a href="#交给助手">交给助手</a></li>
@@ -412,7 +805,7 @@ python examples/model_verify.py
 <li><a href="#许可证">许可证</a></li>
 </ol>
 <hr />
-<h2 id="仓库里有什么">仓库里有什么</h2>
+</section><section class="doc-section" data-section-index="05"><h2 id="仓库里有什么">仓库里有什么</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -511,7 +904,7 @@ python examples/model_verify.py
 </tr>
 </tbody>
 </table></div>
-<h2 id="先认清四种协议面孔">先认清四种协议面孔</h2>
+</section><section class="doc-section" data-section-index="06"><h2 id="先认清四种协议面孔">先认清四种协议面孔</h2>
 <p>客户端设置里名字再多，本仓库面向通用文本与 Agent 客户端归纳为四种常见报文协议：Chat Completions、Responses、Messages、Gemini 原生。xAI（Grok）、DeepSeek、MiniMax 等模型在许多第三方客户端中也通过现有兼容协议接入，不能只凭厂商名判断协议。<strong>Base URL 是前缀，不是完整请求地址</strong>，客户端通常会继续拼接路径。概念、报文差异和判断方法见<a href="../docs/AI模型API协议科普-2026-10-12.md">《AI 模型 API 协议科普》</a>，下表仅作配置速查。</p>
 <div class="table-wrap"><table>
 <thead>
@@ -550,9 +943,9 @@ python examples/model_verify.py
 </tbody>
 </table></div>
 <p>选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>（根地址）+ <code>GEMINI_API_KEY</code> + <code>GEMINI_MODEL</code>；报 <code>400 platform is not gemini</code> 时按<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">这篇短页</a>改，不要先当成 Key 无效。</p>
-<h2 id="三分钟快速开始">三分钟快速开始</h2>
+</section><section class="doc-section" data-section-index="07"><h2 id="三分钟快速开始">三分钟快速开始</h2>
 <ol>
-<li>在 <a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net">https://nuoapi.net</a> 注册并创建一个<strong>专门用于测试</strong>的 API Key。</li>
+<li>在 <code>https://nuoapi.net</code> 注册并创建一个<strong>专门用于测试</strong>的 API Key。</li>
 <li>从模型广场或当前 Key 的 <code>/v1/models</code> 复制<strong>精确模型名</strong>，不要凭印象写、不要照抄别的账号。</li>
 <li>判断客户端走哪张协议面孔（上表），选对 Base URL。</li>
 <li>跑一键脚本（可选），或按下文手动配置。</li>
@@ -568,7 +961,7 @@ python examples/model_verify.py
 bash ./examples/quick_setup.sh
 </code></pre>
 <p>环境要求：<strong>Python 3.10+</strong>（真伪探针与全部零依赖示例；3 个 OpenAI SDK 示例另需 <code>pip install openai</code>）、Windows PowerShell 5.1+ 或任意 POSIX bash。脚本不会内置任何模型名，模型 ID 一律以你当前 Key 的模型广场列表为准。命令行客户端本身（Claude Code / Codex / Gemini CLI）需要先装 Node.js 再用 npm 安装，步骤见<a href="../docs/接入第三方工具教程-2026-09-26.md#2-命令行客户端先安装-nodejs-与-cli">接入教程第 2 节</a>。</p>
-<h2 id="各客户端cli-接入要点">各客户端/CLI 接入要点</h2>
+</section><section class="doc-section" data-section-index="08"><h2 id="各客户端cli-接入要点">各客户端/CLI 接入要点</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -665,7 +1058,7 @@ bash ./examples/quick_setup.sh
 [Environment]::SetEnvironmentVariable(&quot;ANTHROPIC_AUTH_TOKEN&quot;, &quot;YOUR_NUOAPI_API_KEY&quot;, &quot;User&quot;)
 </code></pre>
 <p>不同操作系统、Docker 与 CI 环境的完整接法（<code>$env:</code>/<code>export</code>/<code>~/.bashrc</code>/Secrets 注入、配置文件路径对照）见 <a href="../docs/接入第三方工具教程-2026-09-26.md#3-通用配置载体">接入教程第 3 节：通用配置载体</a>。</p>
-<h2 id="多语言调用样例与四协议最小示例">多语言调用样例与四协议最小示例</h2>
+</section><section class="doc-section" data-section-index="09"><h2 id="多语言调用样例与四协议最小示例">多语言调用样例与四协议最小示例</h2>
 <p>在 <a href="../examples/"><code>examples/</code></a> 中：Python、Node.js、Go（零依赖）、Rust、Java 11+、C#、PHP、curl（<a href="../examples/curl.ps1"><code>curl.ps1</code></a> / <a href="../examples/curl.sh"><code>curl.sh</code></a>）都有最小请求；另有 <a href="../examples/openai_stream.py"><code>openai_stream.py</code></a>（SSE 流式）、<a href="../examples/function_calling.py"><code>function_calling.py</code></a>（工具调用）。</p>
 <p>四种协议面孔各发一句 <code>hello</code> 的最小脚本（先设 <code>NUOAPI_API_KEY</code> 和 <code>NUOAPI_MODEL</code>；需要 Python 3.10+）：</p>
 <pre><code class="language-powershell">$env:NUOAPI_API_KEY = &quot;YOUR_NUOAPI_API_KEY&quot;
@@ -677,7 +1070,7 @@ python examples/gemini_native.py        # Gemini 原生 /v1beta generateContent�
 </code></pre>
 <p>各示例的依赖归属（哪些零依赖、哪些需要 <code>pip install openai</code>）见 <a href="../examples/README.md">examples/README.md</a>。</p>
 <p>这些最小样例只证明"协议通了"。<strong>HTTP 200 ≠ 高级能力可用</strong>：工具调用、流式、图片、联网、长上下文要分别核对响应字段与实际结果。</p>
-<h2 id="模型清单与选型带取证窗口">模型清单与选型（带取证窗口）</h2>
+</section><section class="doc-section" data-section-index="10"><h2 id="模型清单与选型带取证窗口">模型清单与选型（带取证窗口）</h2>
 <p>优先用当前 Key 拉取自己分组可见的模型，不要抄旧文档：</p>
 <pre><code class="language-bash">curl -s &quot;https://nuoapi.net/v1/models&quot; \
   -H &quot;Authorization: Bearer YOUR_NUOAPI_API_KEY&quot; \
@@ -730,7 +1123,7 @@ python examples/gemini_native.py        # Gemini 原生 /v1beta generateContent�
 <blockquote>
 <p><strong>上表是 09-21 前后的观察，不要当现价用。</strong> 模型广场的分组、倍率与在架模型每天都在变，且页面还提示"登录后可查看你的专属分组与专属倍率"——<strong>公开倍率不等于你的实付价</strong>。当前的完整清单（14 个分组、每个组可用模型全列）见<a href="../docs/模型广场清单-2026-10-18.md">《模型广场清单（10-18）》</a>。</p>
 </blockquote>
-<h2 id="防掺水模型真伪探针">防掺水：模型真伪探针</h2>
+</section><section class="doc-section" data-section-index="11"><h2 id="防掺水模型真伪探针">防掺水：模型真伪探针</h2>
 <p>核心原则：<strong>不要问模型"你是谁"</strong>——网关注入的系统前缀让它答什么身份都行，自述只有参考价值。看它难以伪造的东西。方法学全文见 <a href="../docs/MODEL_VERIFICATION_METHODS.md">MODEL_VERIFICATION_METHODS.md</a>，信号分四档：</p>
 <div class="table-wrap"><table>
 <thead>
@@ -779,7 +1172,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 <p><strong>C 段自动化边界</strong>：<code>model_verify.py</code> 的 C 段目前只实现长上下文针探；附件真读（PDF/图片暗号）、工具链/结构输出、<code>web_search</code> 空结果检测仍是 <a href="../docs/MODEL_VERIFICATION_METHODS.md">方法学第四节</a>里的手工方法，不要因为脚本能跑 <code>--tier A,B,C</code> 就以为这些能力已被自动覆盖。</p>
 <p><strong>取证与对账配套工具</strong>（均为零第三方依赖、默认 DRY RUN）：<a href="../examples/evidence_capture.py"><code>examples/evidence_capture.py</code></a> 把一次最小请求固化为 A 级证据包（UTC 毫秒时间戳、全量同名响应头、响应体 SHA-256，<code>--probe models</code> 零计费）；<a href="../examples/check_usage.py"><code>examples/check_usage.py</code></a> 只读查询 <code>/v1/usage</code> 并做 SPA 兜底与多级兜底解析；<a href="../examples/cost_audit.py"><code>examples/cost_audit.py</code></a> 消费证据包（或两条差分请求）估算系统前缀注入量与缓存读取占比。</p>
 <p>写正式取证报告时用 <a href="../docs/TEST_REPORT_SPEC.md">TEST_REPORT_SPEC.md</a> 的六模块结构（元数据与证据分级、路由全图、静默降级、真伪测谎、成本与前缀审计、风险台账）。</p>
-<h2 id="最小验收与静默降级">最小验收与静默降级</h2>
+</section><section class="doc-section" data-section-index="12"><h2 id="最小验收与静默降级">最小验收与静默降级</h2>
 <p>每个客户端至少做这五步（详见 <a href="../docs/接入第三方工具教程-2026-09-26.md#10-最小验收流程">接入教程第 10 节「最小验收流程」</a>）：</p>
 <ol>
 <li>固定短句测活；2. 无持续重连/超时；3. 控制台调用记录与客户端一致（模型名、时间）；4. 再测真实需要的能力（流式/工具/图片）；5. 留存状态码、错误正文、模型名与时间，分享前抹掉 Key。</li>
@@ -789,7 +1182,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 <li><strong>HTTP 200 静默降级</strong>：附件块被悄悄丢弃、联网检索返回空数组但模型照常作答——用暗号（canary）验证指令是否真被执行。</li>
 <li><strong>计费陷阱</strong>：<code>cache_read_input_tokens</code> 等缓存读取项是<strong>收费的</strong>，对账必须算进去；模型广场"列表里有"不代表当前分组真能调通。</li>
 </ul>
-<h2 id="常见错误与排错">常见错误与排错</h2>
+</section><section class="doc-section" data-section-index="13"><h2 id="常见错误与排错">常见错误与排错</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -829,24 +1222,25 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 </tbody>
 </table></div>
 <p>更多见 <a href="../FAQ.md">FAQ.md</a>。</p>
-<h2 id="安全收尾">安全收尾</h2>
+</section><section class="doc-section" data-section-index="14"><h2 id="安全收尾">安全收尾</h2>
 <ul>
 <li>测试 Key 用完即撤，或限制额度与权限；Key 只放环境变量/工具凭据存储，绝不进 Git、截图、Issue、CI 日志。</li>
 <li>仓库只提交 <code>*.example</code>；真实 <code>auth.json</code>、<code>.env</code>、<code>hermes.yaml</code>、<code>openclaw.json</code> 已在 <a href="../.gitignore">.gitignore</a> 中排除。提交前可跑 <code>python -m unittest discover -s tests</code> 自检死链与凭据。</li>
 <li>Key 一旦泄露立即作废重建，不要只改本地文件。</li>
 </ul>
-<h2 id="证据纪律">证据纪律</h2>
+</section><section class="doc-section" data-section-index="15"><h2 id="证据纪律">证据纪律</h2>
 <ul>
 <li>对外表述按 A/B/C 分级：A=原始报文/响应体哈希/毫秒时间戳；B=公开接口、前端 bundle 静态解析、DNS/RDAP；C=多现象推断且明确标注"未单点证实"。</li>
 <li>"实测""已验证"只在有 A/B 级支撑时使用，并带上取证窗口日期。</li>
 <li>判定只用三态：<strong>匹配 / 不匹配 / 证据不足</strong>。不把"没出现某厂商关键词"写成通过，不把跨协议入口的字段差异当成调包证据。</li>
 <li>结论被推翻时写明撤回，不删除原始记录。</li>
 </ul>
-<h2 id="许可证">许可证</h2>
-<p><a href="../LICENSE">MIT</a>。示例代码可自由使用；使用本工具箱不构成任何投资或购买建议。</p>
+</section><section class="doc-section" data-section-index="16"><h2 id="许可证">许可证</h2>
+<p><a href="../LICENSE">MIT</a>。示例代码可自由使用；使用本工具箱不构成任何投资或购买建议。</p></section>
 </article>
 <aside class="page-side"><div class="side-title">本页目录</div><div class="toc">
 <ul>
+<li><a href="#常见问题速查">常见问题速查</a></li>
 <li><a href="#先看计划不花钱">先看计划，不花钱</a></li>
 <li><a href="#交给助手">交给助手</a><ul>
 <li><a href="#会不会把-api-key-传走">会不会把 API Key 传走？</a></li>

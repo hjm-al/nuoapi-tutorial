@@ -40,6 +40,7 @@ import markdown
 
 from theme import CSS, JS, SITE_NAME, SITE_SHORT, footer_html, interaction_copy_json
 from build_h5 import github_slug
+from document_structure import transform_home_content, wrap_sections
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
@@ -697,63 +698,63 @@ def llms_txt(base_url: str, pages: list[Page]) -> str:
 
 
 SITE_CSS = """
-.layout{max-width:1140px;margin:0 auto;padding:0 16px}
+.layout{max-width:1120px;margin:0 auto;padding:0 24px}
 .side{display:none}
-.crumb{max-width:760px;margin:16px auto 0;padding:0 18px;font-size:12.5px;color:var(--muted);
+.crumb{max-width:760px;margin:20px auto 0;padding:0 24px;font-size:12px;color:var(--muted);
   display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .crumb a{color:var(--muted);text-decoration:none}
-.crumb a:hover{color:var(--primary)}
+.crumb a:hover{color:var(--rust)}
 .crumb .sep{opacity:.5}
 .crumb .here{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70vw}
 .lang-switch{display:flex;align-items:center;gap:4px;margin-left:4px}
 .lang-switch a{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;
-  padding:0 7px;border:1px solid var(--border);border-radius:8px;color:var(--muted);
-  text-decoration:none;font-size:11.5px;line-height:1;background:var(--card)}
-.lang-switch a:hover{border-color:var(--primary);color:var(--primary)}
-.lang-switch a.current{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:700}
+  padding:0 7px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  text-decoration:none;font-size:11px;line-height:1;background:transparent}
+.lang-switch a:hover{border-color:var(--line-strong);color:var(--rust)}
+.lang-switch a.current{background:transparent;border-color:var(--ink);color:var(--ink);font-weight:650}
 .drawer-language{display:flex;gap:7px;flex-wrap:wrap;padding:10px 16px 12px;border-bottom:1px solid var(--border)}
 .drawer-language a{display:inline-flex;align-items:center;min-height:32px;padding:4px 10px;
-  border:1px solid var(--border);border-radius:9px;color:var(--text);text-decoration:none;font-size:12.5px}
-.drawer-language a.current{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:700}
-.side-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px 10px;box-shadow:var(--shadow)}
+  border:1px solid var(--line);border-radius:4px;color:var(--text);text-decoration:none;font-size:12.5px}
+.drawer-language a.current{background:transparent;border-color:var(--ink);color:var(--ink);font-weight:650}
 .side-nav{list-style:none;margin:0;padding:0}
 .side-nav li{margin:1px 0}
-.side-nav a{display:block;padding:7px 10px;border-radius:9px;font-size:13.5px;
+.side-nav a{display:block;padding:5px 7px;border-radius:3px;font-size:13px;
   color:var(--text);text-decoration:none;line-height:1.5}
-.side-nav a:hover{background:var(--card-2);color:var(--primary)}
-.side-nav a.current{background:var(--primary-soft);color:var(--primary);font-weight:600}
-.side-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
-  color:var(--muted);margin:6px 0 8px;padding:0 10px}
-.side-group{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
-.toc-box{margin:12px 0 0;padding:12px 10px 4px;font-size:13px;border-top:1px dashed var(--border)}
-.toc-box strong{display:block;font-size:11px;letter-spacing:.08em;color:var(--muted);
-  margin-bottom:6px;text-transform:uppercase}
+.side-nav a:hover{background:var(--surface-2);color:var(--rust)}
+.side-nav a.current{background:var(--surface-2);color:var(--rust);font-weight:650}
+.side-title{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;
+  color:var(--muted);margin:6px 0 8px;padding:0}
+.side-group{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.toc-box{margin:0 0 20px;padding:0 0 18px;font-size:13px;border:0;border-bottom:1px solid var(--line)}
+.toc-box strong{display:block;font-size:10.5px;letter-spacing:.11em;color:var(--muted);
+  margin-bottom:8px;text-transform:uppercase}
 .toc-box ul{list-style:none;margin:0;padding:0}
 .toc-box ul ul{padding-left:12px}
-.toc-box a{display:block;padding:4px 6px;border-radius:6px;color:var(--text);text-decoration:none;line-height:1.45;
+.toc-box a{display:block;padding:5px 7px;border-radius:3px;color:var(--text);text-decoration:none;line-height:1.45;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.toc-box a:hover{color:var(--primary);background:var(--card-2)}
-.toc-box a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
-.pager{max-width:760px;margin:0 auto;padding:0 16px 8px;display:grid;grid-template-columns:1fr;gap:10px}
-@media (min-width:480px){.pager{grid-template-columns:1fr 1fr;gap:12px}}
-.pager a{display:block;padding:12px 14px;border:1px solid var(--border);border-radius:12px;
-  background:var(--card);color:var(--text);text-decoration:none;font-size:13.5px;line-height:1.45;
-  transition:border-color .15s,box-shadow .15s}
-.pager a:hover{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-ring)}
-.pager a span{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:2px}
+.toc-box a:hover{color:var(--rust);background:var(--surface-2)}
+.toc-box a.active{color:var(--rust);background:var(--surface-2);font-weight:650}
+.pager{max-width:760px;margin:0 auto;padding:0 24px 8px;display:grid;grid-template-columns:1fr;gap:0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pager a{display:block;padding:15px 0;border:0;border-radius:0;
+  background:transparent;color:var(--text);text-decoration:none;font-size:13.5px;line-height:1.45}
+.pager a:hover{color:var(--rust)}
+.pager a span{display:block;font-size:10.5px;color:var(--muted);letter-spacing:.08em;margin-bottom:2px;
+  font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
 .pager a.next{text-align:right}
 .pager .empty{display:block}
 @media (min-width:900px){
-  .layout{display:flex;gap:28px;align-items:flex-start}
-  .side{display:block;width:256px;flex:0 0 256px;position:sticky;top:64px;
-    max-height:calc(100vh - 84px);overflow-y:auto;padding:28px 0 40px}
-  .layout article{margin:28px 0 24px;flex:1;min-width:0;max-width:none}
+  .layout{display:grid;grid-template-columns:260px minmax(0,760px);justify-content:center;
+    gap:56px;align-items:flex-start}
+  .side{display:block;position:sticky;top:72px;max-height:calc(100vh - 92px);
+    overflow-y:auto;padding:34px 0 48px}
+  .layout article{width:100%;max-width:760px;margin:0;padding:46px 0 88px}
   .menu-btn{display:none}
-  .crumb{max-width:1140px;padding:0 16px}
+  .crumb{max-width:1120px;padding:0 24px}
   .crumb .here{max-width:none}
-  .pager{max-width:1140px}
-  .pager{padding-left:300px}
+  .pager{margin-left:calc((100% - 760px) / 2);padding-left:0;padding-right:0}
+  .pager a:first-child{padding-right:22px}
+  .pager a.next{padding-left:22px;border-left:1px solid var(--line)}
 }
 @media (max-width:899px){
   .appbar .lang-switch{display:none}
@@ -765,8 +766,8 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171a18" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
 __VERIFICATION__
@@ -793,7 +794,7 @@ __NOINDEX____JSONLD__
 __CSS__
 __SITE_CSS__
 </head>
-<body>
+<body data-page-kind="__PAGE_KIND__">
 <div id="progress"></div>
 <header class="appbar">
   <button id="menuBtn" class="menu-btn" aria-label="__MENU_LABEL__">&#9776;</button>
@@ -820,7 +821,7 @@ __SITE_CSS__
 __BREADCRUMB__
 
 <div class="layout">
-  <aside class="side"><div class="side-card">__SIDE_NAV__</div></aside>
+  <aside class="side" aria-label="__NAV_LABEL__">__SIDE_NAV__</aside>
   <article>
 __CONTENT__
   </article>
@@ -860,6 +861,17 @@ def page_group(page: Page) -> str:
     if "模型广场清单" in slug:
         return "snapshots"
     return "other"
+
+
+def page_kind(page: Page) -> str:
+    """Return the stable layout contract stored on ``<body>``."""
+    if page.is_home:
+        return "home"
+    if page.src == Path("FAQ.md"):
+        return "faq"
+    if page.schema_type == "TechArticle":
+        return "error"
+    return "doc"
 
 
 def group_nav(nav_items: list[tuple[Page, str]], locale: str) -> list:
@@ -1004,6 +1016,10 @@ class SiteBuilder:
 
             page_title = first_heading(md_text) or dst
             is_home = page.is_home
+            kind = page_kind(page)
+            content = wrap_sections(content, kind, locale)
+            if is_home:
+                content = transform_home_content(content)
             # 有 frontmatter title 就整条覆盖（作者自己排品牌词，控长度）；否则标题 + 站点名
             title = meta.get("title") or "{0} | {1}".format(page_title, site_name)
             desc = meta.get("description") or page_description(md_text)
@@ -1024,7 +1040,14 @@ class SiteBuilder:
             drawer_nav = page_toc + render_nav(
                 nav_groups, dst, "toc", "drawer-section", ui["all_docs"]
             )
-            side_nav = render_nav(
+            side_toc = (
+                '<div class="toc-box"><strong>{0}</strong>{1}</div>'.format(
+                    html.escape(ui["toc"]), toc
+                )
+                if toc
+                else ""
+            )
+            side_nav = side_toc + render_nav(
                 nav_groups, dst, "side-nav", "side-title", ui["all_docs"]
             )
 
@@ -1101,6 +1124,7 @@ class SiteBuilder:
                 .replace("__SITE_NAME__", html.escape(site_name, quote=True))
                 .replace("__SITE_SHORT__", html.escape(site_short, quote=True))
                 .replace("__HTML_LANG__", html.escape(locale_config["html_lang"], quote=True))
+                .replace("__PAGE_KIND__", html.escape(kind, quote=True))
                 .replace("__TITLE__", html.escape(title, quote=True))
                 .replace("__DESC__", html.escape(desc, quote=True))
                 .replace("__CANONICAL__", html.escape(canonical, quote=True))
@@ -1124,16 +1148,7 @@ class SiteBuilder:
                 .replace("__LANG_SWITCH__", language_switch_html(page, pages, dst, True))
                 .replace("__DRAWER_LANG__", language_switch_html(page, pages, dst, False))
                 .replace("__DRAWER_NAV__", drawer_nav)
-                .replace(
-                    "__SIDE_NAV__",
-                    side_nav
-                    + (
-                        '<div class="toc-box"><strong>{0}</strong>{1}</div>'.format(
-                            html.escape(ui["toc"]), toc
-                        )
-                        if toc else ""
-                    ),
-                )
+                .replace("__SIDE_NAV__", side_nav)
                 .replace("__PAGER__", pager)
                 .replace("__PAGER_LABEL__", html.escape(ui["pager"], quote=True))
                 .replace("__NOINDEX__", "")

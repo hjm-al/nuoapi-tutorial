@@ -3,7 +3,7 @@
   description: 四种协议（Chat Completions、Responses、Messages、Gemini REST）怎么选、16+ 客户端怎么接、模型真伪怎么验，附可直接跑的探针与一键配置脚本。
 -->
 
-# NuoAPI 接入脚手架与防掺水取证工具箱
+# [NuoAPI](https://nuoapi.net/model-plaza) 接入脚手架与防掺水取证工具箱
 
 > **法律与第三方商标免责声明**
 >
@@ -18,6 +18,15 @@
 在线文档：<https://hjm-al.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [繁體中文](README.zh-Hant.md)
 
 一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关），并用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
+
+## 常见问题速查
+
+- [Gemini CLI 报 `platform is not gemini`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)
+- [Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.md)
+- [Claude Code 不要加 `/v1`](docs/Claude-Code-不要加v1-2026-10-18.md)
+- [`401 invalid_api_key`](docs/401-invalid-api-key.md)
+- [`400 invalid_request_error`](docs/400-invalid-request-error.md)
+- [`404 model_not_found`](docs/model_not_found.md)
 
 ## 先看计划，不花钱
 
@@ -41,10 +50,6 @@ python examples/evidence_capture.py --probe models
 ```
 
 加上 `--run` 之后，这条是 `GET /v1/models`，不产生 token 费用。客户端配置可以改用 [`examples/quick_setup.ps1`](examples/quick_setup.ps1) 或 [`quick_setup.sh`](examples/quick_setup.sh)，已有文件会先备份。
-
-已经遇到报错时，可以先看对应的短页：[Gemini CLI 报 `platform is not gemini`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)、[Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.md)、[Claude Code 不要加 `/v1`](docs/Claude-Code-不要加v1-2026-10-18.md)。
-
-更多可直接搜索的报错原文：[`401 invalid_api_key`](docs/401-invalid-api-key.md)、[`model_not_found`](docs/model_not_found.md)、[`400 invalid_request_error`](docs/400-invalid-request-error.md)、[Cursor / Roo Code Base URL](docs/Cursor-Roo-Code-Base-URL.md)、[WSL `\r: command not found`](docs/WSL-command-not-found.md)。
 
 ## 交给助手
 
@@ -127,7 +132,7 @@ python examples/evidence_capture.py --probe models
 
 ## 三分钟快速开始
 
-1. 在 <https://nuoapi.net> 注册并创建一个**专门用于测试**的 API Key。
+1. 在 `https://nuoapi.net` 注册并创建一个**专门用于测试**的 API Key。
 2. 从模型广场或当前 Key 的 `/v1/models` 复制**精确模型名**，不要凭印象写、不要照抄别的账号。
 3. 判断客户端走哪张协议面孔（上表），选对 Base URL。
 4. 跑一键脚本（可选），或按下文手动配置。

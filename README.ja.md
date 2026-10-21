@@ -3,7 +3,7 @@
   description: よく使う AI クライアントの Base URL を設定し、課金前のドライランとモデル判定の三つの結果を確認する実用手順。
 -->
 
-# NuoAPI 接続スターターとモデル検証ツール
+# [NuoAPI](https://nuoapi.net/model-plaza) 接続スターターとモデル検証ツール
 
 > **法的通知と商標について**
 >
@@ -14,6 +14,15 @@
 Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲートウェイへ接続し、**課金された応答が表示上のモデルと一致するか**を再現可能な手順で確認するためのリポジトリです。
 
 [简体中文](README.md) · [English](README.en.md) · 日本語 · [繁體中文](README.zh-Hant.md)
+
+## よくあるエラー早見表
+
+- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md)
+- [Codex が Reconnecting を繰り返す](docs/Codex-一直Reconnecting-2026-10-18.ja.md)
+- [Claude Code の 404: /v1 を付けない](docs/Claude-Code-不要加v1-2026-10-18.ja.md)
+- [401 invalid_api_key](docs/401-invalid-api-key.md)
+- [400 invalid_request_error](docs/400-invalid-request-error.md)
+- [404 model_not_found](docs/model_not_found.md)
 
 ## 課金せずに確認する
 
@@ -35,12 +44,6 @@ python examples/model_verify.py
 | Gemini CLI | `https://nuoapi.net` | `/v1beta` を付ける |
 
 接続先の例は [`nuoapi.net`](https://nuoapi.net) です。モデル ID、グループ、倍率、可用性は変わるため、[モデル広場](https://nuoapi.net/model-plaza)で現在値を確認し、管理画面の表示を優先してください。
-
-## エラー別ガイド
-
-- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md)
-- [Codex が Reconnecting を繰り返す](docs/Codex-一直Reconnecting-2026-10-18.ja.md)
-- [Claude Code の 404: /v1 を付けない](docs/Claude-Code-不要加v1-2026-10-18.ja.md)
 
 ## 判定の読み方
 

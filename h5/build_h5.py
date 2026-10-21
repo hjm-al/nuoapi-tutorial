@@ -26,6 +26,7 @@ from pathlib import Path
 
 import markdown
 
+from document_structure import transform_home_content, wrap_sections
 from theme import CSS, JS, SITE_SHORT, footer_html, interaction_copy_json
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -131,13 +132,14 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171a18" media="(prefers-color-scheme: dark)">
 <meta name="description" content="__DESC__">
 <link rel="canonical" href="__CANONICAL__">
 <title>__TITLE__</title>
 __CSS__
 </head>
-<body>
+<body data-page-kind="home">
 <div id="progress"></div>
 <header class="appbar">
   <button id="menuBtn" class="menu-btn" aria-label="打开目录">&#9776;</button>
@@ -194,6 +196,8 @@ def build(readme: Path = README, output: Path = OUTPUT) -> Path:
     content = md.convert(text)
     content = wrap_tables(content)
     content = fix_relative_links(content)
+    content = wrap_sections(content, "home", "zh-CN")
+    content = transform_home_content(content)
     page_toc = fix_relative_links(md.toc)
     toc = '<div class="drawer-section">本页章节</div>' + page_toc + docs_drawer_html()
 

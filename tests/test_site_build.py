@@ -13,10 +13,12 @@
 
 import re
 import os
+import struct
 import sys
 import tempfile
 import unicodedata
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest import mock
 from urllib.parse import parse_qsl, urlsplit
@@ -27,6 +29,7 @@ sys.path.insert(0, str(H5))
 
 import build_h5  # noqa: E402
 import build_site  # noqa: E402
+import document_structure  # noqa: E402
 BASE_URL = "https://example.github.io/nuoapi-tutorial"
 REPO_URL = "https://github.com/example/nuoapi-tutorial"
 EXPECTED_PAGE_COUNT = 33
@@ -289,6 +292,70 @@ class TestSiteBuild(unittest.TestCase):
                 record.dst,
             )
 
+    def test_page_kind_contract_matches_page_records(self):
+        """33 个页面都通过稳定的 body 标识声明版式类型。"""
+        expected = Counter({"home": 4, "faq": 1, "error": 17, "doc": 11})
+        self.assertEqual(
+            Counter(build_site.page_kind(page) for page in self.records),
+            expected,
+        )
+        for record in self.records:
+            text = (self.site / record.dst).read_text(encoding="utf-8")
+            match = re.search(r'<body data-page-kind="([^"]+)">', text)
+            self.assertIsNotNone(match, record.dst)
+            self.assertEqual(match.group(1), build_site.page_kind(record), record.dst)
+
+    def test_faq_has_thirty_numbered_manual_entries(self):
+        """FAQ 以连续编号的手册条目呈现，不拆成三十张卡片。"""
+        text = (self.site / "faq.html").read_text(encoding="utf-8")
+        entries = re.findall(
+            r'<section\b[^>]*class="[^"]*\bfaq-entry\b[^"]*"[^>]*'
+            r'data-entry="(\d{2})"',
+            text,
+        )
+        self.assertEqual(entries, ["{0:02d}".format(i) for i in range(1, 31)])
+        self.assertNotIn("faq-card", text)
+
+    def test_error_sections_have_layout_roles_in_all_locales(self):
+        """报错页章节都带角色；两种四语言短页保留症状、配置和验证。"""
+        allowed = {"symptom", "fix", "verify", "related", "detail"}
+        error_records = [page for page in self.records if page.schema_type == "TechArticle"]
+        for record in error_records:
+            text = (self.site / record.dst).read_text(encoding="utf-8")
+            roles = set(re.findall(r'data-role="([^"]+)"', text))
+            self.assertTrue(roles, record.dst)
+            self.assertLessEqual(roles, allowed, record.dst)
+
+        for slug in (
+            "Gemini-CLI-platform-is-not-gemini-2026-10-18",
+            "Claude-Code-不要加v1-2026-10-18",
+        ):
+            records = [
+                page
+                for page in error_records
+                if page.translation_group == "doc:" + slug
+            ]
+            self.assertEqual(len(records), 4, slug)
+            for record in records:
+                text = (self.site / record.dst).read_text(encoding="utf-8")
+                roles = set(re.findall(r'data-role="([^"]+)"', text))
+                self.assertTrue(
+                    {"symptom", "fix", "verify"}.issubset(roles),
+                    "{0} 缺少必需的章节角色：{1}".format(record.dst, sorted(roles)),
+                )
+
+    def test_unknown_error_heading_falls_back_to_detail(self):
+        """未知翻译仍会渲染，不能因标题词表漏项而丢掉章节包装。"""
+        self.assertEqual(document_structure.section_role("未识别章节"), "detail")
+        self.assertEqual(document_structure.section_role("A new locale heading"), "detail")
+
+    def test_og_image_has_expected_social_dimensions(self):
+        """社交预览图保持 1200×630，避免平台裁切后丢失纸面排版。"""
+        data = (ROOT / "docs" / "og-image.png").read_bytes()
+        self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+        width, height = struct.unpack(">II", data[16:24])
+        self.assertEqual((width, height), (1200, 630))
+
     def test_home_jsonld_and_language_variants(self):
         """四个首页都有 WebApplication；不能把中文 FAQ 结构化数据复制到译文首页。"""
         for dst in ("index.html", "en/index.html", "ja/index.html", "zh-Hant/index.html"):
@@ -330,6 +397,157 @@ class TestSiteBuild(unittest.TestCase):
                     text,
                 )
 
+    def test_readme_first_headings_link_nuapi(self):
+        """四语言首标题的第一个词必须是可点击的规范实例页链接。"""
+        expected = "[NuoAPI](https://nuoapi.net/model-plaza)"
+        for readme in (
+            Path("README.md"),
+            Path("README.en.md"),
+            Path("README.ja.md"),
+            Path("README.zh-Hant.md"),
+        ):
+            _, body = build_site.split_frontmatter(
+                (ROOT / readme).read_text(encoding="utf-8")
+            )
+            self.assertTrue(
+                build_site.first_heading(body).startswith(expected),
+                "{0} 的 H1 没有从 NuoAPI 实例链接开始".format(readme),
+            )
+
+        h1_link = re.compile(
+            r'<h1\b[^>]*>\s*'
+            r'<a\b[^>]*\bhref="https://nuoapi\.net/model-plaza"[^>]*>'
+            r"\s*NuoAPI\s*</a>",
+            re.S,
+        )
+        for page in self.records:
+            if not page.is_home:
+                continue
+            text = (self.site / page.dst).read_text(encoding="utf-8")
+            self.assertIn('class="home-disclaimer"', text, page.dst)
+            self.assertRegex(
+                text,
+                h1_link,
+                "{0} 的构建后 H1 缺少 NuoAPI 真实链接".format(page.dst),
+            )
+
+    def test_readme_hero_prioritizes_plan_and_keeps_error_guides(self):
+        """四语言首页先给不花钱的计划，再放状态行和六个高意图报错入口。"""
+        guides = (
+            (
+                Path("README.md"),
+                "index.html",
+                "常见问题速查",
+                "先看计划，不花钱",
+                (
+                    "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md",
+                    "docs/Codex-一直Reconnecting-2026-10-18.md",
+                    "docs/Claude-Code-不要加v1-2026-10-18.md",
+                    "docs/401-invalid-api-key.md",
+                    "docs/400-invalid-request-error.md",
+                    "docs/model_not_found.md",
+                ),
+            ),
+            (
+                Path("README.en.md"),
+                "en/index.html",
+                "Common errors at a glance",
+                "Start without spending",
+                (
+                    "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md",
+                    "docs/Codex-一直Reconnecting-2026-10-18.en.md",
+                    "docs/Claude-Code-不要加v1-2026-10-18.en.md",
+                    "docs/401-invalid-api-key.md",
+                    "docs/400-invalid-request-error.md",
+                    "docs/model_not_found.md",
+                ),
+            ),
+            (
+                Path("README.ja.md"),
+                "ja/index.html",
+                "よくあるエラー早見表",
+                "課金せずに確認する",
+                (
+                    "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md",
+                    "docs/Codex-一直Reconnecting-2026-10-18.ja.md",
+                    "docs/Claude-Code-不要加v1-2026-10-18.ja.md",
+                    "docs/401-invalid-api-key.md",
+                    "docs/400-invalid-request-error.md",
+                    "docs/model_not_found.md",
+                ),
+            ),
+            (
+                Path("README.zh-Hant.md"),
+                "zh-Hant/index.html",
+                "常見問題速查",
+                "先看計畫，不花錢",
+                (
+                    "docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.zh-Hant.md",
+                    "docs/Codex-一直Reconnecting-2026-10-18.zh-Hant.md",
+                    "docs/Claude-Code-不要加v1-2026-10-18.zh-Hant.md",
+                    "docs/401-invalid-api-key.md",
+                    "docs/400-invalid-request-error.md",
+                    "docs/model_not_found.md",
+                ),
+            ),
+        )
+
+        for readme, dst, heading, plan_heading, links in guides:
+            _, body = build_site.split_frontmatter(
+                (ROOT / readme).read_text(encoding="utf-8")
+            )
+            self.assertEqual(body.count(heading), 1, "{0} 的速查标题不唯一".format(readme))
+            plan_heading_line = re.compile(
+                r"(?m)^##\s+{0}\s*$".format(re.escape(plan_heading))
+            )
+            self.assertEqual(
+                len(plan_heading_line.findall(body)),
+                1,
+                "{0} 的计划标题不唯一".format(readme),
+            )
+
+            section_end = body.find("\n## ", body.index(heading) + len(heading))
+            self.assertNotEqual(section_end, -1, "{0} 的速查区块没有下一节".format(readme))
+            section = body[body.index(heading) : section_end]
+            self.assertEqual(
+                re.findall(r"\]\((docs/[^)]+)\)", section),
+                list(links),
+                "{0} 的六个报错目标不完整或顺序变化".format(readme),
+            )
+
+            article = (
+                (self.site / dst)
+                .read_text(encoding="utf-8")
+                .split("<article>", 1)[1]
+                .split("</article>", 1)[0]
+            )
+            hero_start = article.index('<header class="home-hero">')
+            hero_end = article.index("</header>", hero_start)
+            first_section_start = article.find("<section", hero_end)
+            first_section_end = article.find("</section>", first_section_start)
+            self.assertNotEqual(first_section_start, -1, "{0} 缺少正文区块".format(dst))
+            first_section = article[first_section_start : first_section_end + len("</section>")]
+            self.assertIn(
+                ">{0}</h2>".format(plan_heading),
+                first_section,
+                "{0} 的首个区块不是不花钱的 DRY RUN 计划".format(dst),
+            )
+            self.assertIn("--selftest", first_section, dst)
+            self.assertIn("model_verify.py", first_section, dst)
+
+            status_start = article.find('<div class="home-status">')
+            self.assertGreater(status_start, first_section_end, dst)
+            guide_start = article.find(heading, status_start)
+            self.assertGreater(guide_start, status_start, dst)
+            guide_section_start = article.rfind("<section", 0, guide_start)
+            guide_section_end = article.find("</section>", guide_section_start)
+            guide_section = article[guide_section_start:guide_section_end]
+            self.assertEqual(
+                len(re.findall(r'href="[^"]*docs/[^"]+\.html"', guide_section)),
+                6,
+                "{0} 的速查区块没有恰好六个站内报错链接".format(dst),
+            )
+
     def test_pages_workflow_uses_actions_deploy(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
         self.assertIn("actions/deploy-pages@", workflow)
@@ -339,6 +557,14 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn('"docs/**"', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
+
+    def test_pages_workflow_notifies_indexnow_after_deploy(self):
+        workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
+        self.assertIn("  indexnow:\n    needs: deploy", workflow)
+        self.assertIn('python h5/submit_indexnow.py --site-url "$SITE_URL"', workflow)
+        self.assertIn("GITHUB_STEP_SUMMARY", workflow)
+        self.assertIn("::warning::", workflow)
+        self.assertIn("exit 0", workflow)
 
 
 class TestOutboundLinks(unittest.TestCase):
@@ -474,6 +700,11 @@ class TestSingleFileSync(unittest.TestCase):
                 stamp.sub("构建于 <时间>", rebuilt),
                 "h5/index.html 已过期：请运行 python h5/build_h5.py 后提交产物",
             )
+
+    def test_h5_index_is_tagged_as_home(self):
+        """单文件 H5 只有首页形态，固定用它自己的页面类型选择器。"""
+        text = (H5 / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<body data-page-kind="home">', text)
 
     def test_h5_drawer_links_every_doc(self):
         """中文单文件抽屉列全部中文 docs，不把翻译页重复成近似目录。"""

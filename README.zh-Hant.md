@@ -3,7 +3,7 @@
   description: 設定常見 AI 用戶端，先用不計費的試跑檢查，再以三態結果核對付費回應是否來自你指定的模型。
 -->
 
-# NuoAPI 接入腳手架與防摻水取證工具箱
+# [NuoAPI](https://nuoapi.net/model-plaza) 接入腳手架與防摻水取證工具箱
 
 > **法律與第三方商標免責聲明**
 >
@@ -14,6 +14,15 @@
 這個倉庫協助你把 Codex、Claude Code、Gemini CLI 等用戶端接到第三方 AI 閘道，並用可重現的檢查回答一個更窄的問題：**付費收到的回應，是否真的來自服務聲稱的模型？**
 
 [简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · 繁體中文
+
+## 常見問題速查
+
+- [Gemini CLI 報 platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.zh-Hant.md)
+- [Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.zh-Hant.md)
+- [Claude Code 報 404：不要加 /v1](docs/Claude-Code-不要加v1-2026-10-18.zh-Hant.md)
+- [401 invalid_api_key](docs/401-invalid-api-key.md)
+- [400 invalid_request_error](docs/400-invalid-request-error.md)
+- [404 model_not_found](docs/model_not_found.md)
 
 ## 先看計畫，不花錢
 
@@ -35,12 +44,6 @@ python examples/model_verify.py
 | Gemini CLI | `https://nuoapi.net` | 誤加 `/v1beta` |
 
 本文以 [`nuoapi.net`](https://nuoapi.net) 作為位址夾具。模型 ID、分組、倍率與可用性會變動，請從[模型廣場](https://nuoapi.net/model-plaza)複製目前值，再以控制台即時顯示為準。
-
-## 錯誤短頁
-
-- [Gemini CLI 報 platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.zh-Hant.md)
-- [Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.zh-Hant.md)
-- [Claude Code 報 404：不要加 /v1](docs/Claude-Code-不要加v1-2026-10-18.zh-Hant.md)
 
 ## 如何解讀結果
 
