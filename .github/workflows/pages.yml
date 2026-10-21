@@ -57,13 +57,20 @@ jobs:
           python - <<'PY'
           import pathlib, sys
           site = pathlib.Path("_site")
-          pages = sorted(site.rglob("*.html"))
-          assert pages, "没有生成任何页面"
+          verification_pages = sorted(site.glob("google*.html"))
+          pages = sorted(
+              path for path in site.rglob("*.html")
+              if path not in verification_pages
+          )
+          assert pages, "没有生成任何可索引页面"
+          assert verification_pages, "缺少 Google 所有权验证文件"
           assert (site / "sitemap.xml").exists(), "缺少 sitemap.xml"
           assert (site / "robots.txt").exists(), "缺少 robots.txt"
           assert (site / ".nojekyll").exists(), "缺少 .nojekyll"
           locs = (site / "sitemap.xml").read_text(encoding="utf-8").count("<loc>")
-          print("pages={0} sitemap_urls={1}".format(len(pages), locs))
+          print("pages={0} sitemap_urls={1} verification_files={2}".format(
+              len(pages), locs, len(verification_pages)
+          ))
           if locs != len(pages):
               sys.exit("sitemap 条目数与页面数不一致")
           PY

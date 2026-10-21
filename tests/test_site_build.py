@@ -873,6 +873,8 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("build_site.py", workflow)
         self.assertIn('"docs/**"', workflow)
         self.assertIn('"google*.html"', workflow)
+        self.assertIn('verification_pages = sorted(site.glob("google*.html"))', workflow)
+        self.assertIn("if path not in verification_pages", workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
