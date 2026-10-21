@@ -751,6 +751,7 @@ SEARCH_CRAWLERS = (
 # 提交时通过 keyLocation 指向具体 URL。
 INDEXNOW_KEY = "b8a860a9074b6feebaec4870aaa80bed"
 GOOGLE_SITE_VERIFICATION_FILE = "google40a4a7b144167b25.html"
+BING_SITE_VERIFICATION_FILE = "BingSiteAuth.xml"
 
 AI_CRAWLERS = (
     "GPTBot",
@@ -1396,11 +1397,18 @@ class SiteBuilder:
         # Pages 默认用 Jekyll 处理，.nojekyll 让下划线开头的路径原样发布
         (out_dir / ".nojekyll").write_text("", encoding="utf-8")
 
-        verification_src = ROOT / GOOGLE_SITE_VERIFICATION_FILE
-        if verification_src.is_file():
-            shutil.copyfile(verification_src, out_dir / GOOGLE_SITE_VERIFICATION_FILE)
-        else:
-            errors.append("缺少 {0}，Google 所有权验证将失败".format(GOOGLE_SITE_VERIFICATION_FILE))
+        verification_files = (
+            ("Google", GOOGLE_SITE_VERIFICATION_FILE),
+            ("Bing", BING_SITE_VERIFICATION_FILE),
+        )
+        for provider, filename in verification_files:
+            verification_src = ROOT / filename
+            if verification_src.is_file():
+                shutil.copyfile(verification_src, out_dir / filename)
+            else:
+                errors.append(
+                    "缺少 {0}，{1} 所有权验证将失败".format(filename, provider)
+                )
 
         # 社交预览图：og:image 指向站根，必须同步拷进产物，否则分享卡片是空白
         og_src = ROOT / "docs" / "og-image.png"

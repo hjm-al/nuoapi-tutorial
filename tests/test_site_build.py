@@ -170,6 +170,7 @@ class TestSiteBuild(unittest.TestCase):
             ".nojekyll",
             build_site.INDEXNOW_KEY + ".txt",
             build_site.GOOGLE_SITE_VERIFICATION_FILE,
+            build_site.BING_SITE_VERIFICATION_FILE,
         ):
             self.assertTrue((self.site / required).exists(), "缺少 " + required)
         names = {p.relative_to(self.site).as_posix() for p in self.pages}
@@ -873,8 +874,10 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("build_site.py", workflow)
         self.assertIn('"docs/**"', workflow)
         self.assertIn('"google*.html"', workflow)
+        self.assertIn('"BingSiteAuth.xml"', workflow)
         self.assertIn('verification_pages = sorted(site.glob("google*.html"))', workflow)
         self.assertIn("if path not in verification_pages", workflow)
+        self.assertIn('assert (site / "BingSiteAuth.xml").exists()', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
@@ -895,6 +898,23 @@ class TestSiteBuild(unittest.TestCase):
         self.assertRegex(source, r"^google-site-verification: google[0-9a-f]+\.html\s*$")
         sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
         self.assertNotIn(build_site.GOOGLE_SITE_VERIFICATION_FILE, sitemap)
+
+    def test_bing_verification_file_is_copied_but_not_in_sitemap(self):
+        """Bing 根目录 XML 验证文件必须原样部署，且保持为有效 XML。"""
+        source = (ROOT / build_site.BING_SITE_VERIFICATION_FILE).read_text(
+            encoding="utf-8"
+        )
+        deployed = (self.site / build_site.BING_SITE_VERIFICATION_FILE).read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(deployed, source)
+        root = ET.fromstring(source)
+        self.assertEqual(root.tag, "users")
+        users = root.findall("user")
+        self.assertEqual(len(users), 1)
+        self.assertRegex(users[0].text or "", r"^[0-9A-F]{32}$")
+        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertNotIn(build_site.BING_SITE_VERIFICATION_FILE, sitemap)
 
     def test_pages_workflow_notifies_indexnow_after_deploy(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")

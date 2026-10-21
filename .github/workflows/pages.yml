@@ -8,6 +8,7 @@ on:
     paths:
       - "**.md"
       - "google*.html"
+      - "BingSiteAuth.xml"
       - "h5/**"
       - "docs/**"
       - ".github/workflows/pages.yml"
@@ -64,6 +65,7 @@ jobs:
           )
           assert pages, "没有生成任何可索引页面"
           assert verification_pages, "缺少 Google 所有权验证文件"
+          assert (site / "BingSiteAuth.xml").exists(), "缺少 Bing 所有权验证文件"
           assert (site / "sitemap.xml").exists(), "缺少 sitemap.xml"
           assert (site / "robots.txt").exists(), "缺少 robots.txt"
           assert (site / ".nojekyll").exists(), "缺少 .nojekyll"
