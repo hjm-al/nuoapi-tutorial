@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: NuoAPI: configuración de Codex, Claude Code y Gemini
-  description: Configura clientes de IA, ejecuta comprobaciones sin gasto y distingue entre coincidencia, discrepancia y evidencia insuficiente al verificar un modelo.
+  description: Configura Codex, ejecuta comprobaciones sin gasto y distingue entre coincidencia, discrepancia y evidencia insuficiente para verificar un modelo.
 -->
 
 # [NuoAPI](https://nuoapi.net/model-plaza) Starter y kit de verificación de modelos
@@ -19,7 +19,7 @@ Este repositorio ayuda a conectar Codex, Claude Code, Gemini CLI y otros cliente
 
 - [English: LLM Gateway Checklist](docs/llm-gateway-checklist.en.md): consistencia del modelo, residencia de datos, BYOK, auditoría y conmutación por error.
 - [日本語: 最低チャージと料金](docs/minimum-charge-and-pricing.ja.md): importe mínimo, conversión de crédito, precio oficial y fecha de comprobación.
-- [Español: precio por 1M de tokens](docs/cost-per-1m-tokens.es.md): entrada, salida, caché, contexto y coste efectivo.
+- [Español: precio por 1M de tokens](docs/cost-per-1m-tokens.es.md): calculadora local de entrada, salida, caché, recarga mínima y coste efectivo.
 - [Metodología de verificación](docs/MODEL_VERIFICATION_METHODS.md): el resultado solo puede ser **coincidencia / discrepancia / evidencia insuficiente**.
 
 ## Empieza sin gastar

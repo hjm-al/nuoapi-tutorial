@@ -9,7 +9,7 @@ El precio por 1M de tokens es una unidad útil, pero no es el coste final. Para 
 
 > **Acción principal**: introduce tu propio uso y tus precios por 1M de tokens para ver el coste por solicitud, el coste mensual y el efecto de la recarga mínima.
 
-<section class="cost-calculator" data-cost-calculator aria-labelledby="cost-calculator-title">
+<section class="cost-calculator" data-cost-calculator data-cost-locale="es-ES" aria-labelledby="cost-calculator-title">
   <div class="cost-calculator-head">
     <p class="cost-kicker">Calculadora local</p>
     <h2 id="cost-calculator-title">Calcula el coste real antes de recargar</h2>
@@ -19,7 +19,8 @@ El precio por 1M de tokens es una unidad útil, pero no es el coste final. Para 
     aria-describedby="cost-calculator-help"
     data-msg-ready="Cálculo local completado. No se enviaron datos."
     data-msg-missing="Completa los ocho campos obligatorios de uso y precio para calcular."
-    data-msg-invalid="Revisa los campos marcados: usa cero o un número positivo; el volumen mensual debe ser un entero igual o mayor que cero.">
+    data-msg-invalid="Revisa los campos marcados: usa cero o un número positivo; el volumen mensual debe ser un entero igual o mayor que cero."
+    data-msg-overflow="El resultado supera el rango numérico admitido. Reduce los valores e inténtalo de nuevo.">
     <fieldset class="cost-fieldset">
       <legend>1. Uso de una solicitud</legend>
       <div class="cost-fields">

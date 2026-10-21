@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: NuoAPI 接続ガイド：Codex / Claude Code / Gemini CLI
-  description: よく使う AI クライアントの Base URL を設定し、課金前のドライランとモデル判定の三つの結果を確認する実用手順。
+  description: Codex、Claude Code、Gemini CLI を AI ゲートウェイへ接続し、Base URL 設定、課金前のドライラン、モデル真偽の三態判定を確認する実用手順と費用計算への入口。
 -->
 
 # [NuoAPI](https://nuoapi.net/model-plaza) 接続スターターとモデル検証ツール
@@ -19,7 +19,7 @@ Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲート�
 
 - [English: LLM gateway checklist](docs/llm-gateway-checklist.en.md)：モデルの一貫性、データ所在、BYOK、監査、フェイルオーバー。
 - [日本語：最低チャージと料金](docs/minimum-charge-and-pricing.ja.md)：最低入金額、クレジット換算、公開価格と実効価格。
-- [Español：1M token あたりの料金](docs/cost-per-1m-tokens.es.md)：入力、出力、キャッシュ、長い文脈を含む総コスト。
+- [日本語：1M Token あたりの実費](docs/cost-per-1m-tokens.ja.md)：入力、出力、キャッシュ、最低入金を含む総コストをブラウザ内で計算。
 
 ## よくあるエラー早見表
 

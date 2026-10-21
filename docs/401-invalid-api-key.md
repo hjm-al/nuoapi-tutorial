@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: 401 invalid_api_key：API Key 失效怎么排查
-  description: 遇到 401 API_KEY_REQUIRED、invalid_api_key 或 Incorrect API key 时，先确认客户端读到的变量位置、空白字符和 Key 状态，再重建测试 Key。
+  description: 遇到 401 invalid_api_key 先检查客户端实际读到哪把 Key：核对变量名、空白、撤销状态和配置文件位置，再用短期测试 Key 重试，避免把网络错误误判成凭据失效。
 -->
 
 # 401 invalid_api_key：先确认客户端读到哪把 Key

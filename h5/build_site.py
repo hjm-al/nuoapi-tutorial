@@ -528,7 +528,7 @@ def tech_article_jsonld(
     image_url: str,
     date_modified: str | None = None,
 ) -> str:
-    """报错短页的 TechArticle 标记；字段与页面可见标题、摘要保持一致。"""
+    """教程、首页与报错页的 TechArticle；字段与页面可见标题、摘要保持一致。"""
     data = {
         "@context": "https://schema.org",
         "@type": "TechArticle",
@@ -542,6 +542,81 @@ def tech_article_jsonld(
     }
     if date_modified:
         data["dateModified"] = date_modified
+    return '<script type="application/ld+json">{0}</script>'.format(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+def protocol_table_jsonld(md_text: str, page_url: str) -> str:
+    """从 README 的可见协议表生成 Table，避免另写一份会漂移的表格数据。"""
+    section = re.search(
+        r"(?ms)^## +[^\n]*先认清四种协议面孔[^\n]*\n(.*?)(?=^## +|\Z)",
+        md_text,
+    )
+    if not section:
+        return ""
+
+    rows = []
+    for line in section.group(1).splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if rows:
+                break
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if cells and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
+            continue
+        rows.append(cells)
+    if len(rows) < 2 or len(rows[0]) != 4:
+        return ""
+
+    headers = [plain_text(cell) for cell in rows[0]]
+    body_rows = [row for row in rows[1:] if len(row) == len(headers)]
+    if not body_rows:
+        return ""
+
+    item_list = []
+    for position, row in enumerate(body_rows, start=1):
+        cells = [
+            {"@type": "PropertyValue", "name": headers[index], "value": plain_text(value)}
+            for index, value in enumerate(row)
+        ]
+        item_list.append(
+            {
+                "@type": "ListItem",
+                "position": position,
+                "item": {
+                    "@type": "ItemList",
+                    "numberOfItems": len(cells),
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": cell_position,
+                            "item": cell,
+                        }
+                        for cell_position, cell in enumerate(cells, start=1)
+                    ],
+                },
+            }
+        )
+
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Table",
+        "name": "四种 AI API 协议面孔对照表",
+        "description": "Chat Completions、Responses、Messages 与 Gemini 原生 REST 的请求路径、Base URL 和典型客户端对照。",
+        "url": page_url + "#" + github_slug("先认清四种协议面孔"),
+        "isPartOf": {"@type": "WebPage", "@id": page_url, "url": page_url},
+        "about": [
+            {"@type": "Thing", "name": plain_text(row[0])}
+            for row in body_rows
+        ],
+        "mainEntity": {
+            "@type": "ItemList",
+            "numberOfItems": len(item_list),
+            "itemListElement": item_list,
+        },
+    }
     return '<script type="application/ld+json">{0}</script>'.format(
         json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     )
@@ -675,6 +750,7 @@ SEARCH_CRAWLERS = (
 # IndexNow 的公开验证文件。文件名和内容必须一致；它位于本站子目录，
 # 提交时通过 keyLocation 指向具体 URL。
 INDEXNOW_KEY = "b8a860a9074b6feebaec4870aaa80bed"
+GOOGLE_SITE_VERIFICATION_FILE = "google40a4a7b144167b25.html"
 
 AI_CRAWLERS = (
     "GPTBot",
@@ -732,6 +808,18 @@ def llms_txt(base_url: str, pages: list[Page]) -> str:
         "> Configure Codex, Claude Code, and Gemini CLI, then check whether a paid call matches the claimed model.",
         "> Verdicts are only: match, mismatch, or insufficient evidence.",
         "> This site does not sell API access and does not rank relay providers.",
+        "",
+        "## 核心页面",
+        "",
+        "- 首页：{0}/ —— Codex、Claude Code、Gemini CLI 接入入口、四种协议说明与零计费自检。".format(base),
+        "- FAQ：{0}/faq.html —— 按用户报错原文组织的最短修复与成功判据。".format(base),
+        "- 模型真伪 / 防掺水：{0}/docs/MODEL_VERIFICATION_METHODS.html —— 四步复核、证据分档与匹配 / 不匹配 / 证据不足三态结论。".format(base),
+        "- 协议对照表：{0}/docs/AI模型API协议科普-2026-10-12.html —— Chat Completions、Responses、Messages、Gemini REST 的路径与 Base URL。".format(base),
+        "- 费用计算器（简中）：{0}/docs/cost-per-1m-tokens.html —— 输入、输出、缓存、最低充值与到账额度折算。".format(base),
+        "- Cost calculator (English): {0}/en/docs/cost-per-1m-tokens.html — input, output, cache, minimum top-up, and effective per-million cost.".format(base),
+        "- 料金計算（日本語）：{0}/ja/docs/cost-per-1m-tokens.html —— 入力、出力、キャッシュ、最低入金と実効単価。".format(base),
+        "- Calculadora de costes (Español): {0}/es/docs/cost-per-1m-tokens.html — entrada, salida, caché, recarga mínima y coste efectivo.".format(base),
+        "- 費用計算器（繁體中文）：{0}/zh-Hant/docs/cost-per-1m-tokens.html —— 輸入、輸出、快取、最低儲值與實際單價。".format(base),
         "",
         "## 页面",
         "",
@@ -1150,14 +1238,30 @@ class SiteBuilder:
             pager = prev_link + next_link
 
             if src.name == "FAQ.md":
-                jsonld = faq_jsonld(md_text, canonical, site_name)
+                jsonld = faq_jsonld(md_text, canonical, site_name) + tech_article_jsonld(
+                    meta.get("title") or page_title,
+                    desc,
+                    canonical,
+                    locale,
+                    og_image,
+                    last_modified[page.dst],
+                )
             elif is_home:
                 jsonld = home_jsonld(
                     canonical,
                     site_name,
                     desc,
                     locale_config["home_features"],
-                ) + home_faq_jsonld(md_text, canonical)
+                ) + home_faq_jsonld(md_text, canonical) + tech_article_jsonld(
+                    meta.get("title") or page_title,
+                    desc,
+                    canonical,
+                    locale,
+                    og_image,
+                    last_modified[page.dst],
+                )
+                if src == Path("README.md"):
+                    jsonld += protocol_table_jsonld(md_text, canonical)
             elif page.schema_type == "TechArticle":
                 jsonld = tech_article_jsonld(
                     meta.get("title") or page_title,
@@ -1291,6 +1395,12 @@ class SiteBuilder:
         (out_dir / "llms.txt").write_text(llms_txt(base, pages), encoding="utf-8")
         # Pages 默认用 Jekyll 处理，.nojekyll 让下划线开头的路径原样发布
         (out_dir / ".nojekyll").write_text("", encoding="utf-8")
+
+        verification_src = ROOT / GOOGLE_SITE_VERIFICATION_FILE
+        if verification_src.is_file():
+            shutil.copyfile(verification_src, out_dir / GOOGLE_SITE_VERIFICATION_FILE)
+        else:
+            errors.append("缺少 {0}，Google 所有权验证将失败".format(GOOGLE_SITE_VERIFICATION_FILE))
 
         # 社交预览图：og:image 指向站根，必须同步拷进产物，否则分享卡片是空白
         og_src = ROOT / "docs" / "og-image.png"

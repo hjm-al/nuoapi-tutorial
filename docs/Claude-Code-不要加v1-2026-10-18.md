@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: Claude Code 报 404：Base URL 不要加 /v1
-  description: ANTHROPIC_BASE_URL 填站点根地址，Key 放进 ANTHROPIC_AUTH_TOKEN。误加 /v1 会落到未注册路径并返回 404，改完必须重开终端。
+  description: Claude Code 报 404 通常不是 Key 失效：ANTHROPIC_BASE_URL 应填站点根地址，不要附加 /v1；确认 ANTHROPIC_AUTH_TOKEN 后重开终端，再用一次最小请求核对成功判据。
 -->
 
 # Claude Code 报 404：ANTHROPIC_BASE_URL 不要加 /v1

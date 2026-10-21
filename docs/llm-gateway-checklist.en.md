@@ -11,6 +11,8 @@ An `OpenAI-compatible` endpoint is a protocol claim, not proof of model identity
 
 The example address is [`nuoapi.net`](https://nuoapi.net). Model IDs, groups, rates, and availability change, so confirm current values in the [model plaza](https://nuoapi.net/model-plaza) and your console. Read the [model verification methodology](MODEL_VERIFICATION_METHODS.md) before treating a responsive endpoint as proof that the claimed model is being served.
 
+For procurement, separate the headline token price from billed input, output, cache, minimum top-up, and effective credit with the [AI API cost calculator](cost-per-1m-tokens.en.md).
+
 ## 1. Start with the decision, not the logo
 
 Write down the decision this gateway must support:
@@ -128,6 +130,7 @@ Choose the exit criteria before the pilot starts. A gateway that cannot produce 
 ## Related evidence
 
 - [Model verification methodology](MODEL_VERIFICATION_METHODS.md)
+- [AI API cost per 1M tokens](cost-per-1m-tokens.en.md)
 - [Codex reconnect troubleshooting](Codex-一直Reconnecting-2026-10-18.en.md)
 - [Claude Code 404 troubleshooting](Claude-Code-不要加v1-2026-10-18.en.md)
 

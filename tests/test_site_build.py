@@ -18,6 +18,7 @@ import sys
 import tempfile
 import unicodedata
 import unittest
+import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
 from unittest import mock
@@ -32,7 +33,7 @@ import build_site  # noqa: E402
 import document_structure  # noqa: E402
 BASE_URL = "https://example.github.io/nuoapi-tutorial"
 REPO_URL = "https://github.com/example/nuoapi-tutorial"
-EXPECTED_PAGE_COUNT = 37
+EXPECTED_PAGE_COUNT = 41
 PRIORITY_PAGES = {
     Path("docs/MODEL_VERIFICATION_METHODS.md"): {
         "h1": "模型真伪与防掺水：中转站换模型怎么判断",
@@ -76,6 +77,48 @@ MULTILINGUAL_ENTRY_PAGES = {
         "action": "**Acción principal**",
         "phrases": ("precio por 1M de tokens", "entrada", "salida", "caché", "recarga mínima"),
     },
+    Path("docs/cost-per-1m-tokens.md"): {
+        "h1": "AI API 每百万 Token 成本怎么算：输入、输出与缓存",
+        "action": "**主操作**",
+        "phrases": ("每百万 Token", "输入", "输出", "缓存", "最低充值"),
+    },
+    Path("docs/cost-per-1m-tokens.en.md"): {
+        "h1": "AI API Cost per 1M Tokens: Input, Output and Cache",
+        "action": "**Primary action**",
+        "phrases": ("cost per 1M tokens", "input", "output", "cache", "minimum top-up"),
+    },
+    Path("docs/cost-per-1m-tokens.ja.md"): {
+        "h1": "AI API の 1M Token あたりの実費：入力・出力・キャッシュ",
+        "action": "**主な操作**",
+        "phrases": ("1M Token", "入力", "出力", "キャッシュ", "最低入金"),
+    },
+    Path("docs/cost-per-1m-tokens.zh-Hant.md"): {
+        "h1": "AI API 每百萬 Token 成本怎麼算：輸入、輸出與快取",
+        "action": "**主要操作**",
+        "phrases": ("每百萬 Token", "輸入", "輸出", "快取", "最低儲值"),
+    },
+}
+COST_CALCULATOR_PAGES = {
+    Path("docs/cost-per-1m-tokens.md"): "zh-CN",
+    Path("docs/cost-per-1m-tokens.en.md"): "en-US",
+    Path("docs/cost-per-1m-tokens.ja.md"): "ja-JP",
+    Path("docs/cost-per-1m-tokens.es.md"): "es-ES",
+    Path("docs/cost-per-1m-tokens.zh-Hant.md"): "zh-TW",
+}
+MAJOR_SEO_PAGES = {
+    Path("README.md"): ("AI 中转站", "模型真伪", "防掺水", "Codex"),
+    Path("README.en.md"): ("AI API gateway", "model authenticity", "Codex"),
+    Path("README.ja.md"): ("AI ゲートウェイ", "モデル真偽", "Codex"),
+    Path("README.es.md"): ("modelo", "evidencia", "Codex"),
+    Path("README.zh-Hant.md"): ("AI 中轉站", "模型真偽", "防摻水", "Codex"),
+    Path("FAQ.md"): ("AI 中转站", "platform is not gemini", "model_not_found"),
+    Path("docs/MODEL_VERIFICATION_METHODS.md"): ("AI 中转站", "模型真伪", "防掺水"),
+    Path("docs/Codex-一直Reconnecting-2026-10-18.md"): ("Codex", "Reconnecting", "supports_websockets"),
+    Path("docs/Claude-Code-不要加v1-2026-10-18.md"): ("Claude Code", "ANTHROPIC_BASE_URL", "/v1"),
+    Path("docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md"): ("Gemini CLI", "platform is not gemini", "/v1beta"),
+    Path("docs/model_not_found.md"): ("404", "model_not_found", "模型 ID"),
+    Path("docs/401-invalid-api-key.md"): ("401", "invalid_api_key", "Key"),
+    Path("docs/AI模型API协议科普-2026-10-12.md"): ("AI 中转站", "Responses", "Gemini"),
 }
 
 
@@ -106,7 +149,11 @@ class TestSiteBuild(unittest.TestCase):
             clear=False,
         ):
             run_build(cls.site)
-        cls.pages = sorted(cls.site.rglob("*.html"))
+        cls.pages = sorted(
+            path
+            for path in cls.site.rglob("*.html")
+            if path.name != build_site.GOOGLE_SITE_VERIFICATION_FILE
+        )
         cls.records = all_page_records()
         cls.records_by_dst = {page.dst: page for page in cls.records}
 
@@ -115,13 +162,14 @@ class TestSiteBuild(unittest.TestCase):
         cls._tmp.cleanup()
 
     def test_pages_and_required_files(self):
-        """五语言首页、固定页和全部 docs 应生成恰好 37 个产物。"""
+        """五语言首页、固定页和全部 docs 应生成恰好 41 个产物。"""
         for required in (
             "sitemap.xml",
             "robots.txt",
             "llms.txt",
             ".nojekyll",
             build_site.INDEXNOW_KEY + ".txt",
+            build_site.GOOGLE_SITE_VERIFICATION_FILE,
         ):
             self.assertTrue((self.site / required).exists(), "缺少 " + required)
         names = {p.relative_to(self.site).as_posix() for p in self.pages}
@@ -144,22 +192,8 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(set(locs), expected)
         self.assertIn(BASE_URL + "/", locs)
 
-    def test_spanish_cost_calculator_contract(self):
-        """西语费用页只有一个本地计算器，字段、结果和隐私边界都固定。"""
-        text = (self.site / "es" / "docs" / "cost-per-1m-tokens.html").read_text(
-            encoding="utf-8"
-        )
-        self.assertEqual(
-            len(re.findall(r"<section\b[^>]*\bdata-cost-calculator\b", text)),
-            1,
-        )
-        self.assertEqual(text.count('<form class="cost-form" data-cost-form'), 1)
-        self.assertNotIn("<form action=", text)
-        self.assertIn('aria-live="polite"', text)
-        self.assertIn('data-msg-ready="Cálculo local completado.', text)
-        self.assertIn('data-msg-missing="Completa los ocho campos', text)
-        self.assertIn('data-msg-invalid="Revisa los campos marcados', text)
-
+    def test_multilingual_cost_calculator_contract(self):
+        """五语言费用页各有一个同构本地计算器，字段、结果和隐私边界固定。"""
         required_fields = (
             "input_tokens",
             "output_tokens",
@@ -170,40 +204,67 @@ class TestSiteBuild(unittest.TestCase):
             "cache_read_price",
             "cache_write_price",
         )
-        for name in required_fields:
-            tag = re.search(
-                r'<input\b(?=[^>]*\bname="' + re.escape(name) + r'")[^>]*>',
-                text,
+        records_by_src = {page.src: page for page in self.records}
+        for path, locale in COST_CALCULATOR_PAGES.items():
+            record = records_by_src[path]
+            text = (self.site / record.dst).read_text(encoding="utf-8")
+            self.assertEqual(
+                len(re.findall(r"<section\b[^>]*\bdata-cost-calculator\b", text)),
+                1,
+                record.dst,
             )
-            self.assertIsNotNone(tag, name)
-            self.assertRegex(tag.group(0), r"\brequired\b", name)
-            self.assertNotIn("value=", tag.group(0), name)
+            self.assertEqual(text.count('<form class="cost-form" data-cost-form'), 1)
+            self.assertNotIn("<form action=", text)
+            self.assertIn('data-cost-locale="{0}"'.format(locale), text)
+            self.assertIn('aria-live="polite"', text)
 
-        for name in ("currency", "minimum_charge", "credit_amount", "monthly_requests"):
-            self.assertIn('name="{0}"'.format(name), text)
+            for message in ("ready", "missing", "invalid", "overflow"):
+                match = re.search(
+                    r'data-msg-' + message + r'="([^"]*)"',
+                    text,
+                )
+                self.assertIsNotNone(match, "{0}: data-msg-{1}".format(record.dst, message))
+                self.assertTrue(match.group(1).strip(), record.dst)
 
-        for name in (
-            "request-cost",
-            "monthly-cost",
-            "effective-per-million",
-            "credit-rate",
-            "topup-count",
-        ):
-            self.assertIn('data-cost-result="{0}"'.format(name), text)
+            for name in required_fields:
+                tag = re.search(
+                    r'<input\b(?=[^>]*\bname="' + re.escape(name) + r'")[^>]*>',
+                    text,
+                )
+                self.assertIsNotNone(tag, "{0}: {1}".format(record.dst, name))
+                self.assertRegex(tag.group(0), r"\brequired\b", name)
+                self.assertNotIn("value=", tag.group(0), name)
 
-        for guard in (
-            "Number.isFinite(n)",
-            "n < 0",
-            "Math.floor(n) !== n",
-            "Number.isFinite(requestCost)",
-            "Number.isFinite(monthlyCost)",
-            "costForm.elements.currency.value",
-        ):
-            self.assertIn(guard, text)
-        for network_call in ("fetch(", "XMLHttpRequest", "sendBeacon"):
-            self.assertNotIn(network_call, text)
-        self.assertNotRegex(text, r"<script\b[^>]*\bsrc=")
-        self.assertNotIn("utm_", text)
+            for name in (
+                "currency",
+                "minimum_charge",
+                "credit_amount",
+                "monthly_requests",
+            ):
+                self.assertIn('name="{0}"'.format(name), text)
+
+            for name in (
+                "request-cost",
+                "monthly-cost",
+                "effective-per-million",
+                "credit-rate",
+                "topup-count",
+            ):
+                self.assertIn('data-cost-result="{0}"'.format(name), text)
+
+            for guard in (
+                "Number.isFinite(n)",
+                "n < 0",
+                "Math.floor(n) !== n",
+                "Number.isFinite(requestCost)",
+                "Number.isFinite(monthlyCost)",
+                "costForm.elements.currency.value",
+            ):
+                self.assertIn(guard, text)
+            for network_call in ("fetch(", "XMLHttpRequest", "sendBeacon"):
+                self.assertNotIn(network_call, text)
+            self.assertNotRegex(text, r"<script\b[^>]*\bsrc=")
+            self.assertNotIn("utm_", text)
 
         self.assertEqual(len(self.pages), EXPECTED_PAGE_COUNT)
         sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
@@ -255,6 +316,10 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("insufficient evidence", llms)
         self.assertIn("匹配 / 不匹配 / 证据不足", llms)
         self.assertIn(BASE_URL + "/", llms)
+        self.assertIn("## 核心页面", llms)
+        for path in COST_CALCULATOR_PAGES:
+            page = next(record for record in self.records if record.src == path)
+            self.assertIn(build_site.canonical_url(BASE_URL, page.dst), llms)
         self.assertNotIn("utm_", llms)
         home = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn(
@@ -267,6 +332,21 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn('"@type":"FAQPage"', home)
         self.assertIn("会不会把 API Key 传走", home)
         self.assertNotIn("98%", home)
+
+    def test_robots_sitemap_target_exists_and_parses(self):
+        """robots 指向的 sitemap 必须真实生成、可解析并包含全部公开页面。"""
+        robots = (self.site / "robots.txt").read_text(encoding="utf-8")
+        match = re.search(r"(?m)^Sitemap: (https?://\S+)$", robots)
+        self.assertIsNotNone(match)
+        sitemap_url = match.group(1)
+        self.assertTrue(sitemap_url.startswith(BASE_URL + "/"))
+        target = self.site / sitemap_url[len(BASE_URL) + 1:]
+        self.assertTrue(target.is_file(), sitemap_url)
+        root = ET.parse(target).getroot()
+        self.assertTrue(root.tag.endswith("urlset"))
+        locs = [item.text for item in root.iter() if item.tag.endswith("loc")]
+        self.assertEqual(len(locs), EXPECTED_PAGE_COUNT)
+        self.assertEqual(len(locs), len(set(locs)))
 
     def test_indexnow_key_file_matches_its_name(self):
         """IndexNow 子目录验证文件必须存在，且内容与文件名完全一致。"""
@@ -405,12 +485,21 @@ class TestSiteBuild(unittest.TestCase):
 
     def test_faq_structured_data_parses(self):
         text = (self.site / "faq.html").read_text(encoding="utf-8")
-        data = parse_jsonld(text)[0]
-        self.assertEqual(data["@type"], "FAQPage")
-        self.assertGreaterEqual(len(data["mainEntity"]), 20)
-        for item in data["mainEntity"]:
+        data = parse_jsonld(text)
+        faq_pages = [item for item in data if item.get("@type") == "FAQPage"]
+        self.assertEqual(len(faq_pages), 1)
+        faq_page = faq_pages[0]
+        self.assertGreaterEqual(len(faq_page["mainEntity"]), 20)
+        for item in faq_page["mainEntity"]:
             self.assertEqual(item["@type"], "Question")
             self.assertTrue(item["acceptedAnswer"]["text"].strip())
+        articles = [item for item in data if item.get("@type") == "TechArticle"]
+        self.assertEqual(len(articles), 1)
+        self.assertEqual(articles[0]["url"], build_site.canonical_url(BASE_URL, "faq.html"))
+        self.assertEqual(
+            articles[0]["dateModified"],
+            build_site.source_last_modified(Path("FAQ.md")),
+        )
 
     def test_error_pages_have_tech_article_jsonld(self):
         """8 个报错 slug 的所有既有语言页都必须输出与页面一致的 TechArticle。"""
@@ -451,8 +540,8 @@ class TestSiteBuild(unittest.TestCase):
             )
 
     def test_page_kind_contract_matches_page_records(self):
-        """37 个页面都通过稳定的 body 标识声明版式类型。"""
-        expected = Counter({"home": 5, "faq": 1, "error": 17, "doc": 14})
+        """41 个页面都通过稳定的 body 标识声明版式类型。"""
+        expected = Counter({"home": 5, "faq": 1, "error": 17, "doc": 18})
         self.assertEqual(
             Counter(build_site.page_kind(page) for page in self.records),
             expected,
@@ -518,7 +607,7 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual((width, height), (1200, 630))
 
     def test_home_jsonld_and_language_variants(self):
-        """五个首页都有 WebApplication；不能把中文 FAQ 结构化数据复制到译文首页。"""
+        """五个首页都有 WebApplication 与 TechArticle；FAQ 数据只属于中文首页。"""
         for dst in (
             "index.html",
             "en/index.html",
@@ -529,10 +618,42 @@ class TestSiteBuild(unittest.TestCase):
             data = parse_jsonld((self.site / dst).read_text(encoding="utf-8"))
             self.assertEqual(data[0]["@type"], "WebApplication", dst)
             faq_pages = [item for item in data if item.get("@type") == "FAQPage"]
+            articles = [item for item in data if item.get("@type") == "TechArticle"]
             if dst == "index.html":
                 self.assertEqual(len(faq_pages), 1, dst)
             else:
                 self.assertEqual(faq_pages, [], dst)
+            self.assertEqual(len(articles), 1, dst)
+            self.assertEqual(
+                articles[0]["url"],
+                build_site.canonical_url(BASE_URL, dst),
+                dst,
+            )
+
+    def test_home_protocol_table_jsonld_matches_visible_table(self):
+        """中文首页恰好一个 Table 标记，四行来自可见协议表且保留表头。"""
+        home = (self.site / "index.html").read_text(encoding="utf-8")
+        tables = [item for item in parse_jsonld(home) if item.get("@type") == "Table"]
+        self.assertEqual(len(tables), 1)
+        table = tables[0]
+        self.assertEqual(table["mainEntity"]["numberOfItems"], 4)
+        names = [item["name"] for item in table["about"]]
+        self.assertEqual(
+            names,
+            ["Chat Completions", "Responses", "Messages", "Gemini 原生 REST"],
+        )
+        headers = [
+            item["item"]["name"]
+            for item in table["mainEntity"]["itemListElement"][0]["item"]["itemListElement"]
+        ]
+        self.assertEqual(headers, ["协议面孔", "实际请求路径", "客户端 Base URL", "典型客户端"])
+        for dst in ("en/index.html", "ja/index.html", "es/index.html", "zh-Hant/index.html"):
+            data = parse_jsonld((self.site / dst).read_text(encoding="utf-8"))
+            self.assertEqual(
+                [item for item in data if item.get("@type") == "Table"],
+                [],
+                dst,
+            )
 
     def test_search_verification_meta_toggles_with_environment(self):
         """仓库变量为空时不输出验证标签，有值时每页输出三家搜索平台标签。"""
@@ -751,6 +872,7 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("pages: write", workflow)
         self.assertIn("build_site.py", workflow)
         self.assertIn('"docs/**"', workflow)
+        self.assertIn('"google*.html"', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
@@ -758,6 +880,19 @@ class TestSiteBuild(unittest.TestCase):
 
         ci_workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("fetch-depth: 0", ci_workflow)
+
+    def test_google_verification_file_is_copied_but_not_in_sitemap(self):
+        """Google 根目录验证文件必须原样部署，但不属于可索引页面。"""
+        source = (ROOT / build_site.GOOGLE_SITE_VERIFICATION_FILE).read_text(
+            encoding="utf-8"
+        )
+        deployed = (self.site / build_site.GOOGLE_SITE_VERIFICATION_FILE).read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(deployed, source)
+        self.assertRegex(source, r"^google-site-verification: google[0-9a-f]+\.html\s*$")
+        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertNotIn(build_site.GOOGLE_SITE_VERIFICATION_FILE, sitemap)
 
     def test_pages_workflow_notifies_indexnow_after_deploy(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
@@ -786,7 +921,11 @@ class TestOutboundLinks(unittest.TestCase):
     def test_every_page_links_to_instance_in_body(self):
         """正文（非页脚）至少 1 处到 nuoapi.net 的真锚点；纯文本域名不算外链。"""
         home_dsts = {page.dst for page in all_page_records() if page.is_home}
-        for page in sorted(self.site.rglob("*.html")):
+        for page in sorted(
+            path
+            for path in self.site.rglob("*.html")
+            if path.name != build_site.GOOGLE_SITE_VERIFICATION_FILE
+        ):
             text = page.read_text(encoding="utf-8")
             body = text.split("<article>")[1].split("</article>")[0]
             hits = [h for h in re.findall(r'href="(https?://[^"]+)"', body) if "nuoapi.net" in h]
@@ -802,7 +941,11 @@ class TestOutboundLinks(unittest.TestCase):
     def test_outbound_links_carry_no_tracking_params(self):
         """所有外链都不带追踪参数；实例链接只使用无查询串的规范页。"""
         tracking_key = re.compile(r"^(?:utm_.+|ref|aff)$", re.IGNORECASE)
-        pages = [H5 / "index.html"] + sorted(self.site.rglob("*.html"))
+        pages = [H5 / "index.html"] + sorted(
+            path
+            for path in self.site.rglob("*.html")
+            if path.name != build_site.GOOGLE_SITE_VERIFICATION_FILE
+        )
         for page in pages:
             text = page.read_text(encoding="utf-8")
             for href in re.findall(r'href="(https?://[^"]+)"', text):
@@ -878,6 +1021,27 @@ class TestSearchMetadata(unittest.TestCase):
                 self.width(meta["description"]), 160, "{0} 描述过长会被截断".format(doc))
             self.assertGreaterEqual(
                 self.width(meta["description"]), 60, "{0} 描述太短，浪费结果页空间".format(doc))
+
+    def test_major_pages_have_intent_rich_search_descriptions(self):
+        """主要入口的描述为手写版本，长度落在 120–155 个搜索显示列。"""
+        for doc, phrases in MAJOR_SEO_PAGES.items():
+            meta, _ = build_site.split_frontmatter(doc.read_text(encoding="utf-8"))
+            description = meta["description"]
+            width = self.width(description)
+            self.assertGreaterEqual(width, 120, "{0}: {1}".format(doc, width))
+            self.assertLessEqual(width, 155, "{0}: {1}".format(doc, width))
+            folded = description.casefold()
+            for phrase in phrases:
+                self.assertIn(phrase.casefold(), folded, "{0}: {1}".format(doc, phrase))
+
+    def test_home_title_is_question_or_problem_oriented(self):
+        """首页搜索结果标题先说问题与解法，不改正文 H1。"""
+        meta, body = build_site.split_frontmatter((ROOT / "README.md").read_text(encoding="utf-8"))
+        self.assertTrue(meta["title"].startswith("AI 中转站防掺水："))
+        self.assertEqual(
+            build_site.first_heading(body),
+            "[NuoAPI](https://nuoapi.net/model-plaza) 接入脚手架与防掺水取证工具箱",
+        )
 
     def test_faq_title_carries_symptom_keywords(self):
         """报错长尾是点击率最高的一类词，FAQ 标题必须带至少一个报错原文。"""

@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: Codex 一直 Reconnecting：关掉 supports_websockets
-  description: 日志出现 wss:// 的 /v1/responses，或 Codex 一直 Reconnecting 时，把 wire_api 设为 responses 并关掉 WebSocket，保存后彻底重启。
+  description: Codex 一直 Reconnecting 时，先检查 wss 请求与 supports_websockets 配置：关闭 WebSocket、保存并彻底重启，再用固定短句和日志判断是否恢复。
 -->
 
 # Codex 一直 Reconnecting：关闭 supports_websockets

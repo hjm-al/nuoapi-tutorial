@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: NuoAPI starter: Codex, Claude Code, and Gemini API setup
-  description: Configure common AI clients, use dry-run checks before spending, and verify whether a paid response matches the model you requested.
+  description: Connect Codex, Claude Code, and Gemini CLI through an AI API gateway, troubleshoot errors, and run dry-run model authenticity checks before paying.
 -->
 
 # [NuoAPI](https://nuoapi.net/model-plaza) Starter and Model Verification Toolkit
@@ -19,7 +19,7 @@ This repository helps you connect Codex, Claude Code, Gemini CLI, and other comp
 
 - [English: LLM gateway checklist](docs/llm-gateway-checklist.en.md) for model consistency, data residency, BYOK, audit logs, and failover.
 - [日本語: minimum charge and pricing](docs/minimum-charge-and-pricing.ja.md) for top-up thresholds and cost conversion.
-- [Español: cost per 1M tokens](docs/cost-per-1m-tokens.es.md) for input, output, cache, and effective cost.
+- [English: cost per 1M tokens](docs/cost-per-1m-tokens.en.md) for input, output, cache, minimum top-up, and a local cost calculator.
 
 ## Common errors at a glance
 

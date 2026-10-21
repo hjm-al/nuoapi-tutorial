@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#171a18" media="(prefers-color-scheme: dark)">
-<meta name="description" content="四种协议（Chat Completions、Responses、Messages、Gemini REST）怎么选、16+ 客户端怎么接、模型真伪怎么验，附可直接跑的探针与一键配置脚本。">
+<meta name="description" content="AI 中转站 Codex 接入与排错指南：对照四种 API 协议，修复 Claude Code、Gemini CLI 常见错误，用离线探针检查模型真伪与防掺水，结论只写匹配、不匹配或证据不足。">
 <link rel="canonical" href="https://hjm-al.github.io/nuoapi-tutorial/">
-<title>NuoAPI 接入脚手架：Codex / Claude Code / Gemini 配置与防掺水</title>
+<title>AI 中转站防掺水：Codex / Claude Code 接入与报错排查</title>
 <style>
 :root{
   --paper:#f5f6f2; --surface:#fbfbf8; --surface-2:#eff1ec; --ink:#191b19; --ink-strong:#101210;
@@ -801,7 +801,7 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
     <div class="brand-mark" aria-hidden="true">N</div>
     <div>
       <div class="appbar-title">NuoAPI 接入脚手架</div>
-      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 15:59</div>
+      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 17:15</div>
     </div>
   </div>
   <div class="appbar-actions"><button id="themeBtn" class="icon-btn" type="button" title="切换主题"><span class="i-light">&#9788;</span><span class="i-dark">&#9790;</span></button></div>
@@ -839,7 +839,7 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
 <li><a href="#许可证">许可证</a></li>
 </ul>
 </div>
-<div class="toc docs-toc"><div class="drawer-section">专题文档</div><ul><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/400-invalid-request-error.html" target="_blank" rel="noopener noreferrer">400 invalid_request_error：先读响应里的 message</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/401-invalid-api-key.html" target="_blank" rel="noopener noreferrer">401 invalid_api_key：先确认客户端读到哪把 Key</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/AI模型API协议科普-2026-10-12.html" target="_blank" rel="noopener noreferrer">AI 模型 API 协议科普</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Claude-Code-不要加v1-2026-10-18.html" target="_blank" rel="noopener noreferrer">Claude Code 报 404：ANTHROPIC_BASE_URL 不要加 /v1</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Codex-一直Reconnecting-2026-10-18.html" target="_blank" rel="noopener noreferrer">Codex 一直 Reconnecting：关闭 supports_websockets</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html" target="_blank" rel="noopener noreferrer">Cursor / Roo Code：Base URL 与模型 ID 怎么填</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html" target="_blank" rel="noopener noreferrer">Gemini CLI：platform is not gemini</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/MODEL_VERIFICATION_METHODS.html" target="_blank" rel="noopener noreferrer">模型真伪与防掺水：中转站换模型怎么判断</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/TEST_REPORT_SPEC.html" target="_blank" rel="noopener noreferrer">工业级 AI API 黑盒兼容性与真实性测试报告规范与模板</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/WSL-command-not-found.html" target="_blank" rel="noopener noreferrer">WSL 报 `\r: command not found`：先修脚本换行</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/model_not_found.html" target="_blank" rel="noopener noreferrer">404 model_not_found：先核对当前分组的模型 ID</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/余额与额度查询-2026-10-06.html" target="_blank" rel="noopener noreferrer">余额与额度查询（sub2api 类网关）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/图像质量复盘方法-2026-10-18.html" target="_blank" rel="noopener noreferrer">图像生成质量复盘方法</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/图片生成实测教程-2026-09-28.html" target="_blank" rel="noopener noreferrer">图片生成 API 实测教程（2026-09-27 / 09-28 双窗口记录）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/接入第三方工具教程-2026-09-26.html" target="_blank" rel="noopener noreferrer">接入第三方工具教程</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型列表获取与排错-2026-10-18.html" target="_blank" rel="noopener noreferrer">模型列表：怎么拿、怎么看、哪里会骗你</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型广场清单-2026-10-12.html" target="_blank" rel="noopener noreferrer">NuoAPI 模型广场清单（2026-10-12 历史窗口）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型广场清单-2026-10-18.html" target="_blank" rel="noopener noreferrer">NuoAPI 模型广场清单（2026-10-18 窗口）</a></li></ul></div></div>
+<div class="toc docs-toc"><div class="drawer-section">专题文档</div><ul><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/400-invalid-request-error.html" target="_blank" rel="noopener noreferrer">400 invalid_request_error：先读响应里的 message</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/401-invalid-api-key.html" target="_blank" rel="noopener noreferrer">401 invalid_api_key：先确认客户端读到哪把 Key</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/AI模型API协议科普-2026-10-12.html" target="_blank" rel="noopener noreferrer">AI 模型 API 协议科普</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Claude-Code-不要加v1-2026-10-18.html" target="_blank" rel="noopener noreferrer">Claude Code 报 404：ANTHROPIC_BASE_URL 不要加 /v1</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Codex-一直Reconnecting-2026-10-18.html" target="_blank" rel="noopener noreferrer">Codex 一直 Reconnecting：关闭 supports_websockets</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html" target="_blank" rel="noopener noreferrer">Cursor / Roo Code：Base URL 与模型 ID 怎么填</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html" target="_blank" rel="noopener noreferrer">Gemini CLI：platform is not gemini</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/MODEL_VERIFICATION_METHODS.html" target="_blank" rel="noopener noreferrer">模型真伪与防掺水：中转站换模型怎么判断</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/TEST_REPORT_SPEC.html" target="_blank" rel="noopener noreferrer">工业级 AI API 黑盒兼容性与真实性测试报告规范与模板</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/WSL-command-not-found.html" target="_blank" rel="noopener noreferrer">WSL 报 `\r: command not found`：先修脚本换行</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/cost-per-1m-tokens.html" target="_blank" rel="noopener noreferrer">AI API 每百万 Token 成本怎么算：输入、输出与缓存</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/model_not_found.html" target="_blank" rel="noopener noreferrer">404 model_not_found：先核对当前分组的模型 ID</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/余额与额度查询-2026-10-06.html" target="_blank" rel="noopener noreferrer">余额与额度查询（sub2api 类网关）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/图像质量复盘方法-2026-10-18.html" target="_blank" rel="noopener noreferrer">图像生成质量复盘方法</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/图片生成实测教程-2026-09-28.html" target="_blank" rel="noopener noreferrer">图片生成 API 实测教程（2026-09-27 / 09-28 双窗口记录）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/接入第三方工具教程-2026-09-26.html" target="_blank" rel="noopener noreferrer">接入第三方工具教程</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型列表获取与排错-2026-10-18.html" target="_blank" rel="noopener noreferrer">模型列表：怎么拿、怎么看、哪里会骗你</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型广场清单-2026-10-12.html" target="_blank" rel="noopener noreferrer">NuoAPI 模型广场清单（2026-10-12 历史窗口）</a></li><li><a href="https://hjm-al.github.io/nuoapi-tutorial/docs/模型广场清单-2026-10-18.html" target="_blank" rel="noopener noreferrer">NuoAPI 模型广场清单（2026-10-18 窗口）</a></li></ul></div></div>
 </nav>
 
 <div class="page">
@@ -1498,11 +1498,12 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
     h.appendChild(a);
   });
 
-  // 西语费用页：所有计算在本地完成，没有表单提交、网络请求或输入持久化。
+  // 多语言费用页：所有计算在本地完成，没有表单提交、网络请求或输入持久化。
   var costCalculator = document.querySelector('[data-cost-calculator]');
   if (costCalculator) {
     var costForm = costCalculator.querySelector('[data-cost-form]');
     var costStatus = costCalculator.querySelector('[data-cost-status]');
+    var costLocale = costCalculator.getAttribute('data-cost-locale') || 'en-US';
     var costResultEls = {};
     var costEmpty = '—';
     costCalculator.querySelectorAll('[data-cost-result]').forEach(function (el) {
@@ -1558,7 +1559,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
     function formatCostMoney(value, currency) {
       if (!Number.isFinite(value)) { return costEmpty; }
       try {
-        return new Intl.NumberFormat('es-ES', {
+        return new Intl.NumberFormat(costLocale, {
           style: 'currency',
           currency: currency,
           currencyDisplay: 'narrowSymbol',
@@ -1572,12 +1573,12 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 
     function formatCostCount(value) {
       if (!Number.isFinite(value)) { return costEmpty; }
-      return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(value);
+      return new Intl.NumberFormat(costLocale, { maximumFractionDigits: 0 }).format(value);
     }
 
     function formatCostRatio(value) {
       if (!Number.isFinite(value)) { return costEmpty; }
-      return new Intl.NumberFormat('es-ES', {
+      return new Intl.NumberFormat(costLocale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 4
       }).format(value) + ' ×';
@@ -1640,7 +1641,7 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
         clearCostResults();
         setCostStatus(
           'invalid',
-          costMessage('invalid', 'El resultado supera el rango numérico admitido.')
+          costMessage('overflow', 'The result exceeds the supported numeric range.')
         );
         return;
       }

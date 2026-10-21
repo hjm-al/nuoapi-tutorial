@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: 404 model_not_found：模型名与分组不一致怎么修
-  description: 遇到 model_not_found 时，先核对当前 Key 所属分组、完整模型 ID 和协议路径；不要靠拼音猜模型名，也不要连续试错制造无效调用。
+  description: 遇到 404 model_not_found 不要连续猜模型名：先核对当前 Key 所属分组、完整模型 ID 与协议路径，再从当前清单复制名称，最后用一次最小请求确认修复是否成功。
 -->
 
 # 404 model_not_found：先核对当前分组的模型 ID

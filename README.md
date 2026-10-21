@@ -1,6 +1,6 @@
 <!-- seo-meta
-  title: NuoAPI 接入脚手架：Codex / Claude Code / Gemini 配置与防掺水
-  description: 四种协议（Chat Completions、Responses、Messages、Gemini REST）怎么选、16+ 客户端怎么接、模型真伪怎么验，附可直接跑的探针与一键配置脚本。
+  title: AI 中转站防掺水：Codex / Claude Code 接入与报错排查
+  description: AI 中转站 Codex 接入与排错指南：对照四种 API 协议，修复 Claude Code、Gemini CLI 常见错误，用离线探针检查模型真伪与防掺水，结论只写匹配、不匹配或证据不足。
 -->
 
 # [NuoAPI](https://nuoapi.net/model-plaza) 接入脚手架与防掺水取证工具箱
@@ -23,7 +23,7 @@
 
 - [English：LLM Gateway Checklist](docs/llm-gateway-checklist.en.md)：模型一致性、数据驻留、BYOK、审计与故障转移。
 - [日本語：最低チャージと料金](docs/minimum-charge-and-pricing.ja.md)：最低充值、额度换算、公开价与实际支付价。
-- [Español：每百万 Token 价格](docs/cost-per-1m-tokens.es.md)：输入、输出、缓存、长上下文与总成本模拟。
+- [简体中文：每百万 Token 真实成本](docs/cost-per-1m-tokens.md)：输入、输出、缓存、最低充值与在线成本模拟。
 
 ## 常见问题速查
 

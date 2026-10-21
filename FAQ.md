@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: AI 中转站 FAQ 与报错排查：platform is not gemini、model_not_found
-  description: 接入第三方 AI API 中转站时的 30 个真实报错与问法，每条给出原因和可直接照抄的改法，按 Ctrl+F 搜报错原文即可定位。
+  description: AI 中转站 FAQ 与报错排查：收录 platform is not gemini、Codex Reconnecting、Claude Code 404 与 model_not_found，按错误原文给出判断、最短修复和成功判据。
 -->
 
 # NuoAPI FAQ 与排错

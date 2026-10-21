@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: NuoAPI 接入腳手架：Codex / Claude Code / Gemini 設定
-  description: 設定常見 AI 用戶端，先用不計費的試跑檢查，再以三態結果核對付費回應是否來自你指定的模型。
+  description: AI 中轉站 Codex 接入與排錯指南：對照四種 API 協定，修復 Claude Code、Gemini CLI 常見錯誤，用離線探針檢查模型真偽與防摻水，結論只寫吻合、不吻合或證據不足。
 -->
 
 # [NuoAPI](https://nuoapi.net/model-plaza) 接入腳手架與防摻水取證工具箱
@@ -19,7 +19,7 @@
 
 - [English：LLM gateway checklist](docs/llm-gateway-checklist.en.md)：模型一致性、資料駐留、BYOK、稽核與故障轉移。
 - [日本語：最低儲值與費用](docs/minimum-charge-and-pricing.ja.md)：最低儲值、額度換算、公開價與實際支付價。
-- [Español：每百萬 Token 價格](docs/cost-per-1m-tokens.es.md)：輸入、輸出、快取、長上下文與總成本模擬。
+- [繁體中文：每百萬 Token 真實成本](docs/cost-per-1m-tokens.zh-Hant.md)：輸入、輸出、快取、最低儲值與線上成本模擬。
 
 ## 常見問題速查
 

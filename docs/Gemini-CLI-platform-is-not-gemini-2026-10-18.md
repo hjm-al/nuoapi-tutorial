@@ -1,6 +1,6 @@
 <!-- seo-meta
   title: Gemini CLI 报 platform is not gemini：根地址怎么填
-  description: 出现 400 platform is not gemini，或改完 CLI 仍无响应时，GOOGLE_GEMINI_BASE_URL 只填根地址，不要加 /v1beta，保存后重启。
+  description: Gemini CLI 报 platform is not gemini 时，先核对 GOOGLE_GEMINI_BASE_URL：变量只填根地址，不要加 /v1beta；确认精确模型 ID 后重启验证。
 -->
 
 # Gemini CLI：platform is not gemini

@@ -1006,11 +1006,12 @@ JS = r"""<script>
     h.appendChild(a);
   });
 
-  // 西语费用页：所有计算在本地完成，没有表单提交、网络请求或输入持久化。
+  // 多语言费用页：所有计算在本地完成，没有表单提交、网络请求或输入持久化。
   var costCalculator = document.querySelector('[data-cost-calculator]');
   if (costCalculator) {
     var costForm = costCalculator.querySelector('[data-cost-form]');
     var costStatus = costCalculator.querySelector('[data-cost-status]');
+    var costLocale = costCalculator.getAttribute('data-cost-locale') || 'en-US';
     var costResultEls = {};
     var costEmpty = '—';
     costCalculator.querySelectorAll('[data-cost-result]').forEach(function (el) {
@@ -1066,7 +1067,7 @@ JS = r"""<script>
     function formatCostMoney(value, currency) {
       if (!Number.isFinite(value)) { return costEmpty; }
       try {
-        return new Intl.NumberFormat('es-ES', {
+        return new Intl.NumberFormat(costLocale, {
           style: 'currency',
           currency: currency,
           currencyDisplay: 'narrowSymbol',
@@ -1080,12 +1081,12 @@ JS = r"""<script>
 
     function formatCostCount(value) {
       if (!Number.isFinite(value)) { return costEmpty; }
-      return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(value);
+      return new Intl.NumberFormat(costLocale, { maximumFractionDigits: 0 }).format(value);
     }
 
     function formatCostRatio(value) {
       if (!Number.isFinite(value)) { return costEmpty; }
-      return new Intl.NumberFormat('es-ES', {
+      return new Intl.NumberFormat(costLocale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 4
       }).format(value) + ' ×';
@@ -1148,7 +1149,7 @@ JS = r"""<script>
         clearCostResults();
         setCostStatus(
           'invalid',
-          costMessage('invalid', 'El resultado supera el rango numérico admitido.')
+          costMessage('overflow', 'The result exceeds the supported numeric range.')
         );
         return;
       }
