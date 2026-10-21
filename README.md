@@ -1,5 +1,5 @@
 <!-- seo-meta
-  title: AI 中转站防掺水：Codex / Claude Code 接入与报错排查
+  title: NuoAPI 接入教程：Codex / Claude Code / Gemini CLI 报错与防掺水
   description: AI 中转站 Codex 接入与排错指南：对照四种 API 协议，修复 Claude Code、Gemini CLI 常见错误，用离线探针检查模型真伪与防掺水，结论只写匹配、不匹配或证据不足。
 -->
 
@@ -15,7 +15,7 @@
 [![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2563eb)](https://hjm-al.github.io/nuoapi-tutorial/)
 [![许可证: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
-在线文档：<https://hjm-al.github.io/nuoapi-tutorial/> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [Español](README.es.md) / [繁體中文](README.zh-Hant.md)
+在线文档：<a href="https://hjm-al.github.io/nuoapi-tutorial/">打开中文文档站</a> · 仓库：<https://github.com/hjm-al/nuoapi-tutorial> · 语言：[简体中文](README.md) / [English](README.en.md) / [日本語](README.ja.md) / [Español](README.es.md) / [繁體中文](README.zh-Hant.md)
 
 一套面向**买方视角**的开源工具：把各类 AI 客户端/CLI/IDE 插件接入第三方 AI 中转站（网关）。如果正在判断 AI 中转站是否换模型、检查模型真伪，先看[模型真伪与防掺水方法学](docs/MODEL_VERIFICATION_METHODS.md)，再用可辩护的证据回答一个问题——**"我付费调用的，是不是它声称的那个模型？"**
 
@@ -27,12 +27,29 @@
 
 ## 常见问题速查
 
-- [Gemini CLI 报 `platform is not gemini`](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)
-- [Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.md)
-- [Claude Code 不要加 `/v1`](docs/Claude-Code-不要加v1-2026-10-18.md)
-- [`401 invalid_api_key`](docs/401-invalid-api-key.md)
-- [`400 invalid_request_error`](docs/400-invalid-request-error.md)
-- [`404 model_not_found`](docs/model_not_found.md)
+### Gemini CLI 报 `platform is not gemini` 怎么办？
+
+`GOOGLE_GEMINI_BASE_URL` 只填根地址 `https://nuoapi.net`，不要再加 `/v1` 或 `/v1beta`；模型 ID 也要从当前分组逐字符复制。完整步骤见[Gemini CLI 排错](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md)。
+
+### Codex 一直 Reconnecting 怎么办？
+
+把 Provider 的 `wire_api` 设为 `responses`，将 `supports_websockets` 设为 `false`，保存后彻底退出并重启 Codex。完整步骤见[Codex Reconnecting 排错](docs/Codex-一直Reconnecting-2026-10-18.md)。
+
+### Claude Code 报 404，`/v1` 要加吗？
+
+不要。`ANTHROPIC_BASE_URL` 填根地址 `https://nuoapi.net`，Key 放进 `ANTHROPIC_AUTH_TOKEN`，再新开终端。完整步骤见[Claude Code 404 排错](docs/Claude-Code-不要加v1-2026-10-18.md)。
+
+### `401 invalid_api_key` 先查什么？
+
+先确认当前客户端进程实际读到的 Key 是否存在、变量名是否对应客户端、前后有没有空白；不要打印完整 Key。完整步骤见[401 排查](docs/401-invalid-api-key.md)。
+
+### `400 invalid_request_error` 为什么只给类别？
+
+继续读响应正文里的 `message`；常见方向是 Base URL 重复 `/v1`、协议或模型不匹配、缺必填字段，以及流式参数混用。完整步骤见[400 排查](docs/400-invalid-request-error.md)。
+
+### `404 model_not_found` 是网关宕机吗？
+
+通常不是。它多表示请求已到网关，但当前 Key 所属分组没有这个完整模型 ID；先从 `/v1/models` 或模型广场复制精确名称。完整步骤见[404 模型名排错](docs/model_not_found.md)。
 
 ## 先看计划，不花钱
 

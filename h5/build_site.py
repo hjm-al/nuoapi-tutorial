@@ -35,6 +35,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote
 
 import markdown
 
@@ -45,6 +46,8 @@ from document_structure import transform_home_content, wrap_sections
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 DEFAULT_OUT = SCRIPT_DIR / "_site"
+SITEMAP_FILENAME = "sitemap.xml"
+SITEMAP_ALIAS_FILENAME = "sm.xml"
 
 # 页面不是“源文件 → 文件名”的二元组：语言、翻译关系和结构化数据都属于同一份
 # 页面契约。导航、分页、canonical、hreflang、sitemap 与 llms.txt 都从这份契约
@@ -624,7 +627,8 @@ def protocol_table_jsonld(md_text: str, page_url: str) -> str:
 
 def canonical_url(base_url: str, dst: str) -> str:
     url = base_url.rstrip("/") + "/" + ("" if dst == "index.html" else dst)
-    return url.replace("/index.html", "/")
+    url = url.replace("/index.html", "/")
+    return quote(url, safe=":/?#[]@!$&'()*+,;=-._~%")
 
 
 def page_alternates(page: Page, pages: list[Page]) -> list[Page]:
@@ -768,7 +772,9 @@ def robots_txt(base_url: str) -> str:
     lines = ["User-agent: *", "Allow: /", ""]
     for name in CRAWLERS:
         lines.extend(["User-agent: {0}".format(name), "Allow: /", ""])
-    lines.append("Sitemap: {0}/sitemap.xml".format(base_url.rstrip("/")))
+    lines.append(
+        "Sitemap: {0}/{1}".format(base_url.rstrip("/"), SITEMAP_FILENAME)
+    )
     lines.append("")
     return "\n".join(lines)
 
@@ -1382,13 +1388,14 @@ class SiteBuilder:
                     "1.0" if page.dst == "index.html" else ("0.9" if page.is_home else "0.8"),
                 )
             )
-        (out_dir / "sitemap.xml").write_text(
+        sitemap_text = (
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             + "\n".join(urls)
-            + "\n</urlset>\n",
-            encoding="utf-8",
+            + "\n</urlset>\n"
         )
+        for filename in (SITEMAP_FILENAME, SITEMAP_ALIAS_FILENAME):
+            (out_dir / filename).write_text(sitemap_text, encoding="utf-8")
         (out_dir / "robots.txt").write_text(robots_txt(base), encoding="utf-8")
         (out_dir / "{0}.txt".format(INDEXNOW_KEY)).write_text(
             INDEXNOW_KEY, encoding="utf-8"
@@ -1439,8 +1446,17 @@ def main() -> int:
         help="GitHub 仓库地址，用于源码/模板/表格链接",
     )
     parser.add_argument("--out", default=str(DEFAULT_OUT), help="输出目录")
+    parser.add_argument(
+        "--sync-root-sitemap",
+        action="store_true",
+        help="构建成功后把 sitemap.xml 快照同步到仓库根目录",
+    )
     args = parser.parse_args()
-    return build(args.base_url, args.repo_url, Path(args.out))
+    out_dir = Path(args.out)
+    exit_code = build(args.base_url, args.repo_url, out_dir)
+    if exit_code == 0 and args.sync_root_sitemap:
+        shutil.copyfile(out_dir / SITEMAP_FILENAME, ROOT / SITEMAP_FILENAME)
+    return exit_code
 
 
 if __name__ == "__main__":

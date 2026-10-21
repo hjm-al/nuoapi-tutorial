@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#171a18" media="(prefers-color-scheme: dark)">
 <meta name="description" content="AI 中转站 Codex 接入与排错指南：对照四种 API 协议，修复 Claude Code、Gemini CLI 常见错误，用离线探针检查模型真伪与防掺水，结论只写匹配、不匹配或证据不足。">
 <link rel="canonical" href="https://hjm-al.github.io/nuoapi-tutorial/">
-<title>AI 中转站防掺水：Codex / Claude Code 接入与报错排查</title>
+<title>NuoAPI 接入教程：Codex / Claude Code / Gemini CLI 报错与防掺水</title>
 <style>
 :root{
   --paper:#f5f6f2; --surface:#fbfbf8; --surface-2:#eff1ec; --ink:#191b19; --ink-strong:#101210;
@@ -801,7 +801,7 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
     <div class="brand-mark" aria-hidden="true">N</div>
     <div>
       <div class="appbar-title">NuoAPI 接入脚手架</div>
-      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 18:47</div>
+      <div class="appbar-sub">离线单页版 · 构建于 2026-10-22 03:21</div>
     </div>
   </div>
   <div class="appbar-actions"><button id="themeBtn" class="icon-btn" type="button" title="切换主题"><span class="i-light">&#9788;</span><span class="i-dark">&#9790;</span></button></div>
@@ -816,7 +816,15 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
   <div class="drawer-body"><div class="drawer-section">本页章节</div><div class="toc">
 <ul>
 <li><a href="#多语言核验入口">多语言核验入口</a></li>
-<li><a href="#常见问题速查">常见问题速查</a></li>
+<li><a href="#常见问题速查">常见问题速查</a><ul>
+<li><a href="#gemini-cli-报-platform-is-not-gemini-怎么办">Gemini CLI 报 platform is not gemini 怎么办？</a></li>
+<li><a href="#codex-一直-reconnecting-怎么办">Codex 一直 Reconnecting 怎么办？</a></li>
+<li><a href="#claude-code-报-404v1-要加吗">Claude Code 报 404，/v1 要加吗？</a></li>
+<li><a href="#401-invalid_api_key-先查什么">401 invalid_api_key 先查什么？</a></li>
+<li><a href="#400-invalid_request_error-为什么只给类别">400 invalid_request_error 为什么只给类别？</a></li>
+<li><a href="#404-model_not_found-是网关宕机吗">404 model_not_found 是网关宕机吗？</a></li>
+</ul>
+</li>
 <li><a href="#先看计划不花钱">先看计划，不花钱</a></li>
 <li><a href="#交给助手">交给助手</a><ul>
 <li><a href="#会不会把-api-key-传走">会不会把 API Key 传走？</a></li>
@@ -867,15 +875,19 @@ python examples/model_verify.py
 <p>加上 <code>--run</code> 之后，这条是 <code>GET /v1/models</code>，不产生 token 费用。客户端配置可以改用 <a href="../examples/quick_setup.ps1"><code>examples/quick_setup.ps1</code></a> 或 <a href="../examples/quick_setup.sh"><code>quick_setup.sh</code></a>，已有文件会先备份。</p>
 </section><div class="home-status"><p><a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml"><img alt="契约测试" src="https://github.com/hjm-al/nuoapi-tutorial/actions/workflows/ci.yml/badge.svg" /></a>
 <a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/"><img alt="GitHub Pages" src="https://img.shields.io/badge/docs-GitHub%20Pages-2563eb" /></a>
-<a href="../LICENSE"><img alt="许可证: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a></p><p>在线文档：<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/">https://hjm-al.github.io/nuoapi-tutorial/</a> · 仓库：<a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial">https://github.com/hjm-al/nuoapi-tutorial</a> · 语言：<a href="../README.md">简体中文</a> / <a href="../README.en.md">English</a> / <a href="../README.ja.md">日本語</a> / <a href="../README.es.md">Español</a> / <a href="../README.zh-Hant.md">繁體中文</a></p></div><section class="doc-section" data-section-index="01"><h2 id="常见问题速查">常见问题速查</h2>
-<ul>
-<li><a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">Gemini CLI 报 <code>platform is not gemini</code></a></li>
-<li><a href="../docs/Codex-一直Reconnecting-2026-10-18.md">Codex 一直 Reconnecting</a></li>
-<li><a href="../docs/Claude-Code-不要加v1-2026-10-18.md">Claude Code 不要加 <code>/v1</code></a></li>
-<li><a href="../docs/401-invalid-api-key.md"><code>401 invalid_api_key</code></a></li>
-<li><a href="../docs/400-invalid-request-error.md"><code>400 invalid_request_error</code></a></li>
-<li><a href="../docs/model_not_found.md"><code>404 model_not_found</code></a></li>
-</ul>
+<a href="../LICENSE"><img alt="许可证: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a></p><p>在线文档：<a target="_blank" rel="noopener noreferrer" href="https://hjm-al.github.io/nuoapi-tutorial/">打开中文文档站</a> · 仓库：<a target="_blank" rel="noopener noreferrer" href="https://github.com/hjm-al/nuoapi-tutorial">https://github.com/hjm-al/nuoapi-tutorial</a> · 语言：<a href="../README.md">简体中文</a> / <a href="../README.en.md">English</a> / <a href="../README.ja.md">日本語</a> / <a href="../README.es.md">Español</a> / <a href="../README.zh-Hant.md">繁體中文</a></p></div><section class="doc-section" data-section-index="01"><h2 id="常见问题速查">常见问题速查</h2>
+<h3 id="gemini-cli-报-platform-is-not-gemini-怎么办">Gemini CLI 报 <code>platform is not gemini</code> 怎么办？</h3>
+<p><code>GOOGLE_GEMINI_BASE_URL</code> 只填根地址 <code>https://nuoapi.net</code>，不要再加 <code>/v1</code> 或 <code>/v1beta</code>；模型 ID 也要从当前分组逐字符复制。完整步骤见<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">Gemini CLI 排错</a>。</p>
+<h3 id="codex-一直-reconnecting-怎么办">Codex 一直 Reconnecting 怎么办？</h3>
+<p>把 Provider 的 <code>wire_api</code> 设为 <code>responses</code>，将 <code>supports_websockets</code> 设为 <code>false</code>，保存后彻底退出并重启 Codex。完整步骤见<a href="../docs/Codex-一直Reconnecting-2026-10-18.md">Codex Reconnecting 排错</a>。</p>
+<h3 id="claude-code-报-404v1-要加吗">Claude Code 报 404，<code>/v1</code> 要加吗？</h3>
+<p>不要。<code>ANTHROPIC_BASE_URL</code> 填根地址 <code>https://nuoapi.net</code>，Key 放进 <code>ANTHROPIC_AUTH_TOKEN</code>，再新开终端。完整步骤见<a href="../docs/Claude-Code-不要加v1-2026-10-18.md">Claude Code 404 排错</a>。</p>
+<h3 id="401-invalid_api_key-先查什么"><code>401 invalid_api_key</code> 先查什么？</h3>
+<p>先确认当前客户端进程实际读到的 Key 是否存在、变量名是否对应客户端、前后有没有空白；不要打印完整 Key。完整步骤见<a href="../docs/401-invalid-api-key.md">401 排查</a>。</p>
+<h3 id="400-invalid_request_error-为什么只给类别"><code>400 invalid_request_error</code> 为什么只给类别？</h3>
+<p>继续读响应正文里的 <code>message</code>；常见方向是 Base URL 重复 <code>/v1</code>、协议或模型不匹配、缺必填字段，以及流式参数混用。完整步骤见<a href="../docs/400-invalid-request-error.md">400 排查</a>。</p>
+<h3 id="404-model_not_found-是网关宕机吗"><code>404 model_not_found</code> 是网关宕机吗？</h3>
+<p>通常不是。它多表示请求已到网关，但当前 Key 所属分组没有这个完整模型 ID；先从 <code>/v1/models</code> 或模型广场复制精确名称。完整步骤见<a href="../docs/model_not_found.md">404 模型名排错</a>。</p>
 </section><section class="doc-section" data-section-index="03"><h2 id="交给助手">交给助手</h2>
 <p>这些步骤也可以交给当前的编程助手。说明写在 <code>skills/nuoapi-setup/SKILL.md</code>，只在你提出来的时候使用。助手会先跑不带 <code>--run</code> 的探针，并把脚本印出的结论转述给你。</p>
 <h3 id="会不会把-api-key-传走">会不会把 API Key 传走？</h3>
@@ -1340,7 +1352,15 @@ python examples/model_verify.py --endpoint https://nuoapi.net/v1 \
 <aside class="page-side"><div class="side-title">本页目录</div><div class="toc">
 <ul>
 <li><a href="#多语言核验入口">多语言核验入口</a></li>
-<li><a href="#常见问题速查">常见问题速查</a></li>
+<li><a href="#常见问题速查">常见问题速查</a><ul>
+<li><a href="#gemini-cli-报-platform-is-not-gemini-怎么办">Gemini CLI 报 platform is not gemini 怎么办？</a></li>
+<li><a href="#codex-一直-reconnecting-怎么办">Codex 一直 Reconnecting 怎么办？</a></li>
+<li><a href="#claude-code-报-404v1-要加吗">Claude Code 报 404，/v1 要加吗？</a></li>
+<li><a href="#401-invalid_api_key-先查什么">401 invalid_api_key 先查什么？</a></li>
+<li><a href="#400-invalid_request_error-为什么只给类别">400 invalid_request_error 为什么只给类别？</a></li>
+<li><a href="#404-model_not_found-是网关宕机吗">404 model_not_found 是网关宕机吗？</a></li>
+</ul>
+</li>
 <li><a href="#先看计划不花钱">先看计划，不花钱</a></li>
 <li><a href="#交给助手">交给助手</a><ul>
 <li><a href="#会不会把-api-key-传走">会不会把 API Key 传走？</a></li>

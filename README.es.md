@@ -13,6 +13,8 @@
 
 Este repositorio ayuda a conectar Codex, Claude Code, Gemini CLI y otros clientes compatibles con una puerta de enlace de IA. También ofrece comprobaciones reproducibles para una pregunta más concreta: **¿la respuesta facturada proviene del modelo declarado por el servicio?**
 
+Sitio de documentación: <a href="https://hjm-al.github.io/nuoapi-tutorial/es/">Abrir la guía en español</a>.
+
 [简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · Español · [繁體中文](README.zh-Hant.md)
 
 ## Rutas de verificación por idioma
@@ -35,12 +37,29 @@ Sin `--run` no se envía una solicitud facturable al modelo. El sondeo solo devu
 
 ## Errores frecuentes
 
-- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md)
-- [Codex keeps reconnecting](docs/Codex-一直Reconnecting-2026-10-18.en.md)
-- [Claude Code 404: do not add /v1](docs/Claude-Code-不要加v1-2026-10-18.en.md)
-- [401 invalid_api_key](docs/401-invalid-api-key.md)
-- [400 invalid_request_error](docs/400-invalid-request-error.md)
-- [404 model_not_found](docs/model_not_found.md)
+### ¿Cómo corrijo `platform is not gemini` en Gemini CLI?
+
+Configura `GOOGLE_GEMINI_BASE_URL` con la URL raíz `https://nuoapi.net`; no añadas `/v1` ni `/v1beta`, y copia el ID del modelo del grupo actual carácter por carácter. Consulta la [guía de solución de Gemini CLI](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md).
+
+### ¿Qué cambio si Codex sigue en Reconnecting?
+
+Configura `wire_api` como `responses` y `supports_websockets` como `false`; después cierra Codex por completo y vuelve a abrirlo. Consulta la [guía de Reconnecting de Codex](docs/Codex-一直Reconnecting-2026-10-18.en.md).
+
+### Claude Code devuelve 404, ¿debo añadir `/v1`?
+
+No. Configura `ANTHROPIC_BASE_URL` con la URL raíz `https://nuoapi.net`, coloca la clave en `ANTHROPIC_AUTH_TOKEN` y abre una terminal nueva. Consulta la [guía del error 404 de Claude Code](docs/Claude-Code-不要加v1-2026-10-18.en.md).
+
+### ¿Qué reviso primero con `401 invalid_api_key`?
+
+Comprueba que el proceso actual del cliente recibe una clave, que el nombre de la variable corresponde al cliente y que no haya espacios alrededor; no imprimas la clave completa. Consulta la [guía del error 401](docs/401-invalid-api-key.md).
+
+### ¿Por qué `400 invalid_request_error` no explica la causa?
+
+Lee el campo `message` de la respuesta. Las causas frecuentes son un `/v1` duplicado, una combinación incorrecta de protocolo o modelo, un campo obligatorio ausente o parámetros de streaming mezclados. Consulta la [guía del error 400](docs/400-invalid-request-error.md).
+
+### ¿`404 model_not_found` significa que la puerta de enlace está caída?
+
+Normalmente no. La solicitud llegó a la puerta de enlace, pero el grupo de la clave actual no contiene ese ID exacto. Cópialo desde `/v1/models` o el catálogo de modelos. Consulta la [guía del nombre del modelo](docs/model_not_found.md).
 
 ## Comprobación rápida de Base URL
 

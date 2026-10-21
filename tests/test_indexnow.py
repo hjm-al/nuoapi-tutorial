@@ -185,6 +185,24 @@ class TestIndexNow(unittest.TestCase):
         self.assertEqual(result.http_status, 202)
         self.assertEqual(len(result.urls), 1)
 
+    def test_fetch_sitemap_requests_renamed_file(self):
+        response = mock.MagicMock()
+        response.__enter__.return_value = response
+        response.headers.get_content_charset.return_value = "utf-8"
+        response.read.return_value = b"<urlset></urlset>"
+        opener = mock.MagicMock(return_value=response)
+
+        submit_indexnow.fetch_sitemap(
+            "https://example.github.io/project",
+            opener=opener,
+        )
+
+        request = opener.call_args.args[0]
+        self.assertEqual(
+            request.full_url,
+            "https://example.github.io/project/sitemap.xml",
+        )
+
     def test_sitemap_http_error_keeps_status_for_summary(self):
         def fetcher(_site_url):
             raise HTTPError(

@@ -13,6 +13,8 @@
 
 這個倉庫協助你把 Codex、Claude Code、Gemini CLI 等用戶端接到第三方 AI 閘道，並用可重現的檢查回答一個更窄的問題：**付費收到的回應，是否真的來自服務聲稱的模型？** 判定依據與三態寫法見[模型驗證方法學](docs/MODEL_VERIFICATION_METHODS.md)。
 
+線上文檔：<a href="https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/">開啟繁體中文文件站</a>。
+
 [简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [Español](README.es.md) · 繁體中文
 
 ## 多語言核驗入口
@@ -23,12 +25,29 @@
 
 ## 常見問題速查
 
-- [Gemini CLI 報 platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.zh-Hant.md)
-- [Codex 一直 Reconnecting](docs/Codex-一直Reconnecting-2026-10-18.zh-Hant.md)
-- [Claude Code 報 404：不要加 /v1](docs/Claude-Code-不要加v1-2026-10-18.zh-Hant.md)
-- [401 invalid_api_key](docs/401-invalid-api-key.md)
-- [400 invalid_request_error](docs/400-invalid-request-error.md)
-- [404 model_not_found](docs/model_not_found.md)
+### Gemini CLI 報 `platform is not gemini` 怎麼辦？
+
+`GOOGLE_GEMINI_BASE_URL` 只填根位址 `https://nuoapi.net`，不要再加 `/v1` 或 `/v1beta`；模型 ID 也要從目前分組逐字複製。完整步驟見[Gemini CLI 排錯](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.zh-Hant.md)。
+
+### Codex 一直 Reconnecting 怎麼辦？
+
+把 Provider 的 `wire_api` 設為 `responses`，將 `supports_websockets` 設為 `false`，儲存後徹底結束並重新啟動 Codex。完整步驟見[Codex Reconnecting 排錯](docs/Codex-一直Reconnecting-2026-10-18.zh-Hant.md)。
+
+### Claude Code 報 404，`/v1` 要加嗎？
+
+不要。`ANTHROPIC_BASE_URL` 填根位址 `https://nuoapi.net`，Key 放進 `ANTHROPIC_AUTH_TOKEN`，再開新終端。完整步驟見[Claude Code 404 排錯](docs/Claude-Code-不要加v1-2026-10-18.zh-Hant.md)。
+
+### `401 invalid_api_key` 先查什麼？
+
+先確認目前用戶端程序實際讀到的 Key 是否存在、變數名稱是否對應用戶端、前後有沒有空白；不要列印完整 Key。完整步驟見[401 排錯](docs/401-invalid-api-key.md)。
+
+### `400 invalid_request_error` 為什麼只給類別？
+
+繼續讀回應本文裡的 `message`；常見方向是 Base URL 重複 `/v1`、協定或模型不匹配、缺必填欄位，以及串流參數混用。完整步驟見[400 排錯](docs/400-invalid-request-error.md)。
+
+### `404 model_not_found` 是閘道故障嗎？
+
+通常不是。它多表示請求已到閘道，但目前 Key 所屬分組沒有這個完整模型 ID；先從 `/v1/models` 或模型廣場複製精確名稱。完整步驟見[404 模型名排錯](docs/model_not_found.md)。
 
 ## 先看計畫，不花錢
 

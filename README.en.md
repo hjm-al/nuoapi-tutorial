@@ -13,6 +13,8 @@
 
 This repository helps you connect Codex, Claude Code, Gemini CLI, and other compatible clients to a third-party AI gateway. It also gives you reproducible checks for a narrower question: **did the paid response come from the model claimed by the service?** Read the [model verification methodology](docs/MODEL_VERIFICATION_METHODS.md) before turning one observation into a conclusion.
 
+Documentation site: <a href="https://hjm-al.github.io/nuoapi-tutorial/en/">Open the English guide</a>.
+
 [简体中文](README.md) · English · [日本語](README.ja.md) · [Español](README.es.md) · [繁體中文](README.zh-Hant.md)
 
 ## Verification paths by language
@@ -23,12 +25,29 @@ This repository helps you connect Codex, Claude Code, Gemini CLI, and other comp
 
 ## Common errors at a glance
 
-- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md)
-- [Codex keeps reconnecting](docs/Codex-一直Reconnecting-2026-10-18.en.md)
-- [Claude Code 404: do not add /v1](docs/Claude-Code-不要加v1-2026-10-18.en.md)
-- [401 invalid_api_key](docs/401-invalid-api-key.md)
-- [400 invalid_request_error](docs/400-invalid-request-error.md)
-- [404 model_not_found](docs/model_not_found.md)
+### Gemini CLI says `platform is not gemini`?
+
+Set `GOOGLE_GEMINI_BASE_URL` to the root URL `https://nuoapi.net`; do not append `/v1` or `/v1beta`, and copy the model ID from the current group exactly. See the [Gemini CLI troubleshooting guide](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.en.md).
+
+### What if Codex keeps reconnecting?
+
+Set the provider's `wire_api` to `responses` and `supports_websockets` to `false`, then fully quit and restart Codex. See the [Codex reconnecting guide](docs/Codex-一直Reconnecting-2026-10-18.en.md).
+
+### Claude Code returns 404. Should I add `/v1`?
+
+No. Set `ANTHROPIC_BASE_URL` to the root URL `https://nuoapi.net`, put the key in `ANTHROPIC_AUTH_TOKEN`, and open a new terminal. See the [Claude Code 404 guide](docs/Claude-Code-不要加v1-2026-10-18.en.md).
+
+### What should I check first for `401 invalid_api_key`?
+
+Confirm that the current client process sees a key, that the variable name matches the client, and that there is no surrounding whitespace; do not print the full key. See the [401 troubleshooting guide](docs/401-invalid-api-key.md).
+
+### Why is `400 invalid_request_error` so generic?
+
+Read the `message` in the response body. Common causes are a duplicated `/v1`, a protocol or model mismatch, a missing required field, or mixed streaming parameters. See the [400 troubleshooting guide](docs/400-invalid-request-error.md).
+
+### Does `404 model_not_found` mean the gateway is down?
+
+Usually not. The request reached the gateway, but the current key's group does not contain that exact model ID. Copy the ID from `/v1/models` or the model marketplace. See the [model name troubleshooting guide](docs/model_not_found.md).
 
 ## Start without spending
 

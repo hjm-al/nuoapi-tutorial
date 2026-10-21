@@ -24,7 +24,8 @@ from urllib.request import Request, urlopen
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_SITEMAP = SCRIPT_DIR / "_site" / "sitemap.xml"
+SITEMAP_FILENAME = "sitemap.xml"
+DEFAULT_SITEMAP = SCRIPT_DIR / "_site" / SITEMAP_FILENAME
 INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow"
 MAX_ATTEMPTS = 3
 REQUEST_TIMEOUT_SECONDS = 30
@@ -145,7 +146,7 @@ def fetch_sitemap(
     site_url: str,
     opener: Callable[..., object] = urlopen,
 ) -> str:
-    sitemap_url = site_url.rstrip("/") + "/sitemap.xml"
+    sitemap_url = site_url.rstrip("/") + "/" + SITEMAP_FILENAME
     request = Request(
         sitemap_url,
         headers={"User-Agent": "nuoapi-tutorial-indexnow/1.0"},

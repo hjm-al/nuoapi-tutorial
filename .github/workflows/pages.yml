@@ -9,6 +9,7 @@ on:
       - "**.md"
       - "google*.html"
       - "BingSiteAuth.xml"
+      - ".nojekyll"
       - "h5/**"
       - "docs/**"
       - ".github/workflows/pages.yml"
@@ -67,6 +68,9 @@ jobs:
           assert verification_pages, "缺少 Google 所有权验证文件"
           assert (site / "BingSiteAuth.xml").exists(), "缺少 Bing 所有权验证文件"
           assert (site / "sitemap.xml").exists(), "缺少 sitemap.xml"
+          assert (site / "sm.xml").exists(), "缺少 sm.xml 备用入口"
+          assert (site / "sitemap.xml").read_bytes() == (site / "sm.xml").read_bytes(), \
+              "sitemap.xml 与 sm.xml 内容不一致"
           assert (site / "robots.txt").exists(), "缺少 robots.txt"
           assert (site / ".nojekyll").exists(), "缺少 .nojekyll"
           locs = (site / "sitemap.xml").read_text(encoding="utf-8").count("<loc>")

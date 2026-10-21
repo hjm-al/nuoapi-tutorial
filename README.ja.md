@@ -13,6 +13,8 @@
 
 Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲートウェイへ接続し、**課金された応答が表示上のモデルと一致するか**を再現可能な手順で確認するためのリポジトリです。判定の根拠と三状態の書き方は[モデル検証の方法論](docs/MODEL_VERIFICATION_METHODS.md)にまとめています。
 
+ドキュメントサイト：<a href="https://hjm-al.github.io/nuoapi-tutorial/ja/">日本語ガイドを開く</a>。
+
 [简体中文](README.md) · [English](README.en.md) · 日本語 · [Español](README.es.md) · [繁體中文](README.zh-Hant.md)
 
 ## 言語別の検証入口
@@ -23,12 +25,29 @@ Codex、Claude Code、Gemini CLI などをサードパーティ製 AI ゲート�
 
 ## よくあるエラー早見表
 
-- [Gemini CLI: platform is not gemini](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md)
-- [Codex が Reconnecting を繰り返す](docs/Codex-一直Reconnecting-2026-10-18.ja.md)
-- [Claude Code の 404: /v1 を付けない](docs/Claude-Code-不要加v1-2026-10-18.ja.md)
-- [401 invalid_api_key](docs/401-invalid-api-key.md)
-- [400 invalid_request_error](docs/400-invalid-request-error.md)
-- [404 model_not_found](docs/model_not_found.md)
+### Gemini CLI で `platform is not gemini` と表示されたら？
+
+`GOOGLE_GEMINI_BASE_URL` はルート URL `https://nuoapi.net` だけを指定し、`/v1` や `/v1beta` を付けません。モデル ID は現在のグループから一字一句コピーします。詳しくは[Gemini CLI のトラブルシューティング](docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.ja.md)へ。
+
+### Codex が Reconnecting を繰り返すときは？
+
+Provider の `wire_api` を `responses`、`supports_websockets` を `false` にし、保存後に Codex を完全終了して再起動します。詳しくは[Codex の Reconnecting 対処](docs/Codex-一直Reconnecting-2026-10-18.ja.md)へ。
+
+### Claude Code の 404 で `/v1` を付けるべき？
+
+付けません。`ANTHROPIC_BASE_URL` はルート URL `https://nuoapi.net`、キーは `ANTHROPIC_AUTH_TOKEN` に入れ、新しいターミナルを開きます。詳しくは[Claude Code の 404 対処](docs/Claude-Code-不要加v1-2026-10-18.ja.md)へ。
+
+### `401 invalid_api_key` は最初に何を確認する？
+
+現在のクライアントが読んでいるキーの有無、クライアントに対応した変数名、前後の空白を確認します。完全なキーは表示しません。詳しくは[401 の確認手順](docs/401-invalid-api-key.md)へ。
+
+### `400 invalid_request_error` の原因が分からないときは？
+
+応答本文の `message` を読みます。`/v1` の重複、プロトコルやモデルの不一致、必須項目の不足、ストリーミングパラメータの混在がよくあります。詳しくは[400 の確認手順](docs/400-invalid-request-error.md)へ。
+
+### `404 model_not_found` はゲートウェイ障害？
+
+通常は違います。リクエストはゲートウェイに届いていますが、現在のキーのグループにその完全なモデル ID がありません。`/v1/models` またはモデル広場からコピーします。詳しくは[モデル名の確認手順](docs/model_not_found.md)へ。
 
 ## 課金せずに確認する
 

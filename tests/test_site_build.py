@@ -11,8 +11,9 @@
 5. 断言 Pages workflow 仍以 GitHub Actions 方式部署（不是 branch 部署）。
 """
 
-import re
+import html
 import os
+import re
 import struct
 import sys
 import tempfile
@@ -163,8 +164,11 @@ class TestSiteBuild(unittest.TestCase):
 
     def test_pages_and_required_files(self):
         """五语言首页、固定页和全部 docs 应生成恰好 41 个产物。"""
+        self.assertEqual(build_site.SITEMAP_FILENAME, "sitemap.xml")
+        self.assertEqual(build_site.SITEMAP_ALIAS_FILENAME, "sm.xml")
         for required in (
-            "sitemap.xml",
+            build_site.SITEMAP_FILENAME,
+            build_site.SITEMAP_ALIAS_FILENAME,
             "robots.txt",
             "llms.txt",
             ".nojekyll",
@@ -173,6 +177,26 @@ class TestSiteBuild(unittest.TestCase):
             build_site.BING_SITE_VERIFICATION_FILE,
         ):
             self.assertTrue((self.site / required).exists(), "缺少 " + required)
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
+        alias = (self.site / build_site.SITEMAP_ALIAS_FILENAME).read_text(encoding="utf-8")
+        self.assertEqual(alias, sitemap)
+        root_sitemap = ET.parse(ROOT / build_site.SITEMAP_FILENAME).getroot()
+        root_locs = [
+            item.text
+            for item in root_sitemap.iter()
+            if item.tag.endswith("loc") and item.text
+        ]
+        self.assertEqual(len(root_locs), EXPECTED_PAGE_COUNT)
+        root_base = root_locs[0].rstrip("/")
+        self.assertEqual(
+            set(root_locs),
+            {
+                build_site.canonical_url(root_base, page.dst)
+                for page in self.records
+            },
+        )
+        self.assertEqual((ROOT / ".nojekyll").read_bytes(), b"")
+        self.assertEqual((self.site / ".nojekyll").read_bytes(), b"")
         names = {p.relative_to(self.site).as_posix() for p in self.pages}
         self.assertEqual(names, {page.dst for page in self.records})
         self.assertEqual(len(self.pages), EXPECTED_PAGE_COUNT)
@@ -183,7 +207,7 @@ class TestSiteBuild(unittest.TestCase):
 
     def test_sitemap_matches_page_count(self):
         """sitemap 必须与页面一一对应，不能重复、遗漏或指向别处。"""
-        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
         locs = re.findall(r"<loc>(.*?)</loc>", sitemap)
         expected = {
             build_site.canonical_url(BASE_URL, page.dst) for page in self.records
@@ -192,6 +216,37 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(len(locs), len(set(locs)), "sitemap 存在重复 URL")
         self.assertEqual(set(locs), expected)
         self.assertIn(BASE_URL + "/", locs)
+
+    def test_sitemap_is_utf8_without_bom_and_percent_encodes_locs(self):
+        """sitemap 首行必须是 XML 声明，且 loc 不能含中文或 BOM。"""
+        raw = (self.site / build_site.SITEMAP_FILENAME).read_bytes()
+        self.assertFalse(raw.startswith(b"\xef\xbb\xbf"), "sitemap 不能带 UTF-8 BOM")
+        self.assertEqual(
+            raw.decode("utf-8").splitlines()[0],
+            '<?xml version="1.0" encoding="UTF-8"?>',
+        )
+
+        root = ET.fromstring(raw)
+        self.assertTrue(root.tag.endswith("urlset"))
+        locs = [item.text for item in root.iter() if item.tag.endswith("loc")]
+        self.assertEqual(len(locs), EXPECTED_PAGE_COUNT)
+        for loc in locs:
+            self.assertTrue(loc.isascii(), loc)
+            self.assertNotRegex(loc, r"\s")
+
+        encoded_doc = (
+            BASE_URL
+            + "/docs/AI%E6%A8%A1%E5%9E%8BAPI%E5%8D%8F%E8%AE%AE"
+            + "%E7%A7%91%E6%99%AE-2026-10-12.html"
+        )
+        self.assertIn(encoded_doc, locs)
+        self.assertEqual(
+            build_site.canonical_url(
+                BASE_URL,
+                "docs/AI模型API协议科普-2026-10-12.html",
+            ),
+            encoded_doc,
+        )
 
     def test_multilingual_cost_calculator_contract(self):
         """五语言费用页各有一个同构本地计算器，字段、结果和隐私边界固定。"""
@@ -268,12 +323,12 @@ class TestSiteBuild(unittest.TestCase):
             self.assertNotIn("utm_", text)
 
         self.assertEqual(len(self.pages), EXPECTED_PAGE_COUNT)
-        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
         self.assertEqual(sitemap.count("<loc>"), EXPECTED_PAGE_COUNT)
 
     def test_sitemap_lastmod_uses_source_git_date(self):
         """sitemap 的 lastmod 来自源 Markdown 最后一次提交，不用构建当天填充。"""
-        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
         expected = {}
         for page in self.records:
             modified = build_site.source_last_modified(page.src)
@@ -294,7 +349,7 @@ class TestSiteBuild(unittest.TestCase):
             undated = Path(tmp) / "site"
             with mock.patch.object(build_site, "source_last_modified", return_value=None):
                 run_build(undated)
-            sitemap = (undated / "sitemap.xml").read_text(encoding="utf-8")
+            sitemap = (undated / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
             self.assertNotIn("<lastmod>", sitemap)
             for record in self.records:
                 if record.schema_type != "TechArticle":
@@ -309,7 +364,10 @@ class TestSiteBuild(unittest.TestCase):
         robots = (self.site / "robots.txt").read_text(encoding="utf-8")
         for name in build_site.CRAWLERS:
             self.assertIn("User-agent: {0}".format(name), robots)
-        self.assertIn("Sitemap: {0}/sitemap.xml".format(BASE_URL), robots)
+        self.assertIn(
+            "Sitemap: {0}/{1}".format(BASE_URL, build_site.SITEMAP_FILENAME),
+            robots,
+        )
         llms = (self.site / "llms.txt").read_text(encoding="utf-8")
         self.assertIn("python examples/model_verify.py --selftest", llms)
         self.assertIn("evidence_capture.py --probe models", llms)
@@ -608,22 +666,48 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual((width, height), (1200, 630))
 
     def test_home_jsonld_and_language_variants(self):
-        """五个首页都有 WebApplication 与 TechArticle；FAQ 数据只属于中文首页。"""
-        for dst in (
-            "index.html",
-            "en/index.html",
-            "ja/index.html",
-            "es/index.html",
-            "zh-Hant/index.html",
-        ):
-            data = parse_jsonld((self.site / dst).read_text(encoding="utf-8"))
+        """五语言首页的 FAQ 数据都与可见问答一致，并保留各自意图。"""
+        expected_faq_counts = {
+            "index.html": 9,
+            "en/index.html": 6,
+            "ja/index.html": 6,
+            "es/index.html": 6,
+            "zh-Hant/index.html": 6,
+        }
+        for dst, expected_faq_count in expected_faq_counts.items():
+            text = (self.site / dst).read_text(encoding="utf-8")
+            data = parse_jsonld(text)
             self.assertEqual(data[0]["@type"], "WebApplication", dst)
             faq_pages = [item for item in data if item.get("@type") == "FAQPage"]
             articles = [item for item in data if item.get("@type") == "TechArticle"]
-            if dst == "index.html":
-                self.assertEqual(len(faq_pages), 1, dst)
-            else:
-                self.assertEqual(faq_pages, [], dst)
+            self.assertEqual(len(faq_pages), 1, dst)
+            faq_page = faq_pages[0]
+            self.assertEqual(
+                faq_page["url"],
+                build_site.canonical_url(BASE_URL, dst),
+                dst,
+            )
+            questions = faq_page["mainEntity"]
+            self.assertEqual(len(questions), expected_faq_count, dst)
+            visible_questions = [
+                html.unescape(re.sub(r"<[^>]+>", "", heading)).strip()
+                for heading in re.findall(
+                    r"<h3\b[^>]*>(.*?)</h3>",
+                    text,
+                    re.S,
+                )
+                if html.unescape(re.sub(r"<[^>]+>", "", heading)).strip().endswith(("?", "？"))
+            ]
+            question_names = [
+                question["name"].replace("`", "")
+                for question in questions
+            ]
+            self.assertEqual(question_names, visible_questions, dst)
+            for question in questions:
+                self.assertTrue(
+                    question["acceptedAnswer"]["text"].strip(),
+                    "{0}: {1}".format(dst, question["name"]),
+                )
             self.assertEqual(len(articles), 1, dst)
             self.assertEqual(
                 articles[0]["url"],
@@ -875,9 +959,13 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn('"docs/**"', workflow)
         self.assertIn('"google*.html"', workflow)
         self.assertIn('"BingSiteAuth.xml"', workflow)
+        self.assertIn('".nojekyll"', workflow)
         self.assertIn('verification_pages = sorted(site.glob("google*.html"))', workflow)
         self.assertIn("if path not in verification_pages", workflow)
         self.assertIn('assert (site / "BingSiteAuth.xml").exists()', workflow)
+        self.assertIn('assert (site / "sitemap.xml").exists()', workflow)
+        self.assertIn('assert (site / "sm.xml").exists()', workflow)
+        self.assertIn('(site / "sitemap.xml").read_bytes()', workflow)
         self.assertIn("vars.GOOGLE_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
@@ -896,7 +984,7 @@ class TestSiteBuild(unittest.TestCase):
         )
         self.assertEqual(deployed, source)
         self.assertRegex(source, r"^google-site-verification: google[0-9a-f]+\.html\s*$")
-        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
         self.assertNotIn(build_site.GOOGLE_SITE_VERIFICATION_FILE, sitemap)
 
     def test_bing_verification_file_is_copied_but_not_in_sitemap(self):
@@ -913,7 +1001,7 @@ class TestSiteBuild(unittest.TestCase):
         users = root.findall("user")
         self.assertEqual(len(users), 1)
         self.assertRegex(users[0].text or "", r"^[0-9A-F]{32}$")
-        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
         self.assertNotIn(build_site.BING_SITE_VERIFICATION_FILE, sitemap)
 
     def test_pages_workflow_notifies_indexnow_after_deploy(self):
@@ -1059,7 +1147,9 @@ class TestSearchMetadata(unittest.TestCase):
     def test_home_title_is_question_or_problem_oriented(self):
         """首页搜索结果标题先说问题与解法，不改正文 H1。"""
         meta, body = build_site.split_frontmatter((ROOT / "README.md").read_text(encoding="utf-8"))
-        self.assertTrue(meta["title"].startswith("AI 中转站防掺水："))
+        self.assertTrue(meta["title"].startswith("NuoAPI 接入教程："))
+        for phrase in ("Codex", "Claude Code", "Gemini CLI", "报错", "防掺水"):
+            self.assertIn(phrase, meta["title"])
         self.assertEqual(
             build_site.first_heading(body),
             "[NuoAPI](https://nuoapi.net/model-plaza) 接入脚手架与防掺水取证工具箱",
