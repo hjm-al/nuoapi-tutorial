@@ -11,7 +11,7 @@
 
 使用前：
 
-1. 在 <https://nuoapi.net> 登录并创建 API Key。
+1. 先完成[注册账号](https://nuoapi.net/register)，再从[密钥管理](https://nuoapi.net/keys)创建 API Key。
 2. 将 `YOUR_NUOAPI_API_KEY` 替换为自己的 Key。
 3. 从模型广场复制精确的模型名。
 4. 不要把替换后的文件提交到公开仓库。

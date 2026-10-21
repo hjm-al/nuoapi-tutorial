@@ -27,6 +27,33 @@ PATH_LIKE_PATTERN = re.compile(
 # 家目录 / 环境变量 / URL 形态，不属于仓库内相对路径
 NON_REPO_PREFIXES = ("http://", "https://", "mailto:", "~/", "$", "%")
 
+OFFICIAL_ACCOUNT_LINKS = {
+    Path("README.md"): ("https://nuoapi.net/register",),
+    Path("README.en.md"): (
+        "https://nuoapi.net/register",
+        "https://nuoapi.net/keys",
+    ),
+    Path("README.ja.md"): (
+        "https://nuoapi.net/register",
+        "https://nuoapi.net/keys",
+    ),
+    Path("README.es.md"): (
+        "https://nuoapi.net/register",
+        "https://nuoapi.net/keys",
+    ),
+    Path("README.zh-Hant.md"): (
+        "https://nuoapi.net/register",
+        "https://nuoapi.net/keys",
+    ),
+    Path("examples/README.md"): (
+        "https://nuoapi.net/register",
+        "https://nuoapi.net/keys",
+    ),
+    Path("docs/余额与额度查询-2026-10-06.md"): (
+        "https://nuoapi.net/usage",
+    ),
+}
+
 
 def github_anchor_slug(heading: str) -> str:
     """按 GitHub 渲染规则把标题文本转成锚点 slug（与 github-slugger 行为对齐）。
@@ -173,6 +200,17 @@ class TestDocsIntegrityAndLinks(unittest.TestCase):
             "README.zh-Hant.md",
         ):
             self.assertTrue((ROOT / name).exists(), f"核心入口缺失: {name}")
+
+    def test_official_account_entry_links_are_present(self):
+        """断言注册、密钥管理和用量记录的正式路径没有被文档改丢。"""
+        for path, expected_urls in OFFICIAL_ACCOUNT_LINKS.items():
+            content = (ROOT / path).read_text(encoding="utf-8")
+            for url in expected_urls:
+                self.assertIn(
+                    "]({0})".format(url),
+                    content,
+                    "{0} 缺少正式账户入口: {1}".format(path, url),
+                )
 
     def test_legal_and_trademark_disclaimer_present(self):
         """断言五语言首页都包含等量的法律、不代售、厂商关系与 Key 保护声明。"""

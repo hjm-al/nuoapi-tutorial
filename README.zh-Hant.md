@@ -49,7 +49,7 @@ python examples/model_verify.py
 | Claude Code | `https://nuoapi.net` | 重複加上 `/v1` |
 | Gemini CLI | `https://nuoapi.net` | 誤加 `/v1beta` |
 
-本文以 [`nuoapi.net`](https://nuoapi.net) 作為位址夾具。模型 ID、分組、倍率與可用性會變動，請從[模型廣場](https://nuoapi.net/model-plaza)複製目前值，再以控制台即時顯示為準。
+測試前請先從[帳戶註冊](https://nuoapi.net/register)與[金鑰管理](https://nuoapi.net/keys)建立專用 Key。本文以 nuoapi.net 作為位址夾具。模型 ID、分組、倍率與可用性會變動，請從模型廣場複製目前值，再以控制台即時顯示為準。
 
 ## 如何解讀結果
 

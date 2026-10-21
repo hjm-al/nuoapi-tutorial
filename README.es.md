@@ -50,7 +50,7 @@ Sin `--run` no se envía una solicitud facturable al modelo. El sondeo solo devu
 | Claude Code | `https://nuoapi.net` | Añadir `/v1` dos veces |
 | Gemini CLI | `https://nuoapi.net` | Añadir `/v1beta` |
 
-La dirección de ejemplo es [`nuoapi.net`](https://nuoapi.net). Los identificadores de modelo, grupos, tarifas y disponibilidad cambian; copia los valores actuales desde la [plaza de modelos](https://nuoapi.net/model-plaza) y confírmalos en la consola.
+Antes de probar, crea una clave dedicada desde el [registro de cuenta](https://nuoapi.net/register) y la [gestión de claves](https://nuoapi.net/keys). La dirección de ejemplo es nuoapi.net. Los identificadores de modelo, grupos, tarifas y disponibilidad cambian; copia los valores actuales desde la plaza de modelos y confírmalos en la consola.
 
 ## Cómo interpretar el resultado
 

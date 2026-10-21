@@ -49,7 +49,7 @@ python examples/model_verify.py
 | Claude Code | `https://nuoapi.net` | `/v1` を重複して付ける |
 | Gemini CLI | `https://nuoapi.net` | `/v1beta` を付ける |
 
-接続先の例は [`nuoapi.net`](https://nuoapi.net) です。モデル ID、グループ、倍率、可用性は変わるため、[モデル広場](https://nuoapi.net/model-plaza)で現在値を確認し、管理画面の表示を優先してください。
+テスト前に[アカウント登録](https://nuoapi.net/register)と[キー管理](https://nuoapi.net/keys)から専用 Key を作成してください。接続先の例は nuoapi.net です。モデル ID、グループ、倍率、可用性は変わるため、現在値はモデル広場からコピーし、管理画面の表示を優先してください。
 
 ## 判定の読み方
 

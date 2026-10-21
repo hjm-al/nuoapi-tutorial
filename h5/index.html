@@ -801,7 +801,7 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
     <div class="brand-mark" aria-hidden="true">N</div>
     <div>
       <div class="appbar-title">NuoAPI 接入脚手架</div>
-      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 17:15</div>
+      <div class="appbar-sub">离线单页版 · 构建于 2026-10-21 18:47</div>
     </div>
   </div>
   <div class="appbar-actions"><button id="themeBtn" class="icon-btn" type="button" title="切换主题"><span class="i-light">&#9788;</span><span class="i-dark">&#9790;</span></button></div>
@@ -884,7 +884,7 @@ python examples/model_verify.py
 <p>默认不会。<code>model_verify.py</code> 和 <code>evidence_capture.py</code> 不加 <code>--run</code> 时只打印计划。加上之后，<code>--probe models</code> 仍是一次清单请求，不计 token；对话探针才会产生费用，记在你自己的 Key 上。</p>
 <h3 id="结果怎么读">结果怎么读？</h3>
 <p>探针给出三种说法：匹配、不匹配、证据不足。响应快慢，以及模型自己怎么称呼自己，只作记录，不单独形成结论。样本不够或请求失败时，记为证据不足，不能据此说成匹配。</p>
-<p>本文以网关 <code>https://nuoapi.net</code>（<a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net/model-plaza">模型广场</a>可按「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，<strong>一切以模型广场和控制台实时显示为准</strong>；文中标注取证窗口的结论只代表该时间点的观察。</p>
+<p>本文以网关 <code>https://nuoapi.net</code>（模型广场可按「分组」筛选查看某组可用模型与倍率）为实例。模型名、分组、价格与渠道状态随时变化，<strong>一切以模型广场和控制台实时显示为准</strong>；文中标注取证窗口的结论只代表该时间点的观察。</p>
 <hr />
 </section><section class="doc-section internal-toc" data-section-index="04" data-landmark="toc"><h2 id="目录">目录</h2>
 <ol>
@@ -1044,7 +1044,7 @@ python examples/model_verify.py
 <p>选错协议的典型症状：路径 404、报文字段 400、连上但流式异常。Gemini CLI 的变量是 <code>GOOGLE_GEMINI_BASE_URL=https://nuoapi.net</code>（根地址）+ <code>GEMINI_API_KEY</code> + <code>GEMINI_MODEL</code>；报 <code>400 platform is not gemini</code> 时按<a href="../docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.md">这篇短页</a>改，不要先当成 Key 无效。</p>
 </section><section class="doc-section" data-section-index="07"><h2 id="三分钟快速开始">三分钟快速开始</h2>
 <ol>
-<li>在 <code>https://nuoapi.net</code> 注册并创建一个<strong>专门用于测试</strong>的 API Key。</li>
+<li>先完成<a target="_blank" rel="noopener noreferrer" href="https://nuoapi.net/register">注册账号</a>，再到控制台创建一个<strong>专门用于测试</strong>的 API Key。</li>
 <li>从模型广场或当前 Key 的 <code>/v1/models</code> 复制<strong>精确模型名</strong>，不要凭印象写、不要照抄别的账号。</li>
 <li>判断客户端走哪张协议面孔（上表），选对 Base URL。</li>
 <li>跑一键脚本（可选），或按下文手动配置。</li>

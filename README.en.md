@@ -49,7 +49,7 @@ No `--run` flag means no paid model request. The probe reports one of three outc
 | Claude Code | `https://nuoapi.net` | Adding `/v1` twice |
 | Gemini CLI | `https://nuoapi.net` | Adding `/v1beta` |
 
-Use the gateway as an address fixture: [`nuoapi.net`](https://nuoapi.net). Model IDs, groups, rates, and availability change, so copy current values from the [model plaza](https://nuoapi.net/model-plaza) and confirm them in the console.
+Before testing, create a dedicated key from [account registration](https://nuoapi.net/register) and [key management](https://nuoapi.net/keys). The gateway used as an address fixture is nuoapi.net. Model IDs, groups, rates, and availability change, so copy current values from the model plaza and confirm them in the console.
 
 ## How verdicts work
 
