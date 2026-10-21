@@ -539,6 +539,96 @@ article tbody tr:hover td:first-child{background:var(--surface-2)}
   background:var(--surface-2);color:var(--rust);
 }
 
+.cost-calculator{
+  margin:30px 0 34px;border:1px solid var(--line-strong);border-radius:6px;
+  background:var(--surface);overflow:hidden;
+}
+.cost-calculator-head{
+  padding:22px 24px 20px;border-bottom:1px solid var(--line);
+  background:var(--surface-2);
+}
+.cost-kicker{
+  margin:0 0 5px;color:var(--rust);font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:10.5px;font-weight:700;line-height:1.5;letter-spacing:.08em;text-transform:uppercase;
+}
+.cost-calculator-head h2{
+  margin:0 0 8px;font-size:23px;line-height:1.35;
+}
+.cost-calculator-head p:last-child{
+  margin:0;color:var(--muted);font-size:13.5px;line-height:1.7;
+}
+.cost-form{padding:4px 24px 0}
+.cost-fieldset{
+  min-width:0;margin:0;padding:20px 0;border:0;
+  border-bottom:1px solid var(--line);
+}
+.cost-fieldset legend{
+  width:100%;margin:0 0 13px;padding:0;color:var(--ink-strong);
+  font-size:12px;font-weight:700;line-height:1.6;letter-spacing:.055em;text-transform:uppercase;
+}
+.cost-fields{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
+}
+.cost-field{
+  display:grid;min-width:0;gap:7px;color:var(--ink);
+  font-size:13px;font-weight:620;line-height:1.5;
+}
+.cost-input-wrap{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+  min-width:0;border:1px solid var(--line-strong);border-radius:4px;background:var(--paper);
+}
+.cost-input-wrap > span{
+  padding:0 10px;color:var(--muted);font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:10.5px;font-weight:600;white-space:nowrap;
+}
+.cost-field input,.cost-field select{
+  width:100%;min-width:0;min-height:42px;padding:8px 10px;border:1px solid var(--line-strong);
+  border-radius:4px;background:var(--paper);color:var(--ink-strong);
+  font:inherit;font-size:14px;line-height:1.4;
+}
+.cost-input-wrap input{
+  border:0;border-radius:3px 0 0 3px;background:transparent;
+  font-variant-numeric:tabular-nums;
+}
+.cost-field select{
+  font-weight:500;appearance:auto;
+}
+.cost-field input:focus,.cost-field select:focus{
+  border-color:var(--rust);outline:2px solid var(--primary-ring);outline-offset:1px;
+}
+.cost-input-wrap:focus-within{
+  border-color:var(--rust);outline:2px solid var(--primary-ring);outline-offset:1px;
+}
+.cost-input-wrap input:focus{outline:0}
+.cost-field input[aria-invalid="true"]{
+  border-color:var(--rust);box-shadow:inset 3px 0 0 var(--rust);
+}
+.cost-field--wide{grid-column:1 / -1}
+.cost-field-note{
+  margin:11px 0 0;color:var(--muted);font-size:12px;line-height:1.65;
+}
+.cost-results{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:1px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--line);
+}
+.cost-result{
+  display:grid;min-width:0;gap:4px;padding:15px 18px;background:var(--surface);
+}
+.cost-result > span{
+  color:var(--muted);font-size:11.5px;line-height:1.5;
+}
+.cost-result > strong{
+  min-width:0;color:var(--ink-strong);font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:17px;font-variant-numeric:tabular-nums;line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.cost-result:last-child:nth-child(odd){grid-column:1 / -1}
+.cost-status{
+  margin:0;padding:14px 24px 17px;color:var(--muted);font-size:12.5px;line-height:1.65;
+}
+.cost-status[data-state="ready"]{color:var(--teal)}
+.cost-status[data-state="invalid"]{color:var(--rust)}
+
 .internal-toc{padding-top:36px}
 .internal-toc > ol{
   margin:0;padding:18px 18px 18px 2.2em;border-top:1px solid var(--line);
@@ -696,6 +786,10 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
 .anchor{color:var(--muted)}
 .anchor.copied{color:var(--teal)}
 
+@media (min-width:640px){
+  .cost-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cost-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media (min-width:768px){
   article{padding:48px 32px 88px}
   article h1{font-size:38px}
@@ -776,6 +870,10 @@ body[data-page-kind="error"] .doc-section[data-role="detail"] > h2{font-size:19p
   .pager{padding-left:16px;padding-right:16px}
   .site-footer{padding-left:16px;padding-right:16px}
   article pre{font-size:12.5px}
+  .cost-calculator-head{padding-left:16px;padding-right:16px}
+  .cost-form{padding-left:16px;padding-right:16px}
+  .cost-status{padding-left:16px;padding-right:16px}
+  .cost-calculator-head h2{font-size:21px}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -907,6 +1005,194 @@ JS = r"""<script>
     });
     h.appendChild(a);
   });
+
+  // 西语费用页：所有计算在本地完成，没有表单提交、网络请求或输入持久化。
+  var costCalculator = document.querySelector('[data-cost-calculator]');
+  if (costCalculator) {
+    var costForm = costCalculator.querySelector('[data-cost-form]');
+    var costStatus = costCalculator.querySelector('[data-cost-status]');
+    var costResultEls = {};
+    var costEmpty = '—';
+    costCalculator.querySelectorAll('[data-cost-result]').forEach(function (el) {
+      costResultEls[el.getAttribute('data-cost-result')] = el;
+    });
+
+    function costFieldValue(name, optional) {
+      var field = costForm.elements[name];
+      if (!field) { return { valid: false, missing: false, value: null }; }
+      field.removeAttribute('aria-invalid');
+      var raw = field.value.trim();
+      if (!raw) {
+        return { valid: !!optional, missing: true, value: null };
+      }
+      var n = Number(raw);
+      var needsInteger = name === 'monthly_requests' || /_tokens$/.test(name);
+      if (!Number.isFinite(n) || n < 0 || (needsInteger && Math.floor(n) !== n)) {
+        field.setAttribute('aria-invalid', 'true');
+        return { valid: false, missing: false, value: null };
+      }
+      return { valid: true, missing: false, value: n };
+    }
+
+    function costMessage(key, fallback) {
+      return costForm.getAttribute('data-msg-' + key) || fallback;
+    }
+
+    function setCostStatus(state, text) {
+      if (!costStatus) { return; }
+      costStatus.setAttribute('data-state', state);
+      costStatus.textContent = text;
+    }
+
+    function clearCostResults() {
+      Object.keys(costResultEls).forEach(function (key) {
+        costResultEls[key].textContent = costEmpty;
+        costResultEls[key].removeAttribute('data-value');
+      });
+    }
+
+    function writeCostResult(key, value, text) {
+      var el = costResultEls[key];
+      if (!el) { return; }
+      if (value === null || !Number.isFinite(Number(value))) {
+        el.textContent = costEmpty;
+        el.removeAttribute('data-value');
+        return;
+      }
+      el.setAttribute('data-value', String(value));
+      el.textContent = text;
+    }
+
+    function formatCostMoney(value, currency) {
+      if (!Number.isFinite(value)) { return costEmpty; }
+      try {
+        return new Intl.NumberFormat('es-ES', {
+          style: 'currency',
+          currency: currency,
+          currencyDisplay: 'narrowSymbol',
+          minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+          maximumFractionDigits: currency === 'JPY' ? 0 : 4
+        }).format(value);
+      } catch (e) {
+        return currency + ' ' + value.toFixed(4);
+      }
+    }
+
+    function formatCostCount(value) {
+      if (!Number.isFinite(value)) { return costEmpty; }
+      return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(value);
+    }
+
+    function formatCostRatio(value) {
+      if (!Number.isFinite(value)) { return costEmpty; }
+      return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+      }).format(value) + ' ×';
+    }
+
+    function updateCostCalculator() {
+      var required = [
+        'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens',
+        'input_price', 'output_price', 'cache_read_price', 'cache_write_price'
+      ];
+      var optional = ['minimum_charge', 'credit_amount', 'monthly_requests'];
+      var values = {};
+      var invalid = false;
+      var missing = false;
+
+      required.forEach(function (name) {
+        var state = costFieldValue(name, false);
+        values[name] = state.value;
+        if (!state.valid) {
+          invalid = invalid || !state.missing;
+          missing = missing || state.missing;
+        }
+      });
+      optional.forEach(function (name) {
+        var state = costFieldValue(name, true);
+        values[name] = state.value;
+        if (!state.valid) { invalid = true; }
+      });
+
+      if (invalid) {
+        clearCostResults();
+        setCostStatus(
+          'invalid',
+          costMessage('invalid', 'Revisa los campos: usa cero o un número positivo.')
+        );
+        return;
+      }
+      if (missing) {
+        clearCostResults();
+        setCostStatus(
+          'missing',
+          costMessage('missing', 'Completa los campos obligatorios para calcular.')
+        );
+        return;
+      }
+
+      var monthlyRequests = values.monthly_requests === null ? 1 : values.monthly_requests;
+      var requestTokens =
+        values.input_tokens + values.output_tokens +
+        values.cache_read_tokens + values.cache_write_tokens;
+      var requestCost =
+        values.input_tokens / 1000000 * values.input_price +
+        values.output_tokens / 1000000 * values.output_price +
+        values.cache_read_tokens / 1000000 * values.cache_read_price +
+        values.cache_write_tokens / 1000000 * values.cache_write_price;
+      var monthlyCost = requestCost * monthlyRequests;
+      var monthlyTokens = requestTokens * monthlyRequests;
+
+      if (!Number.isFinite(requestCost) || !Number.isFinite(monthlyCost)) {
+        clearCostResults();
+        setCostStatus(
+          'invalid',
+          costMessage('invalid', 'El resultado supera el rango numérico admitido.')
+        );
+        return;
+      }
+
+      var currency = costForm.elements.currency.value;
+      var effectivePerMillion = monthlyTokens > 0
+        ? monthlyCost / monthlyTokens * 1000000
+        : null;
+      var creditRate = null;
+      var topupCount = null;
+      if (values.minimum_charge !== null && values.credit_amount !== null && values.credit_amount > 0) {
+        creditRate = values.minimum_charge / values.credit_amount;
+        topupCount = Math.ceil(monthlyCost / values.credit_amount);
+        if (!Number.isFinite(creditRate)) { creditRate = null; }
+        if (!Number.isFinite(topupCount)) { topupCount = null; }
+      }
+
+      writeCostResult('request-cost', requestCost, formatCostMoney(requestCost, currency));
+      writeCostResult('monthly-cost', monthlyCost, formatCostMoney(monthlyCost, currency));
+      writeCostResult(
+        'effective-per-million',
+        effectivePerMillion,
+        effectivePerMillion === null ? costEmpty : formatCostMoney(effectivePerMillion, currency)
+      );
+      writeCostResult(
+        'credit-rate',
+        creditRate,
+        creditRate === null ? costEmpty : formatCostRatio(creditRate)
+      );
+      writeCostResult(
+        'topup-count',
+        topupCount,
+        topupCount === null ? costEmpty : formatCostCount(topupCount)
+      );
+      setCostStatus(
+        'ready',
+        costMessage('ready', 'Cálculo local completado. No se enviaron datos.')
+      );
+    }
+
+    costForm.addEventListener('input', updateCostCalculator);
+    costForm.addEventListener('change', updateCostCalculator);
+    updateCostCalculator();
+  }
 
   var progress = document.getElementById('progress');
   var fab = document.getElementById('toTop');

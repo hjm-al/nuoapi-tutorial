@@ -144,6 +144,71 @@ class TestSiteBuild(unittest.TestCase):
         self.assertEqual(set(locs), expected)
         self.assertIn(BASE_URL + "/", locs)
 
+    def test_spanish_cost_calculator_contract(self):
+        """西语费用页只有一个本地计算器，字段、结果和隐私边界都固定。"""
+        text = (self.site / "es" / "docs" / "cost-per-1m-tokens.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            len(re.findall(r"<section\b[^>]*\bdata-cost-calculator\b", text)),
+            1,
+        )
+        self.assertEqual(text.count('<form class="cost-form" data-cost-form'), 1)
+        self.assertNotIn("<form action=", text)
+        self.assertIn('aria-live="polite"', text)
+        self.assertIn('data-msg-ready="Cálculo local completado.', text)
+        self.assertIn('data-msg-missing="Completa los ocho campos', text)
+        self.assertIn('data-msg-invalid="Revisa los campos marcados', text)
+
+        required_fields = (
+            "input_tokens",
+            "output_tokens",
+            "cache_read_tokens",
+            "cache_write_tokens",
+            "input_price",
+            "output_price",
+            "cache_read_price",
+            "cache_write_price",
+        )
+        for name in required_fields:
+            tag = re.search(
+                r'<input\b(?=[^>]*\bname="' + re.escape(name) + r'")[^>]*>',
+                text,
+            )
+            self.assertIsNotNone(tag, name)
+            self.assertRegex(tag.group(0), r"\brequired\b", name)
+            self.assertNotIn("value=", tag.group(0), name)
+
+        for name in ("currency", "minimum_charge", "credit_amount", "monthly_requests"):
+            self.assertIn('name="{0}"'.format(name), text)
+
+        for name in (
+            "request-cost",
+            "monthly-cost",
+            "effective-per-million",
+            "credit-rate",
+            "topup-count",
+        ):
+            self.assertIn('data-cost-result="{0}"'.format(name), text)
+
+        for guard in (
+            "Number.isFinite(n)",
+            "n < 0",
+            "Math.floor(n) !== n",
+            "Number.isFinite(requestCost)",
+            "Number.isFinite(monthlyCost)",
+            "costForm.elements.currency.value",
+        ):
+            self.assertIn(guard, text)
+        for network_call in ("fetch(", "XMLHttpRequest", "sendBeacon"):
+            self.assertNotIn(network_call, text)
+        self.assertNotRegex(text, r"<script\b[^>]*\bsrc=")
+        self.assertNotIn("utm_", text)
+
+        self.assertEqual(len(self.pages), EXPECTED_PAGE_COUNT)
+        sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertEqual(sitemap.count("<loc>"), EXPECTED_PAGE_COUNT)
+
     def test_sitemap_lastmod_uses_source_git_date(self):
         """sitemap 的 lastmod 来自源 Markdown 最后一次提交，不用构建当天填充。"""
         sitemap = (self.site / "sitemap.xml").read_text(encoding="utf-8")
