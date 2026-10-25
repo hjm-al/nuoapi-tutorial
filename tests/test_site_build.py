@@ -34,7 +34,7 @@ import build_site  # noqa: E402
 import document_structure  # noqa: E402
 BASE_URL = "https://example.github.io/nuoapi-tutorial"
 REPO_URL = "https://github.com/example/nuoapi-tutorial"
-EXPECTED_PAGE_COUNT = 45
+EXPECTED_PAGE_COUNT = 46
 TOPIC_LANDING_TITLES = {
     "cursor.html": "NuoAPI Cursor 接入教程：3分钟配置自定义 API Key",
     "claude-code.html": "NuoAPI Claude Code 配置指南：解决 404 与根路径映射",
@@ -168,7 +168,7 @@ class TestSiteBuild(unittest.TestCase):
         cls._tmp.cleanup()
 
     def test_pages_and_required_files(self):
-        """五语言首页、专题页、固定页和全部 docs 应生成恰好 45 个产物。"""
+        """五语言首页、专题页、固定页和全部 docs 应生成恰好 46 个产物。"""
         self.assertEqual(build_site.SITEMAP_FILENAME, "sitemap.xml")
         self.assertEqual(build_site.SITEMAP_ALIAS_FILENAME, "sm.xml")
         for required in (
@@ -670,6 +670,7 @@ class TestSiteBuild(unittest.TestCase):
             Path("examples/README.md"),
             Path("docs/模型广场清单-2026-10-12.md"),
             Path("docs/模型广场清单-2026-10-18.md"),
+            Path("docs/模型广场清单-2026-10-25.md"),
         }
         for record in self.records:
             if record.src not in excluded_sources:
@@ -678,8 +679,8 @@ class TestSiteBuild(unittest.TestCase):
             self.assertNotIn('"@type":"TechArticle"', text, record.dst)
 
     def test_page_kind_contract_matches_page_records(self):
-        """45 个页面都通过稳定的 body 标识声明版式类型。"""
-        expected = Counter({"home": 5, "faq": 1, "error": 18, "doc": 21})
+        """46 个页面都通过稳定的 body 标识声明版式类型。"""
+        expected = Counter({"home": 5, "faq": 1, "error": 18, "doc": 22})
         self.assertEqual(
             Counter(build_site.page_kind(page) for page in self.records),
             expected,
@@ -1195,7 +1196,7 @@ class TestSearchMetadata(unittest.TestCase):
             self.assertTrue(build_site.first_heading(body), doc.as_posix())
 
     def test_titles_and_descriptions_are_unique(self):
-        """45 页不能共用模板标题或摘要，否则搜索结果会互相稀释。"""
+        """46 页不能共用模板标题或摘要，否则搜索结果会互相稀释。"""
         metadata = [
             build_site.split_frontmatter((ROOT / doc).read_text(encoding="utf-8"))[0]
             for doc in self.documents()

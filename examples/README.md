@@ -61,6 +61,7 @@
 - `evidence_capture.py`：**A 级证据采集器（推荐）**。一次最小请求落盘为证据包：UTC 毫秒时间戳、状态码、全量同名响应头（多跳 `X-Request-Id` 不丢失）、请求体、响应体 SHA-256 与原始响应体；Key 自动掩码，默认 DRY RUN，`--probe models` 为零计费路由取证。
 - `check_usage.py`：`GET /v1/usage` 只读查询（默认 DRY RUN）。先校验 Content-Type 防 SPA 假成功，再多级兜底解析 `remaining` / `quota.remaining` / `balance`，缺字段输出"未知"不用 0 填充。
 - `cost_audit.py`：账单对账与系统前缀估算（默认 DRY RUN）。离线消费 `evidence_capture.py` 证据包（`--from-bundle`，零新增计费），或实时发短/长两条差分请求；输出缓存读取字段、前缀 token 估算区间（C 级）与倍率口径成本，可另存 CSV。
+- `capture_model_plaza.py`：抓取模型广场的**公开**清单接口 `GET https://nuoapi.net/api/v1/model-plaza`，落地 132 行明细 xlsx（分组 / 倍率 / 模型 / 实付价 / 官方价 / 缓存价 / 长上下文分档）。**不需要登录、不需要 API Key、不发起任何计费请求**，属 B 级证据：只能证明站点当前声明了什么，不能证明你的 Key 实际能调用成功。口径：实付价(折后) = 接口 `pricing` × 分组倍率，官方价 = 接口 `official_pricing`。当前窗口清单见 [`../docs/模型广场清单-2026-10-25.md`](../docs/模型广场清单-2026-10-25.md)。
 - `model_authenticity_check.py`：**已降级的 D 档低判别力反例，不要用于真伪结论**——基于模型自述、合规话术诱导与首字延迟的旧测谎脚本，需显式 `--run` 确认才会发起 3 次计费调用，默认仅打印警告并退出 0，其“✅ 通过”只表示“未触发关键词”；保留仅为留存旧口径问题，新排查一律用 `model_verify.py`。
 - `model_verify.py`：**三段式模型真伪探针（推荐）**。A 段协议与字段取证（成本≈0，端点随 `--claims` 切换并同步取证口径）、B 段输出分布指纹（37 道探针，闭集题比 Jensen-Shannon 散度、开放题比众数集中度，与基线做置换检验 + Holm 校正，≥2 道显著才定罪）、C 段长上下文埋针（默认不跑）。**默认 DRY RUN，只打印计划与预估用量，加 `--run` 才发起计费请求**；`--selftest` 为离线自测（零请求零计费）。输出三态（匹配 / 不匹配 / 证据不足）。方法学见 [`../docs/MODEL_VERIFICATION_METHODS.md`](../docs/MODEL_VERIFICATION_METHODS.md)。
 

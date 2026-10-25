@@ -8,6 +8,8 @@
 
 ### 新增
 
+- 模型广场 2026-10-25 窗口快照 `docs/模型广场清单-2026-10-25.md` 与 132 行明细 `docs/模型广场清单-2026-10-25.xlsx`：13 个分组、0.001x–1.3x 共 13 档倍率、85 个去重模型名。数据改由站点自身的**公开** JSON 接口 `GET /api/v1/model-plaza` 直接取证（B 级，未登录、未用 Key、未发起计费请求），比此前的页面静态解析更可复核；新增 `examples/capture_model_plaza.py` 一键复现该快照。
+- 10-25 快照首次把**实付价格(折后)、官方价格、分组倍率**三者的口径写清：实付价 = 接口 `pricing` × 分组倍率，官方价取 `official_pricing`，两者没有固定算式，不能用官方价乘倍率去估算实付。
 - 三个根路径专题页：`cursor.html`、`claude-code.html`、`anti-dilution.html`。每页只覆盖一个搜索词，由 `topics/*.md` 构建，并写入 `sitemap.xml`。
 - 四语言 README 的首标题把 `NuoAPI` 设为指向规范模型广场的真实链接，首屏实例入口可直接点击。
 - 四语言 README 在第一步操作前增加本地化的六项报错速查，覆盖 Gemini CLI、Codex、Claude Code、401、400 与 `model_not_found`。
@@ -15,6 +17,7 @@
 
 ### 变更
 
+- 仓库内指向"当前模型广场清单"的指针全部改指 10-25（README、FAQ、Claude Code / Codex / Gemini CLI / model_not_found 四个短页、接入教程）；10-18 与 10-12 两份降为历史窗口，数字原样保留，仍不比较涨跌。
 - 修复站点构建器把标识符里的下划线整段删掉的问题：侧栏锚文本里的 `401 invalid_api_key` 曾变成 `401 invalidapikey`，`supports_websockets`、`ANTHROPIC_BASE_URL` 等同理，共影响 30 个产物页、305 处（侧栏锚文本 130、抽屉导航 130、上下页翻页 10、JSON-LD 35）。现在按 CommonMark 的 intraword 规则处理，只剥离真正起强调作用的 `_`，`invalid_api_key` 原样保留。`<title>`、`<h1>`、`<meta description>`、面包屑此前未受影响。
 - 新增 `tests/test_underscore_preservation.py` 防回归：直接导入真实构建器（不做兜底），断言侧栏锚文本与正文 H1 逐页一致，产物里不再出现被吃掉下划线的标识符写法。
 - 中文 README 注册步骤中的自动链接改为行内代码，确保首页正文的真实实例锚点不超过 3 处。
