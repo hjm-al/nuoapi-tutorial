@@ -31,8 +31,10 @@ import os
 import posixpath
 import re
 import shutil
+import string
 import subprocess
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
@@ -403,13 +405,111 @@ def first_heading(md_text: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+# CommonMark 的 intraword 规则：`_` 两侧都紧贴字母或数字时不构成强调标记，
+# 所以 invalid_api_key、ANTHROPIC_BASE_URL 里的下划线必须原样保留。
+# 早期实现把 `_` 当装饰字符整段删掉，侧栏锚文本变成 invalidapikey，
+# 页面标题与 H1 却是对的，肉眼从首页完全看不出来。
+_MD_UNDERSCORE_RUN = re.compile(r"_+")
+_ASCII_PUNCTUATION = frozenset(string.punctuation)
+
+
+def _is_punctuation(char: str) -> bool:
+    """CommonMark 口径的标点：ASCII 标点，或 Unicode P / S 类字符。"""
+    if not char:
+        return False
+    if char in _ASCII_PUNCTUATION:
+        return True
+    return unicodedata.category(char)[0] in ("P", "S")
+
+
+def _flanking(text: str, start: int, end: int) -> tuple[bool, bool]:
+    """按 CommonMark 定界符规则判断一段 `_` 是否左贴边 / 右贴边。"""
+    prev = text[start - 1] if start > 0 else ""
+    nxt = text[end] if end < len(text) else ""
+    prev_space = not prev or prev.isspace()
+    next_space = not nxt or nxt.isspace()
+    prev_punct = _is_punctuation(prev)
+    next_punct = _is_punctuation(nxt)
+    left = (not next_space) and ((not next_punct) or prev_space or prev_punct)
+    right = (not prev_space) and ((not prev_punct) or next_space or next_punct)
+    return left, right
+
+
+def strip_underscore_emphasis(text: str) -> str:
+    """只剥离真正起强调作用的 `_`，保留标识符里的下划线。
+
+    ``invalid_api_key`` 原样保留，``_italic_`` / ``__bold__`` 仍被剥成纯文本；
+    判据与 Python-Markdown 渲染标题的规则一致，所以侧栏锚文本和正文 H1 对得上。
+    """
+    runs = []
+    for match in _MD_UNDERSCORE_RUN.finditer(text):
+        start, end = match.span()
+        left, right = _flanking(text, start, end)
+        prev = text[start - 1] if start > 0 else ""
+        nxt = text[end] if end < len(text) else ""
+        runs.append(
+            {
+                "start": start,
+                "end": end,
+                "length": end - start,
+                "can_open": left and ((not right) or _is_punctuation(prev)),
+                "can_close": right and ((not left) or _is_punctuation(nxt)),
+            }
+        )
+    if not runs:
+        return text
+
+    def blocked(opener: dict, closer: dict) -> bool:
+        """CommonMark 规则三：两段定界符都能开也能合时，长度之和不能是 3 的倍数。"""
+        both = (opener["can_open"] and opener["can_close"]) or (
+            closer["can_open"] and closer["can_close"]
+        )
+        if not both:
+            return False
+        total = opener["length"] + closer["length"]
+        if total % 3:
+            return False
+        return not (opener["length"] % 3 == 0 and closer["length"] % 3 == 0)
+
+    openers: list[int] = []
+    pairs: list[tuple[int, int]] = []
+    for index, run in enumerate(runs):
+        partner = None
+        if run["can_close"]:
+            for slot in range(len(openers) - 1, -1, -1):
+                candidate = openers[slot]
+                if blocked(runs[candidate], run):
+                    continue
+                partner = candidate
+                openers.pop(slot)
+                break
+        if partner is not None:
+            pairs.append((partner, index))
+        elif run["can_open"]:
+            openers.append(index)
+
+    if not pairs:
+        return text
+
+    drop: set[int] = set()
+    for opener_index, closer_index in pairs:
+        opener = runs[opener_index]
+        closer = runs[closer_index]
+        used = min(opener["length"], closer["length"])
+        # 开启侧吃掉靠右的 `_`，闭合侧吃掉靠左的 `_`，多出来的保持字面量。
+        drop.update(range(opener["end"] - used, opener["end"]))
+        drop.update(range(closer["start"], closer["start"] + used))
+
+    return "".join(char for index, char in enumerate(text) if index not in drop)
+
 
 def plain_text(md_text: str) -> str:
     """抽出用于 <meta description> 的纯文本。"""
     text = re.sub(r"```.*?```", " ", md_text, flags=re.S)
     text = re.sub(r"^#+\s*", "", text, flags=re.M)
     text = MD_LINK.sub(r"\1", text)
-    text = re.sub(r"[*_`>|]", "", text)
+    text = re.sub(r"[*`>|]", "", text)
+    text = strip_underscore_emphasis(text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 

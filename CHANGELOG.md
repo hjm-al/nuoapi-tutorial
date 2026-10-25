@@ -15,6 +15,8 @@
 
 ### 变更
 
+- 修复站点构建器把标识符里的下划线整段删掉的问题：侧栏锚文本里的 `401 invalid_api_key` 曾变成 `401 invalidapikey`，`supports_websockets`、`ANTHROPIC_BASE_URL` 等同理，共影响 30 个产物页、305 处（侧栏锚文本 130、抽屉导航 130、上下页翻页 10、JSON-LD 35）。现在按 CommonMark 的 intraword 规则处理，只剥离真正起强调作用的 `_`，`invalid_api_key` 原样保留。`<title>`、`<h1>`、`<meta description>`、面包屑此前未受影响。
+- 新增 `tests/test_underscore_preservation.py` 防回归：直接导入真实构建器（不做兜底），断言侧栏锚文本与正文 H1 逐页一致，产物里不再出现被吃掉下划线的标识符写法。
 - 中文 README 注册步骤中的自动链接改为行内代码，确保首页正文的真实实例锚点不超过 3 处。
 - 索引通知失败只产生警告，不回滚已经完成的 GitHub Pages 部署；IndexNow 提交不代表已被搜索引擎收录。
 
