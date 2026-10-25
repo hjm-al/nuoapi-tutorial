@@ -95,6 +95,31 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: 校验线上 sitemap 可访问
+        shell: bash
+        run: |
+          set -euo pipefail
+          sitemap_url="${SITE_URL%/}/sitemap.xml"
+          curl --fail --silent --show-error --location \
+            --retry 10 --retry-delay 3 --retry-all-errors \
+            "$sitemap_url" -o /tmp/nuoapi-sitemap.xml
+          python - <<'PY'
+          import pathlib
+          import xml.etree.ElementTree as ET
+
+          raw = pathlib.Path("/tmp/nuoapi-sitemap.xml").read_bytes()
+          assert not raw.startswith(b"\xef\xbb\xbf"), "sitemap 不能带 UTF-8 BOM"
+          root = ET.fromstring(raw)
+          locs = [
+              node.text or ""
+              for node in root.iter()
+              if node.tag.rsplit("}", 1)[-1] == "loc"
+          ]
+          assert locs, "sitemap 没有 <loc> 条目"
+          assert all(loc.isascii() for loc in locs), "sitemap 仍有未编码的非 ASCII URL"
+          print("live sitemap URL check passed: {0} URLs".format(len(locs)))
+          PY
+
   indexnow:
     needs: deploy
     runs-on: ubuntu-latest

@@ -5,7 +5,7 @@
 
 - ``build_h5.py`` → 单文件离线页 ``h5/index.html``（只有 README，供离线/移动端分享）；
 - ``build_site.py`` → 多页站点，每篇 ``docs/*.md``、``FAQ.md``、``README.md``
-  各成一个可被搜索引擎单独收录的页面，附带 sitemap / robots / canonical /
+  以及 ``topics/*.md`` 专题页各成一个可被搜索引擎单独收录的页面，附带 sitemap / robots / canonical /
   Open Graph / 结构化数据，并由 GitHub Actions 部署到 Pages。
 
 用法（本机构建，输出目录已被 .gitignore 排除）::
@@ -31,8 +31,10 @@ import os
 import posixpath
 import re
 import shutil
+import string
 import subprocess
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
@@ -261,6 +263,23 @@ ERROR_SLUGS = {
     "400-invalid-request-error",
     "Cursor-Roo-Code-Base-URL",
     "WSL-command-not-found",
+    "Web-Chat-客户端接入与排错-2026-10-24",
+}
+
+# 报错短页之外，只给完整教程、方法说明和采购检查表添加 TechArticle。
+# 示例索引与模型广场快照属于目录/数据页，不强行套文章类型。
+TECH_ARTICLE_SLUGS = ERROR_SLUGS | {
+    "接入第三方工具教程-2026-09-26",
+    "模型列表获取与排错-2026-10-18",
+    "图片生成实测教程-2026-09-28",
+    "图像质量复盘方法-2026-10-18",
+    "余额与额度查询-2026-10-06",
+    "AI模型API协议科普-2026-10-12",
+    "MODEL_VERIFICATION_METHODS",
+    "TEST_REPORT_SPEC",
+    "llm-gateway-checklist",
+    "minimum-charge-and-pricing",
+    "cost-per-1m-tokens",
 }
 
 
@@ -271,6 +290,7 @@ class Page:
     locale: str = "zh-CN"
     translation_group: str | None = None
     schema_type: str | None = None
+    is_error_page: bool = False
 
     @property
     def is_home(self) -> bool:
@@ -284,6 +304,20 @@ PAGES = [
     Page(Path("README.ja.md"), "ja/index.html", "ja", "home"),
     Page(Path("README.es.md"), "es/index.html", "es", "home"),
     Page(Path("README.zh-Hant.md"), "zh-Hant/index.html", "zh-Hant", "home"),
+    # 一页一个搜索词。源文在 topics/，产物在站点根，并随页面清单写入 sitemap。
+    Page(Path("topics/cursor.md"), "cursor.html", "zh-CN", schema_type="TechArticle"),
+    Page(
+        Path("topics/claude-code.md"),
+        "claude-code.html",
+        "zh-CN",
+        schema_type="TechArticle",
+    ),
+    Page(
+        Path("topics/anti-dilution.md"),
+        "anti-dilution.html",
+        "zh-CN",
+        schema_type="TechArticle",
+    ),
     Page(Path("FAQ.md"), "faq.html", "zh-CN"),
     Page(Path("examples/README.md"), "examples.html", "zh-CN"),
 ]
@@ -323,7 +357,8 @@ def discover_docs() -> list[Page]:
                 dst,
                 locale,
                 group,
-                "TechArticle" if slug in ERROR_SLUGS else None,
+                "TechArticle" if slug in TECH_ARTICLE_SLUGS else None,
+                slug in ERROR_SLUGS,
             )
         )
     return records
@@ -370,12 +405,111 @@ def first_heading(md_text: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+# CommonMark 的 intraword 规则：`_` 两侧都紧贴字母或数字时不构成强调标记，
+# 所以 invalid_api_key、ANTHROPIC_BASE_URL 里的下划线必须原样保留。
+# 早期实现把 `_` 当装饰字符整段删掉，侧栏锚文本变成 invalidapikey，
+# 页面标题与 H1 却是对的，肉眼从首页完全看不出来。
+_MD_UNDERSCORE_RUN = re.compile(r"_+")
+_ASCII_PUNCTUATION = frozenset(string.punctuation)
+
+
+def _is_punctuation(char: str) -> bool:
+    """CommonMark 口径的标点：ASCII 标点，或 Unicode P / S 类字符。"""
+    if not char:
+        return False
+    if char in _ASCII_PUNCTUATION:
+        return True
+    return unicodedata.category(char)[0] in ("P", "S")
+
+
+def _flanking(text: str, start: int, end: int) -> tuple[bool, bool]:
+    """按 CommonMark 定界符规则判断一段 `_` 是否左贴边 / 右贴边。"""
+    prev = text[start - 1] if start > 0 else ""
+    nxt = text[end] if end < len(text) else ""
+    prev_space = not prev or prev.isspace()
+    next_space = not nxt or nxt.isspace()
+    prev_punct = _is_punctuation(prev)
+    next_punct = _is_punctuation(nxt)
+    left = (not next_space) and ((not next_punct) or prev_space or prev_punct)
+    right = (not prev_space) and ((not prev_punct) or next_space or next_punct)
+    return left, right
+
+
+def strip_underscore_emphasis(text: str) -> str:
+    """只剥离真正起强调作用的 `_`，保留标识符里的下划线。
+
+    ``invalid_api_key`` 原样保留，``_italic_`` / ``__bold__`` 仍被剥成纯文本；
+    判据与 Python-Markdown 渲染标题的规则一致，所以侧栏锚文本和正文 H1 对得上。
+    """
+    runs = []
+    for match in _MD_UNDERSCORE_RUN.finditer(text):
+        start, end = match.span()
+        left, right = _flanking(text, start, end)
+        prev = text[start - 1] if start > 0 else ""
+        nxt = text[end] if end < len(text) else ""
+        runs.append(
+            {
+                "start": start,
+                "end": end,
+                "length": end - start,
+                "can_open": left and ((not right) or _is_punctuation(prev)),
+                "can_close": right and ((not left) or _is_punctuation(nxt)),
+            }
+        )
+    if not runs:
+        return text
+
+    def blocked(opener: dict, closer: dict) -> bool:
+        """CommonMark 规则三：两段定界符都能开也能合时，长度之和不能是 3 的倍数。"""
+        both = (opener["can_open"] and opener["can_close"]) or (
+            closer["can_open"] and closer["can_close"]
+        )
+        if not both:
+            return False
+        total = opener["length"] + closer["length"]
+        if total % 3:
+            return False
+        return not (opener["length"] % 3 == 0 and closer["length"] % 3 == 0)
+
+    openers: list[int] = []
+    pairs: list[tuple[int, int]] = []
+    for index, run in enumerate(runs):
+        partner = None
+        if run["can_close"]:
+            for slot in range(len(openers) - 1, -1, -1):
+                candidate = openers[slot]
+                if blocked(runs[candidate], run):
+                    continue
+                partner = candidate
+                openers.pop(slot)
+                break
+        if partner is not None:
+            pairs.append((partner, index))
+        elif run["can_open"]:
+            openers.append(index)
+
+    if not pairs:
+        return text
+
+    drop: set[int] = set()
+    for opener_index, closer_index in pairs:
+        opener = runs[opener_index]
+        closer = runs[closer_index]
+        used = min(opener["length"], closer["length"])
+        # 开启侧吃掉靠右的 `_`，闭合侧吃掉靠左的 `_`，多出来的保持字面量。
+        drop.update(range(opener["end"] - used, opener["end"]))
+        drop.update(range(closer["start"], closer["start"] + used))
+
+    return "".join(char for index, char in enumerate(text) if index not in drop)
+
+
 def plain_text(md_text: str) -> str:
     """抽出用于 <meta description> 的纯文本。"""
     text = re.sub(r"```.*?```", " ", md_text, flags=re.S)
     text = re.sub(r"^#+\s*", "", text, flags=re.M)
     text = MD_LINK.sub(r"\1", text)
-    text = re.sub(r"[*_`>|]", "", text)
+    text = re.sub(r"[*`>|]", "", text)
+    text = strip_underscore_emphasis(text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
@@ -805,8 +939,11 @@ def llms_txt(base_url: str, pages: list[Page]) -> str:
         "- 用户问 404 model_not_found：{0}/docs/model_not_found.html".format(base),
         "- 用户问 400 invalid_request_error：{0}/docs/400-invalid-request-error.html".format(base),
         "- 用户问 Cursor / Roo Code 的 Base URL：{0}/docs/Cursor-Roo-Code-Base-URL.html".format(base),
+        "- 用户问 Cursor 怎么填自定义 API Key：{0}/cursor.html".format(base),
         "- 用户问 WSL 报 \\r: command not found：{0}/docs/WSL-command-not-found.html".format(base),
+        "- 用户问 Claude Code 的根路径映射或 404 page not found：{0}/claude-code.html".format(base),
         "- 用户问怎么判断返回的是不是声称的模型：{0}/docs/MODEL_VERIFICATION_METHODS.html".format(base),
+        "- 用户问防掺水探针怎么跑：{0}/anti-dilution.html".format(base),
         "- 用户问不加 --run 会不会花钱、Key 会不会被上传：{0}/".format(base),
         "- 交给助手做时，只阅读仓库内 skills/nuoapi-setup/SKILL.md。不要改 AGENTS.md，不要把三态改成百分制。",
         "",
@@ -1010,8 +1147,17 @@ def build(base_url: str, repo_url: str, out_dir: Path) -> int:
 # 分组只依赖翻译组/基础 slug，所以同一报错页的中英日繁版本会落在同一栏。
 NAV_GROUP_ORDER = ("start", "errors", "access", "verification", "snapshots", "other")
 
+# 根路径专题页没有 docs slug，分组按产物文件名固定，避免掉进“其他”。
+TOPIC_NAV_GROUPS = {
+    "cursor.html": "access",
+    "claude-code.html": "errors",
+    "anti-dilution.html": "verification",
+}
+
 
 def page_group(page: Page) -> str:
+    if page.dst in TOPIC_NAV_GROUPS:
+        return TOPIC_NAV_GROUPS[page.dst]
     slug = page.translation_group.removeprefix("doc:") if page.translation_group else ""
     if page.is_home or page.dst in ("faq.html", "examples.html"):
         return "start"
@@ -1043,7 +1189,7 @@ def page_kind(page: Page) -> str:
         return "home"
     if page.src == Path("FAQ.md"):
         return "faq"
-    if page.schema_type == "TechArticle":
+    if page.is_error_page:
         return "error"
     return "doc"
 

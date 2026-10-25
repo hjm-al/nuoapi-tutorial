@@ -4,8 +4,8 @@
 目的：
 1. 用固定参数构建到临时目录，断言页面数、sitemap/robots/.nojekyll 齐备；
 2. 断言站内链接与页内锚点都有对应产物（构建器自身已自检，这里做第二道闸）；
-3. 断言每页都有自指 canonical 与正确语言，翻译组互链对称，报错页带 TechArticle，
-   FAQ 页带 FAQPage 结构化数据（能被富结果解析）；
+3. 断言每页都有自指 canonical 与正确语言，翻译组互链对称，报错页与选定教程页
+   带 TechArticle，FAQ 页带 FAQPage 结构化数据（能被富结果解析）；
 4. 断言已提交的 h5/index.html 与当前 README/theme.py 构建结果一致，
    防止"README 改了、移动端页面静默过期"；
 5. 断言 Pages workflow 仍以 GitHub Actions 方式部署（不是 branch 部署）。
@@ -34,7 +34,12 @@ import build_site  # noqa: E402
 import document_structure  # noqa: E402
 BASE_URL = "https://example.github.io/nuoapi-tutorial"
 REPO_URL = "https://github.com/example/nuoapi-tutorial"
-EXPECTED_PAGE_COUNT = 41
+EXPECTED_PAGE_COUNT = 46
+TOPIC_LANDING_TITLES = {
+    "cursor.html": "NuoAPI Cursor 接入教程：3分钟配置自定义 API Key",
+    "claude-code.html": "NuoAPI Claude Code 配置指南：解决 404 与根路径映射",
+    "anti-dilution.html": "NuoAPI 防掺水检测：开源 Python 模型真伪取证探针",
+}
 PRIORITY_PAGES = {
     Path("docs/MODEL_VERIFICATION_METHODS.md"): {
         "h1": "模型真伪与防掺水：中转站换模型怎么判断",
@@ -163,7 +168,7 @@ class TestSiteBuild(unittest.TestCase):
         cls._tmp.cleanup()
 
     def test_pages_and_required_files(self):
-        """五语言首页、固定页和全部 docs 应生成恰好 41 个产物。"""
+        """五语言首页、专题页、固定页和全部 docs 应生成恰好 46 个产物。"""
         self.assertEqual(build_site.SITEMAP_FILENAME, "sitemap.xml")
         self.assertEqual(build_site.SITEMAP_ALIAS_FILENAME, "sm.xml")
         for required in (
@@ -204,6 +209,20 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("ja/index.html", names)
         self.assertIn("es/index.html", names)
         self.assertIn("zh-Hant/index.html", names)
+        for dst in TOPIC_LANDING_TITLES:
+            self.assertIn(dst, names)
+
+    def test_topic_landings_use_exact_titles_and_sitemap_urls(self):
+        """三个专题页各自一个词，标题与 sitemap URL 不跟长文页混用。"""
+        sitemap = (self.site / build_site.SITEMAP_FILENAME).read_text(encoding="utf-8")
+        for dst, title in TOPIC_LANDING_TITLES.items():
+            text = (self.site / dst).read_text(encoding="utf-8")
+            self.assertIn("<title>{0}</title>".format(title), text)
+            self.assertIn(build_site.canonical_url(BASE_URL, dst), sitemap)
+            self.assertEqual(
+                build_site.page_group(self.records_by_dst[dst]),
+                build_site.TOPIC_NAV_GROUPS[dst],
+            )
 
     def test_sitemap_matches_page_count(self):
         """sitemap 必须与页面一一对应，不能重复、遗漏或指向别处。"""
@@ -562,8 +581,8 @@ class TestSiteBuild(unittest.TestCase):
 
     def test_error_pages_have_tech_article_jsonld(self):
         """8 个报错 slug 的所有既有语言页都必须输出与页面一致的 TechArticle。"""
-        error_records = [page for page in self.records if page.schema_type == "TechArticle"]
-        self.assertEqual(len(error_records), 17)
+        error_records = [page for page in self.records if page.is_error_page]
+        self.assertEqual(len(error_records), 18)
         self.assertEqual(
             {
                 page.translation_group.removeprefix("doc:")
@@ -598,9 +617,70 @@ class TestSiteBuild(unittest.TestCase):
                 record.dst,
             )
 
+    def test_selected_tutorial_pages_have_tech_article_jsonld(self):
+        """教程和方法页输出 TechArticle；示例索引与快照不机械套文章类型。"""
+        expected_sources = {
+            Path("docs/接入第三方工具教程-2026-09-26.md"),
+            Path("docs/模型列表获取与排错-2026-10-18.md"),
+            Path("docs/图片生成实测教程-2026-09-28.md"),
+            Path("docs/图像质量复盘方法-2026-10-18.md"),
+            Path("docs/余额与额度查询-2026-10-06.md"),
+            Path("docs/AI模型API协议科普-2026-10-12.md"),
+            Path("docs/MODEL_VERIFICATION_METHODS.md"),
+            Path("docs/TEST_REPORT_SPEC.md"),
+            Path("docs/llm-gateway-checklist.en.md"),
+            Path("docs/minimum-charge-and-pricing.ja.md"),
+            Path("docs/cost-per-1m-tokens.md"),
+            Path("docs/cost-per-1m-tokens.en.md"),
+            Path("docs/cost-per-1m-tokens.ja.md"),
+            Path("docs/cost-per-1m-tokens.es.md"),
+            Path("docs/cost-per-1m-tokens.zh-Hant.md"),
+            Path("topics/cursor.md"),
+            Path("topics/claude-code.md"),
+            Path("topics/anti-dilution.md"),
+        }
+        article_records = [
+            page
+            for page in self.records
+            if page.schema_type == "TechArticle" and not page.is_error_page
+        ]
+        self.assertEqual({page.src for page in article_records}, expected_sources)
+
+        for record in article_records:
+            text = (self.site / record.dst).read_text(encoding="utf-8")
+            articles = [
+                item for item in parse_jsonld(text) if item.get("@type") == "TechArticle"
+            ]
+            self.assertEqual(len(articles), 1, record.dst)
+            article = articles[0]
+            self.assertTrue(article["headline"].strip(), record.dst)
+            self.assertGreaterEqual(len(article["description"]), 20, record.dst)
+            self.assertEqual(
+                article["url"],
+                build_site.canonical_url(BASE_URL, record.dst),
+                record.dst,
+            )
+            self.assertEqual(
+                article["inLanguage"],
+                build_site.LOCALES[record.locale]["html_lang"],
+                record.dst,
+            )
+
+        excluded_sources = {
+            Path("examples/README.md"),
+            Path("docs/模型广场清单-2026-10-12.md"),
+            Path("docs/模型广场清单-2026-10-18.md"),
+            Path("docs/模型广场清单-2026-10-25.md"),
+        }
+        for record in self.records:
+            if record.src not in excluded_sources:
+                continue
+            text = (self.site / record.dst).read_text(encoding="utf-8")
+            self.assertNotIn('"@type":"TechArticle"', text, record.dst)
+
     def test_page_kind_contract_matches_page_records(self):
-        """41 个页面都通过稳定的 body 标识声明版式类型。"""
-        expected = Counter({"home": 5, "faq": 1, "error": 17, "doc": 18})
+        """46 个页面都通过稳定的 body 标识声明版式类型。"""
+        expected = Counter({"home": 5, "faq": 1, "error": 18, "doc": 22})
         self.assertEqual(
             Counter(build_site.page_kind(page) for page in self.records),
             expected,
@@ -625,7 +705,7 @@ class TestSiteBuild(unittest.TestCase):
     def test_error_sections_have_layout_roles_in_all_locales(self):
         """报错页章节都带角色；两种四语言短页保留症状、配置和验证。"""
         allowed = {"symptom", "fix", "verify", "related", "detail"}
-        error_records = [page for page in self.records if page.schema_type == "TechArticle"]
+        error_records = [page for page in self.records if page.is_error_page]
         for record in error_records:
             text = (self.site / record.dst).read_text(encoding="utf-8")
             roles = set(re.findall(r'data-role="([^"]+)"', text))
@@ -970,6 +1050,9 @@ class TestSiteBuild(unittest.TestCase):
         self.assertIn("vars.BING_SITE_VERIFICATION", workflow)
         self.assertIn("vars.BAIDU_SITE_VERIFICATION", workflow)
         self.assertEqual(workflow.count("fetch-depth: 0"), 2)
+        self.assertIn("校验线上 sitemap 可访问", workflow)
+        self.assertIn('"${SITE_URL%/}/sitemap.xml"', workflow)
+        self.assertIn("node.tag.rsplit", workflow)
 
         ci_workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("fetch-depth: 0", ci_workflow)
@@ -1099,15 +1182,39 @@ class TestSearchMetadata(unittest.TestCase):
         return self.TARGETS + [
             path.relative_to(ROOT)
             for path in sorted((ROOT / "docs").glob("*.md"))
+        ] + [
+            path.relative_to(ROOT)
+            for path in sorted((ROOT / "topics").glob("*.md"))
         ]
 
     def test_every_doc_has_frontmatter_meta(self):
         for doc in self.documents():
-            meta, body = build_site.split_frontmatter(doc.read_text(encoding="utf-8"))
+            meta, body = build_site.split_frontmatter((ROOT / doc).read_text(encoding="utf-8"))
             self.assertIn("title", meta, "{0} 缺少 title 头".format(doc))
             self.assertIn("description", meta, "{0} 缺少 description 头".format(doc))
             # 头被拆掉后，正文首行必须还是大标题（导航与正文结构不变）
             self.assertTrue(build_site.first_heading(body), doc.as_posix())
+
+    def test_titles_and_descriptions_are_unique(self):
+        """46 页不能共用模板标题或摘要，否则搜索结果会互相稀释。"""
+        metadata = [
+            build_site.split_frontmatter((ROOT / doc).read_text(encoding="utf-8"))[0]
+            for doc in self.documents()
+        ]
+        duplicate_titles = [
+            title
+            for title, count in Counter(item["title"] for item in metadata).items()
+            if count > 1
+        ]
+        duplicate_descriptions = [
+            description
+            for description, count in Counter(
+                item["description"] for item in metadata
+            ).items()
+            if count > 1
+        ]
+        self.assertEqual(duplicate_titles, [], "存在重复 title")
+        self.assertEqual(duplicate_descriptions, [], "存在重复 description")
 
     def test_all_documents_are_covered_once(self):
         """元数据扫描必须覆盖五语言首页、固定页和全部 docs，不漏掉翻译页。"""
@@ -1119,12 +1226,14 @@ class TestSearchMetadata(unittest.TestCase):
             Path("README.zh-Hant.md"),
             Path("FAQ.md"),
             Path("examples/README.md"),
-        } | {path.relative_to(ROOT) for path in (ROOT / "docs").glob("*.md")}
+        } | {path.relative_to(ROOT) for path in (ROOT / "docs").glob("*.md")} | {
+            path.relative_to(ROOT) for path in (ROOT / "topics").glob("*.md")
+        }
         self.assertEqual(set(self.documents()), expected)
 
     def test_title_and_description_fit_search_snippet(self):
         for doc in self.documents():
-            meta, _ = build_site.split_frontmatter(doc.read_text(encoding="utf-8"))
+            meta, _ = build_site.split_frontmatter((ROOT / doc).read_text(encoding="utf-8"))
             self.assertLessEqual(
                 self.width(meta["title"]), 70, "{0} 标题过长会被截断".format(doc))
             self.assertLessEqual(
@@ -1135,7 +1244,7 @@ class TestSearchMetadata(unittest.TestCase):
     def test_major_pages_have_intent_rich_search_descriptions(self):
         """主要入口的描述为手写版本，长度落在 120–155 个搜索显示列。"""
         for doc, phrases in MAJOR_SEO_PAGES.items():
-            meta, _ = build_site.split_frontmatter(doc.read_text(encoding="utf-8"))
+            meta, _ = build_site.split_frontmatter((ROOT / doc).read_text(encoding="utf-8"))
             description = meta["description"]
             width = self.width(description)
             self.assertGreaterEqual(width, 120, "{0}: {1}".format(doc, width))

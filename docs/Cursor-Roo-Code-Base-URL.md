@@ -54,3 +54,4 @@ curl -sS https://nuoapi.net/v1/models \
 - [接入教程 §7.1：Cursor、Roo Code、Cline 与 Continue](接入第三方工具教程-2026-09-26.md#71-cursorroo-codecline-与-continue)
 - [FAQ §27：在 Cursor 或 Roo Code 中配置](../FAQ.md#27-如何在-cursor-或-roo-code-cline-中配置-nuoapi)
 - [模型列表与排错](模型列表获取与排错-2026-10-18.md)
+- [Cursor 自定义 API Key 专题页](../topics/cursor.md)
