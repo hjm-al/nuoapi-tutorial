@@ -5,7 +5,7 @@
 
 - ``build_h5.py`` → 单文件离线页 ``h5/index.html``（只有 README，供离线/移动端分享）；
 - ``build_site.py`` → 多页站点，每篇 ``docs/*.md``、``FAQ.md``、``README.md``
-  各成一个可被搜索引擎单独收录的页面，附带 sitemap / robots / canonical /
+  以及 ``topics/*.md`` 专题页各成一个可被搜索引擎单独收录的页面，附带 sitemap / robots / canonical /
   Open Graph / 结构化数据，并由 GitHub Actions 部署到 Pages。
 
 用法（本机构建，输出目录已被 .gitignore 排除）::
@@ -261,6 +261,23 @@ ERROR_SLUGS = {
     "400-invalid-request-error",
     "Cursor-Roo-Code-Base-URL",
     "WSL-command-not-found",
+    "Web-Chat-客户端接入与排错-2026-10-24",
+}
+
+# 报错短页之外，只给完整教程、方法说明和采购检查表添加 TechArticle。
+# 示例索引与模型广场快照属于目录/数据页，不强行套文章类型。
+TECH_ARTICLE_SLUGS = ERROR_SLUGS | {
+    "接入第三方工具教程-2026-09-26",
+    "模型列表获取与排错-2026-10-18",
+    "图片生成实测教程-2026-09-28",
+    "图像质量复盘方法-2026-10-18",
+    "余额与额度查询-2026-10-06",
+    "AI模型API协议科普-2026-10-12",
+    "MODEL_VERIFICATION_METHODS",
+    "TEST_REPORT_SPEC",
+    "llm-gateway-checklist",
+    "minimum-charge-and-pricing",
+    "cost-per-1m-tokens",
 }
 
 
@@ -271,6 +288,7 @@ class Page:
     locale: str = "zh-CN"
     translation_group: str | None = None
     schema_type: str | None = None
+    is_error_page: bool = False
 
     @property
     def is_home(self) -> bool:
@@ -284,6 +302,20 @@ PAGES = [
     Page(Path("README.ja.md"), "ja/index.html", "ja", "home"),
     Page(Path("README.es.md"), "es/index.html", "es", "home"),
     Page(Path("README.zh-Hant.md"), "zh-Hant/index.html", "zh-Hant", "home"),
+    # 一页一个搜索词。源文在 topics/，产物在站点根，并随页面清单写入 sitemap。
+    Page(Path("topics/cursor.md"), "cursor.html", "zh-CN", schema_type="TechArticle"),
+    Page(
+        Path("topics/claude-code.md"),
+        "claude-code.html",
+        "zh-CN",
+        schema_type="TechArticle",
+    ),
+    Page(
+        Path("topics/anti-dilution.md"),
+        "anti-dilution.html",
+        "zh-CN",
+        schema_type="TechArticle",
+    ),
     Page(Path("FAQ.md"), "faq.html", "zh-CN"),
     Page(Path("examples/README.md"), "examples.html", "zh-CN"),
 ]
@@ -323,7 +355,8 @@ def discover_docs() -> list[Page]:
                 dst,
                 locale,
                 group,
-                "TechArticle" if slug in ERROR_SLUGS else None,
+                "TechArticle" if slug in TECH_ARTICLE_SLUGS else None,
+                slug in ERROR_SLUGS,
             )
         )
     return records
@@ -368,6 +401,7 @@ def split_frontmatter(md_text: str):
 def first_heading(md_text: str) -> str:
     match = re.search(r"^#\s+(.+)$", md_text, flags=re.M)
     return match.group(1).strip() if match else ""
+
 
 
 def plain_text(md_text: str) -> str:
@@ -805,8 +839,11 @@ def llms_txt(base_url: str, pages: list[Page]) -> str:
         "- 用户问 404 model_not_found：{0}/docs/model_not_found.html".format(base),
         "- 用户问 400 invalid_request_error：{0}/docs/400-invalid-request-error.html".format(base),
         "- 用户问 Cursor / Roo Code 的 Base URL：{0}/docs/Cursor-Roo-Code-Base-URL.html".format(base),
+        "- 用户问 Cursor 怎么填自定义 API Key：{0}/cursor.html".format(base),
         "- 用户问 WSL 报 \\r: command not found：{0}/docs/WSL-command-not-found.html".format(base),
+        "- 用户问 Claude Code 的根路径映射或 404 page not found：{0}/claude-code.html".format(base),
         "- 用户问怎么判断返回的是不是声称的模型：{0}/docs/MODEL_VERIFICATION_METHODS.html".format(base),
+        "- 用户问防掺水探针怎么跑：{0}/anti-dilution.html".format(base),
         "- 用户问不加 --run 会不会花钱、Key 会不会被上传：{0}/".format(base),
         "- 交给助手做时，只阅读仓库内 skills/nuoapi-setup/SKILL.md。不要改 AGENTS.md，不要把三态改成百分制。",
         "",
@@ -1010,8 +1047,17 @@ def build(base_url: str, repo_url: str, out_dir: Path) -> int:
 # 分组只依赖翻译组/基础 slug，所以同一报错页的中英日繁版本会落在同一栏。
 NAV_GROUP_ORDER = ("start", "errors", "access", "verification", "snapshots", "other")
 
+# 根路径专题页没有 docs slug，分组按产物文件名固定，避免掉进“其他”。
+TOPIC_NAV_GROUPS = {
+    "cursor.html": "access",
+    "claude-code.html": "errors",
+    "anti-dilution.html": "verification",
+}
+
 
 def page_group(page: Page) -> str:
+    if page.dst in TOPIC_NAV_GROUPS:
+        return TOPIC_NAV_GROUPS[page.dst]
     slug = page.translation_group.removeprefix("doc:") if page.translation_group else ""
     if page.is_home or page.dst in ("faq.html", "examples.html"):
         return "start"
@@ -1043,7 +1089,7 @@ def page_kind(page: Page) -> str:
         return "home"
     if page.src == Path("FAQ.md"):
         return "faq"
-    if page.schema_type == "TechArticle":
+    if page.is_error_page:
         return "error"
     return "doc"
 

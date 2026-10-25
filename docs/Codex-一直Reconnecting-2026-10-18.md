@@ -63,3 +63,9 @@ Key 不要写进这个 toml。放到同目录的 `auth.json`：
 然后发一句固定短句（例如 `请只回复：连接成功`），到控制台核对模型名、时间和是否有这条记录。日志里不应再出现 `wss://nuoapi.net/v1/responses`。
 
 还在重连：多半是改错了文件，或进程还拿着旧配置。路径和 `auth.json` 见 [FAQ §11](../FAQ.md#11-codex-读取不到配置怎么办)，同一症状的短答见 [FAQ §4](../FAQ.md#4-codex-一直显示-reconnecting-或尝试-wssv1responses-怎么办)。
+
+## 相关深页
+
+- [Responses 协议路径与 Base URL](AI模型API协议科普-2026-10-12.md#4-responses)
+- [如何读取模型列表并核对当前分组](模型列表获取与排错-2026-10-18.md#1-唯一正确的入口)
+- [404 model_not_found：先核对模型 ID](model_not_found.md)

@@ -19,6 +19,8 @@ Codex、OpenAI SDK、Cherry Studio、LobeChat 和其他 OpenAI 兼容客户端�
 
 填错 Base URL 的典型表现：请求落到未注册路径，返回纯文本 `404 page not found`；或客户端直接报连接失败、`fetch failed`。客户端自己会在 Base URL 后面拼接 `/chat/completions` 等路径，所以这里填的是前缀，不是完整请求地址。
 
+Web 聊天客户端（如 NextChat、LobeChat、Chatbox）遇到 404、跨域 CORS 或流式打字机不逐字输出时，见[《Web 聊天客户端接入与排错》](docs/Web-Chat-客户端接入与排错-2026-10-24.md)。
+
 ## 2. Claude Code 的 Base URL 要不要加 `/v1`？
 
 通常不要加：

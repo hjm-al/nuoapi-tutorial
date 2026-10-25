@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/es/</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/faq.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/</loc><lastmod>2026-10-22</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/</loc><lastmod>2026-10-22</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/</loc><lastmod>2026-10-22</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/es/</loc><lastmod>2026-10-22</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/</loc><lastmod>2026-10-22</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/cursor.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/claude-code.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/anti-dilution.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/faq.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/examples.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/400-invalid-request-error.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/401-invalid-api-key.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/AI%E6%A8%A1%E5%9E%8BAPI%E5%8D%8F%E8%AE%AE%E7%A7%91%E6%99%AE-2026-10-12.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/docs/Claude-Code-%E4%B8%8D%E8%A6%81%E5%8A%A0v1-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/docs/Claude-Code-%E4%B8%8D%E8%A6%81%E5%8A%A0v1-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Claude-Code-%E4%B8%8D%E8%A6%81%E5%8A%A0v1-2026-10-18.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Claude-Code-%E4%B8%8D%E8%A6%81%E5%8A%A0v1-2026-10-18.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/docs/Claude-Code-%E4%B8%8D%E8%A6%81%E5%8A%A0v1-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/docs/Codex-%E4%B8%80%E7%9B%B4Reconnecting-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/docs/Codex-%E4%B8%80%E7%9B%B4Reconnecting-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Codex-%E4%B8%80%E7%9B%B4Reconnecting-2026-10-18.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Codex-%E4%B8%80%E7%9B%B4Reconnecting-2026-10-18.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/docs/Codex-%E4%B8%80%E7%9B%B4Reconnecting-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Cursor-Roo-Code-Base-URL.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/zh-Hant/docs/Gemini-CLI-platform-is-not-gemini-2026-10-18.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/MODEL_VERIFICATION_METHODS.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/MODEL_VERIFICATION_METHODS.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/TEST_REPORT_SPEC.html</loc><lastmod>2026-10-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/WSL-command-not-found.html</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hjm-al.github.io/nuoapi-tutorial/docs/Web-Chat-%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%8E%A5%E5%85%A5%E4%B8%8E%E6%8E%92%E9%94%99-2026-10-24.html</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/en/docs/cost-per-1m-tokens.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/es/docs/cost-per-1m-tokens.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hjm-al.github.io/nuoapi-tutorial/ja/docs/cost-per-1m-tokens.html</loc><lastmod>2026-10-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>

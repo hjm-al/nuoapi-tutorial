@@ -12,7 +12,7 @@
 > **主操作**：先运行 `python examples/model_verify.py --selftest`，在零请求、零计费的前提下核对探针与统计口径，再决定是否采集真实证据。
 
 > 本文回答一个问题：**怎样用可辩护的证据判断一个 API 端点返回的是不是它声称的那个模型？**
-> 配套可跑脚本：[`../examples/model_verify.py`](../examples/model_verify.py)（默认 DRY RUN，不产生任何计费请求）。
+> 配套可跑脚本：[`../examples/model_verify.py`](../examples/model_verify.py)（默认 DRY RUN，不产生任何计费请求）。探针入口见[防掺水检测专题页](../topics/anti-dilution.md)。
 >
 > 下文的样例端点以[模型广场](https://nuoapi.net/model-plaza)为夹具，方法本身不依赖任何特定网关；换一家只需替换地址与模型名。
 
